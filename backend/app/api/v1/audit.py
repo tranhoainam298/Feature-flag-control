@@ -53,11 +53,7 @@ async def list_audit_logs(
     _user: User = Depends(require_project_access),
 ) -> list[AuditLog]:
     """Retrieve audit logs scoped strictly to the specified project."""
-    stmt = (
-        select(AuditLog)
-        .where(AuditLog.project_id == project_id)
-        .order_by(AuditLog.id.desc())
-    )
+    stmt = select(AuditLog).where(AuditLog.project_id == project_id).order_by(AuditLog.id.desc())
 
     if environment_id:
         stmt = stmt.where(AuditLog.environment_id == environment_id)
@@ -73,4 +69,3 @@ async def list_audit_logs(
     stmt = stmt.limit(limit)
     result = await db.scalars(stmt)
     return list(result.all())
-

@@ -52,16 +52,17 @@ class Settings(BaseSettings):
                 or len(self.CONFIG_MASTER_KEY.encode("utf-8")) != 32
             ):
                 raise RuntimeError(
-                    "FATAL: Insecure CONFIG_MASTER_KEY detected in production environment. Application halted."
+                    "FATAL: Insecure CONFIG_MASTER_KEY detected in production environment. "
+                    "Application halted."
                 )
             if (
                 self.SECRET_KEY == "change-me-to-a-random-string-at-least-32-chars"
                 or len(self.SECRET_KEY) < 32
             ):
                 raise RuntimeError(
-                    "FATAL: Insecure SECRET_KEY detected in production environment. Application halted."
+                    "FATAL: Insecure SECRET_KEY detected in production environment. "
+                    "Application halted."
                 )
 
 
 settings = Settings()
-

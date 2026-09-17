@@ -326,9 +326,12 @@ async def test_revoked_api_key_returns_401() -> None:
 
 
 @pytest.mark.asyncio
-async def test_rate_limit_exceeded_returns_429_with_retry_after(monkeypatch: pytest.MonkeyPatch) -> None:
-    """When rate limit threshold is crossed, evaluation API returns 429 with Retry-After and X-RateLimit-Remaining headers."""
-    # Set limit to 2 requests per minute to test actual sliding window limiter with real Redis without mocking
+async def test_rate_limit_exceeded_returns_429_with_retry_after(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """When rate limit threshold is crossed, evaluation API returns 429
+    with Retry-After and X-RateLimit-Remaining headers."""
+    # Set limit to 2 req/min to test sliding window limiter with real Redis without mocking
     monkeypatch.setattr(settings, "EVAL_RATE_LIMIT_PER_MINUTE", 2)
 
     async with AsyncClient(transport=ASGITransport(app=app), base_url=BASE) as client:
@@ -356,7 +359,6 @@ async def test_rate_limit_exceeded_returns_429_with_retry_after(monkeypatch: pyt
         assert data["error"]["code"] == "RATE_LIMITED"
         assert data["error"]["details"]["retry_after"] == 60
         assert data["error"]["details"]["remaining"] == 0
-
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -677,7 +679,9 @@ async def test_audit_log_returns_only_scoped_events() -> None:
 # ──────────────────────────────────────────────────────────────────────────────
 
 
-def test_fail_secure_startup_rejects_insecure_keys_in_production(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_fail_secure_startup_rejects_insecure_keys_in_production(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """In production/staging or non-debug mode, application refuses to start with default keys."""
     # Test 1: Insecure CONFIG_MASTER_KEY in production raises RuntimeError
     monkeypatch.setattr(settings, "DEBUG", False)
@@ -700,7 +704,9 @@ def test_fail_secure_startup_rejects_insecure_keys_in_production(monkeypatch: py
 
     # Test 4: Valid secure keys in production pass validation
     monkeypatch.setattr(settings, "CONFIG_MASTER_KEY", "0123456789abcdef0123456789abcdef")
-    monkeypatch.setattr(settings, "SECRET_KEY", "secure_production_secret_key_at_least_32_chars_long")
+    monkeypatch.setattr(
+        settings, "SECRET_KEY", "secure_production_secret_key_at_least_32_chars_long"
+    )
     settings.validate_production_security()  # Should not raise
 
 
@@ -726,4 +732,3 @@ async def test_stream_connections_requires_api_key() -> None:
         )
         assert res_with_key.status_code == 200
         assert "active_connections" in res_with_key.json()
-

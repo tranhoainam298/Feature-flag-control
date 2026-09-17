@@ -1,8 +1,11 @@
 import asyncio
-from app.core.database import async_session_factory
-from app.models.user import User
-from app.core.security import verify_password
+
 from sqlalchemy import select
+
+from app.core.database import async_session_factory
+from app.core.security import verify_password
+from app.models.user import User
+
 
 async def main():
     async with async_session_factory() as s:
@@ -19,6 +22,7 @@ async def main():
                 print(f"User found: {u.email} | Password 'FlagOps@Secure2026!' valid: {valid}")
             else:
                 print(f"User NOT found: {email}")
+
 
 if __name__ == "__main__":
     asyncio.run(main())

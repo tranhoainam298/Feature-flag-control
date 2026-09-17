@@ -268,7 +268,9 @@ async def test_sse_client_disconnect_cleanup() -> None:
         async def stream_worker():
             try:
                 async with AsyncClient(base_url=BASE, timeout=10.0) as stream_client:
-                    async with stream_client.stream("GET", f"{EVAL_PREFIX}/stream", headers=headers) as response:
+                    async with stream_client.stream(
+                        "GET", f"{EVAL_PREFIX}/stream", headers=headers
+                    ) as response:
                         assert response.status_code == 200
                         async for line in response.aiter_lines():
                             if "event: heartbeat" in line:

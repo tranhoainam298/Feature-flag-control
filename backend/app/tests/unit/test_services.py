@@ -1,24 +1,27 @@
 """Unit tests for FlagOps service layer.
 
 Covers direct service method invocations:
-- config_service.py: Schema validation, draft updates, release publish, diff, rollback, secret decryption.
-- flag_debt.py: calculate_debt_score 4-vector breakdown, lifecycle state derivation, recommendations.
-- change_request.py: State machine transitions, four-eyes self-approval check, scheduled execution.
-- targeting.py: Condition tree depth limits, cyclic segment references, atomic rule replacements, rollback on error.
+- config_service.py: Schema validation, draft updates, release publish,
+  diff, rollback, secret decryption.
+- flag_debt.py: calculate_debt_score 4-vector breakdown, lifecycle state
+  derivation, recommendations.
+- change_request.py: State machine transitions, four-eyes self-approval check,
+  scheduled execution.
+- targeting.py: Condition tree depth limits, cyclic segment references,
+  atomic rule replacements, rollback on error.
 """
 
+import uuid
 from datetime import datetime, timedelta, timezone
-from typing import Any
 from uuid import uuid4
 
 import pytest
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.crypto import MASKED_SECRET, encrypt_secret
+from app.core.database import async_session_factory
 from app.core.exceptions import FlagOpsError
-from app.models.change_request import ChangeRequest
-from app.models.config import ConfigItem, ConfigNamespace, ConfigRelease
+from app.models.config import ConfigItem
 from app.models.enums import (
     ApiKeyScope,
     ChangeRequestStatus,
@@ -28,22 +31,26 @@ from app.models.enums import (
     LifecycleState,
     MemberRole,
 )
+from app.models.evaluation import EvaluationEvent
 from app.models.flag import (
     Flag,
     FlagEnvironmentSetting,
-    Segment,
-    TargetingRule,
     Variation,
 )
-from app.models.evaluation import EvaluationEvent
 from app.models.organization import Organization
 from app.models.project import Environment, Project
 from app.models.user import User
+from app.schemas.api_key import ApiKeyCreate
+from app.schemas.auth import RegisterRequest
 from app.schemas.config import (
     ConfigItemInput,
     ConfigNamespaceCreate,
     ConfigReleaseCreate,
 )
+from app.schemas.environment import EnvironmentCreate, EnvironmentUpdate
+from app.schemas.flag import FlagCreate, FlagSettingUpdate, FlagUpdate
+from app.schemas.organization import MemberCreate, MemberUpdate, OrgCreate, OrgUpdate
+from app.schemas.project import ProjectCreate, ProjectUpdate
 from app.schemas.segment import SegmentCreate, SegmentUpdate
 from app.schemas.targeting import (
     DistributionItem,
@@ -51,13 +58,16 @@ from app.schemas.targeting import (
     TargetingRuleCreate,
     TargetingRulesUpdate,
 )
+from app.services import auth as auth_service
 from app.services import config_service, targeting
+from app.services import eval as eval_service
+from app.services import flag_health as flag_health_svc
 from app.services.change_request import change_request_service
 from app.services.config_service import (
     _parse_item_value,
     validate_item_schema,
 )
-from app.core.database import async_session_factory
+from app.services.flag import bump_ruleset_version, create_audit_log, flag_service
 from app.services.flag_debt import (
     DebtWeights,
     FlagSnapshot,
@@ -65,18 +75,7 @@ from app.services.flag_debt import (
     derive_lifecycle_state,
     get_recommendations,
 )
-from app.services import auth as auth_service
-from app.services import flag_health as flag_health_svc
 from app.services.tenancy import tenancy_service
-from app.services.flag import flag_service, bump_ruleset_version, create_audit_log
-from app.services import eval as eval_service
-from app.schemas.auth import RegisterRequest
-from app.schemas.organization import OrgCreate, OrgUpdate, MemberCreate, MemberUpdate
-from app.schemas.project import ProjectCreate, ProjectUpdate
-from app.schemas.environment import EnvironmentCreate, EnvironmentUpdate
-from app.schemas.api_key import ApiKeyCreate
-from app.schemas.flag import FlagCreate, FlagUpdate, FlagSettingUpdate
-import uuid
 
 
 @pytest.fixture
@@ -559,7 +558,9 @@ class TestFlagDebtCalculation:
             now=now,
         )
         assert derive_lifecycle_state(draft_snap) == LifecycleState.DRAFT
-        assert any("chưa được bật" in r for r in get_recommendations(LifecycleState.DRAFT, draft_snap))
+        assert any(
+            "chưa được bật" in r for r in get_recommendations(LifecycleState.DRAFT, draft_snap)
+        )
 
         # 3. Stale via days_since_last_eval >= 14
         stale_eval_snap = FlagSnapshot(
@@ -588,7 +589,10 @@ class TestFlagDebtCalculation:
             now=now,
         )
         assert derive_lifecycle_state(rolled_out_snap) == LifecycleState.ROLLED_OUT
-        assert any("rollout 100%" in r for r in get_recommendations(LifecycleState.ROLLED_OUT, rolled_out_snap))
+        assert any(
+            "rollout 100%" in r
+            for r in get_recommendations(LifecycleState.ROLLED_OUT, rolled_out_snap)
+        )
 
         # 5. Active
         active_snap = FlagSnapshot(
@@ -1075,9 +1079,7 @@ class TestTargetingService:
             },
         )
         with pytest.raises(FlagOpsError) as exc_info:
-            await targeting.create_segment(
-                db_session, test_project, seg2_payload, test_user.id
-            )
+            await targeting.create_segment(db_session, test_project, seg2_payload, test_user.id)
         assert exc_info.value.code == "CYCLIC_SEGMENT_REFERENCE"
 
         # Direct self-reference also raises CYCLIC_SEGMENT_REFERENCE
@@ -1092,9 +1094,7 @@ class TestTargetingService:
         # Point to own key
         self_ref_payload.conditions["value"] = self_ref_payload.key
         with pytest.raises(FlagOpsError) as exc_info:
-            await targeting.create_segment(
-                db_session, test_project, self_ref_payload, test_user.id
-            )
+            await targeting.create_segment(db_session, test_project, self_ref_payload, test_user.id)
         assert exc_info.value.code == "CYCLIC_SEGMENT_REFERENCE"
 
     @pytest.mark.asyncio
@@ -1129,9 +1129,7 @@ class TestTargetingService:
                     priority=1,
                     description="Initial Rule",
                     conditions={"attribute": "plan", "operator": "EQ", "value": "pro"},
-                    distribution=[
-                        DistributionItem(variation_id=var_true.id, weight=100.0)
-                    ],
+                    distribution=[DistributionItem(variation_id=var_true.id, weight=100.0)],
                 )
             ]
         )
@@ -1516,9 +1514,13 @@ class TestFlagHealthService:
         assert len(res.items) >= 1
 
         # Test sorts and filters
-        res_name = await flag_health_svc.get_flag_health_list(db_session, project.id, sort_by="name")
+        res_name = await flag_health_svc.get_flag_health_list(
+            db_session, project.id, sort_by="name"
+        )
         assert len(res_name.items) >= 1
-        res_state = await flag_health_svc.get_flag_health_list(db_session, project.id, sort_by="state")
+        res_state = await flag_health_svc.get_flag_health_list(
+            db_session, project.id, sort_by="state"
+        )
         assert len(res_state.items) >= 1
         res_filtered = await flag_health_svc.get_flag_health_list(
             db_session, project.id, state_filter=LifecycleState.ACTIVE
@@ -1564,7 +1566,9 @@ class TestTenancyService:
 
         # Duplicate slug raises CONFLICT
         with pytest.raises(FlagOpsError) as exc_info:
-            await tenancy_service.create_org(db_session, test_user, OrgCreate(name="Dup", slug=slug))
+            await tenancy_service.create_org(
+                db_session, test_user, OrgCreate(name="Dup", slug=slug)
+            )
         assert exc_info.value.code == "CONFLICT"
 
         # List user orgs
@@ -1574,7 +1578,9 @@ class TestTenancyService:
         # Get & Update Org
         fetched_org = await tenancy_service.get_org(db_session, org.id)
         assert fetched_org.id == org.id
-        updated_org = await tenancy_service.update_org(db_session, org.id, OrgUpdate(name="Renamed Org"))
+        updated_org = await tenancy_service.update_org(
+            db_session, org.id, OrgUpdate(name="Renamed Org")
+        )
         assert updated_org.name == "Renamed Org"
 
         # Member management
@@ -1611,7 +1617,9 @@ class TestTenancyService:
         env = await tenancy_service.create_environment(
             db_session,
             project.id,
-            EnvironmentCreate(name="Staging", key=f"staging-{uuid.uuid4().hex[:4]}", is_production=False),
+            EnvironmentCreate(
+                name="Staging", key=f"staging-{uuid.uuid4().hex[:4]}", is_production=False
+            ),
         )
         envs = await tenancy_service.list_environments(db_session, project.id)
         assert any(e.id == env.id for e in envs)

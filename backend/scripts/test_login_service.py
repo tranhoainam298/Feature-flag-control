@@ -1,7 +1,9 @@
 import asyncio
+
 from app.core.database import async_session_factory
-from app.services.auth import login_user
 from app.core.exceptions import FlagOpsError
+from app.services.auth import login_user
+
 
 async def test():
     async with async_session_factory() as db:
@@ -12,6 +14,7 @@ async def test():
             print(f"Login FAILED: code={e.code}, msg={e.message}, status={e.status_code}")
         except Exception as e:
             print("Login ERROR:", e)
+
 
 if __name__ == "__main__":
     asyncio.run(test())

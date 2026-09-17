@@ -128,7 +128,9 @@ async def run_seed(reset: bool = False) -> dict[str, Any]:
             org = Organization(name="Global Core Infrastructure", slug="global-core-infrastructure")
             session.add(org)
             await session.flush()
-            logger.info("Created organization: Global Core Infrastructure (global-core-infrastructure)")
+            logger.info(
+                "Created organization: Global Core Infrastructure (global-core-infrastructure)"
+            )
         else:
             logger.info("Organization global-core-infrastructure already exists, keeping existing.")
 
@@ -180,7 +182,9 @@ async def run_seed(reset: bool = False) -> dict[str, Any]:
             )
             session.add(project)
             await session.flush()
-            logger.info("Created project: Production Platform Gateway (production-platform-gateway)")
+            logger.info(
+                "Created project: Production Platform Gateway (production-platform-gateway)"
+            )
 
         # 4. Environments (dev, staging, prod)
         envs: dict[str, Environment] = {}
@@ -803,7 +807,13 @@ async def run_seed(reset: bool = False) -> dict[str, Any]:
                     None,
                     {"key": "v3-pricing-engine", "type": "JSON"},
                 ),
-                ("FLAG_CREATE", "flag", "dark-mode-theme", None, {"key": "dark-mode-theme", "type": "STRING"}),
+                (
+                    "FLAG_CREATE",
+                    "flag",
+                    "dark-mode-theme",
+                    None,
+                    {"key": "dark-mode-theme", "type": "STRING"},
+                ),
                 (
                     "FLAG_CREATE",
                     "flag",

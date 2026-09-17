@@ -1,6 +1,7 @@
 """OpenAPI YAML exporter for FlagOps FastAPI backend."""
 
 import sys
+
 import yaml
 
 if hasattr(sys.stdout, "reconfigure") and sys.stdout.encoding != "utf-8":
@@ -18,4 +19,3 @@ def export_openapi() -> str:
 if __name__ == "__main__":
     content = export_openapi()
     sys.stdout.write(content + "\n")
-

@@ -167,7 +167,9 @@ async def test_seed_idempotence():
 
     async with async_session_factory() as session:
         org_count = await session.scalar(
-            select(func.count()).select_from(Organization).where(Organization.slug == "global-core-infrastructure")
+            select(func.count())
+            .select_from(Organization)
+            .where(Organization.slug == "global-core-infrastructure")
         )
         user_count = await session.scalar(
             select(func.count())
