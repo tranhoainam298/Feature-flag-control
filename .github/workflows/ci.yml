@@ -62,16 +62,32 @@ jobs:
         env:
           DATABASE_URL: postgresql+asyncpg://postgres:test@localhost:5432/flagops
           REDIS_URL: redis://localhost:6379/0
-          SECRET_KEY: ci-secret-key-at-least-32-chars-long!
-          CONFIG_MASTER_KEY: ci-master-key-32-bytes-change!!
+          SECRET_KEY: "secure_production_secret_key_at_least_32_chars_long"
+          CONFIG_MASTER_KEY: "0123456789abcdef0123456789abcdef"
         run: alembic upgrade head
+
+      - name: Start FastAPI server in background
+        env:
+          DATABASE_URL: postgresql+asyncpg://postgres:test@localhost:5432/flagops
+          REDIS_URL: redis://localhost:6379/0
+          ENVIRONMENT: staging
+          DEBUG: "false"
+          CONFIG_MASTER_KEY: "0123456789abcdef0123456789abcdef"
+          SECRET_KEY: "secure_production_secret_key_at_least_32_chars_long"
+        run: |
+          python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 > /tmp/api.log 2>&1 &
+          echo $! > /tmp/api.pid
+
+      - name: Wait for API server readiness
+        run: |
+          timeout 30 bash -c 'until curl -s -f http://127.0.0.1:8000/health; do sleep 1; done' || (echo "=== API Server Log ===" && cat /tmp/api.log && exit 1)
 
       - name: Engine Coverage Gate (>= 95%)
         env:
           DATABASE_URL: postgresql+asyncpg://postgres:test@localhost:5432/flagops
           REDIS_URL: redis://localhost:6379/0
-          SECRET_KEY: ci-secret-key-at-least-32-chars-long!
-          CONFIG_MASTER_KEY: ci-master-key-32-bytes-change!!
+          SECRET_KEY: "secure_production_secret_key_at_least_32_chars_long"
+          CONFIG_MASTER_KEY: "0123456789abcdef0123456789abcdef"
         run: |
           pytest app/tests/unit/engine --cov=app/engine --cov-fail-under=95
 
@@ -79,10 +95,17 @@ jobs:
         env:
           DATABASE_URL: postgresql+asyncpg://postgres:test@localhost:5432/flagops
           REDIS_URL: redis://localhost:6379/0
-          SECRET_KEY: ci-secret-key-at-least-32-chars-long!
-          CONFIG_MASTER_KEY: ci-master-key-32-bytes-change!!
+          SECRET_KEY: "secure_production_secret_key_at_least_32_chars_long"
+          CONFIG_MASTER_KEY: "0123456789abcdef0123456789abcdef"
         run: |
           pytest --cov=app --cov-report=term-missing --cov-report=xml --cov-fail-under=75
+
+      - name: Stop background API server
+        if: always()
+        run: |
+          if [ -f /tmp/api.pid ]; then
+            kill $(cat /tmp/api.pid) || true
+          fi
 
   frontend:
     name: Frontend Lint, Typecheck, Test & Build
