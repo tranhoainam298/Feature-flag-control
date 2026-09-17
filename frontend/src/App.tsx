@@ -1,20 +1,45 @@
 import React from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { queryClient } from './lib/query-client';
+import { AppProvider } from './context/AppContext';
+import { Layout } from './components/Layout';
+import { LoginPage } from './pages/LoginPage';
+import { FlagsPage } from './pages/FlagsPage';
+import { FlagDetailPage } from './pages/FlagDetailPage';
+import { FlagHealthPage } from './pages/FlagHealthPage';
+import { ProjectsPage } from './pages/ProjectsPage';
+import { ProjectDetailPage } from './pages/ProjectDetailPage';
+import { SegmentsPage } from './pages/SegmentsPage';
+import { ConfigPage } from './pages/ConfigPage';
+import { ConfigDetailPage } from './pages/ConfigDetailPage';
+import { AuditPage } from './pages/AuditPage';
+import { ChangeRequestsPage } from './pages/ChangeRequestsPage';
 
 export default function App(): React.ReactElement {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-slate-950 text-slate-50 selection:bg-indigo-500 selection:text-white">
-      <main className="flex flex-col items-center gap-4 p-8 text-center">
-        <div className="inline-flex items-center gap-2 rounded-full border border-slate-800 bg-slate-900/60 px-3 py-1 text-xs font-medium text-slate-400">
-          <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
-          Bootstrap Slice 0
-        </div>
-        <h1 className="text-5xl font-extrabold tracking-tight sm:text-6xl bg-gradient-to-r from-slate-100 via-slate-300 to-slate-500 bg-clip-text text-transparent">
-          FlagOps
-        </h1>
-        <p className="max-w-md text-sm text-slate-400">
-          Feature Flag & Application Configuration Management Service
-        </p>
-      </main>
-    </div>
+    <QueryClientProvider client={queryClient}>
+      <AppProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/" element={<Layout />}>
+              <Route index element={<Navigate to="/flags" replace />} />
+              <Route path="flags" element={<FlagsPage />} />
+              <Route path="flags/:id" element={<FlagDetailPage />} />
+              <Route path="change-requests" element={<ChangeRequestsPage />} />
+              <Route path="health" element={<FlagHealthPage />} />
+              <Route path="projects" element={<ProjectsPage />} />
+              <Route path="projects/:id" element={<ProjectDetailPage />} />
+              <Route path="segments" element={<SegmentsPage />} />
+              <Route path="config" element={<ConfigPage />} />
+              <Route path="config/:namespaceId" element={<ConfigDetailPage />} />
+              <Route path="audit" element={<AuditPage />} />
+              <Route path="*" element={<Navigate to="/flags" replace />} />
+            </Route>
+          </Routes>
+        </BrowserRouter>
+      </AppProvider>
+    </QueryClientProvider>
   );
 }

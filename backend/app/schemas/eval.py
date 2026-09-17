@@ -42,6 +42,7 @@ class EventItem(BaseModel):
     variation_id: UUID
     reason: str = Field(..., max_length=30)
     context_key: str = Field(..., min_length=1, max_length=200)
+    context: dict[str, Any] | None = None
     created_at: datetime | None = None
 
 

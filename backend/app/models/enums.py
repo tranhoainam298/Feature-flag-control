@@ -48,3 +48,11 @@ class ChangeRequestStatus(str, enum.Enum):
     REJECTED = "REJECTED"
     APPLIED = "APPLIED"
     CANCELLED = "CANCELLED"
+
+
+class LifecycleState(str, enum.Enum):
+    DRAFT = "DRAFT"
+    ACTIVE = "ACTIVE"
+    ROLLED_OUT = "ROLLED_OUT"
+    STALE = "STALE"
+    ARCHIVED = "ARCHIVED"

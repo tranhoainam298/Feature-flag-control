@@ -13,7 +13,7 @@ migrate:
 	docker compose exec api alembic upgrade head
 
 seed:
-	docker compose exec api python -m app.core.seed
+	docker compose exec api python -m app.seed
 
 test:
 	docker compose exec -T api pytest

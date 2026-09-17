@@ -3,6 +3,7 @@
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query, Request, status
+from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
@@ -13,7 +14,7 @@ from app.core.permissions import (
     require_flag_role,
     require_project_role,
 )
-from app.models.enums import FlagType, MemberRole
+from app.models.enums import ChangeRequestStatus, FlagType, MemberRole
 from app.models.flag import Flag, FlagEnvironmentSetting
 from app.models.organization import Membership
 from app.models.project import Environment, Project
@@ -25,6 +26,7 @@ from app.schemas.flag import (
     FlagSettingUpdate,
     FlagUpdate,
 )
+from app.services.change_request import change_request_service
 from app.services.flag import flag_service
 
 router = APIRouter(tags=["Flags"])
@@ -88,6 +90,11 @@ async def get_flag(
     return flag
 
 
+@router.put(
+    "/api/v1/flags/{flag_id}",
+    response_model=FlagResponse,
+    summary="Cập nhật metadata flag (PUT)",
+)
 @router.patch(
     "/api/v1/flags/{flag_id}",
     response_model=FlagResponse,
@@ -169,12 +176,52 @@ async def update_flag_setting(
     payload: FlagSettingUpdate,
     db: AsyncSession = Depends(get_db),
     flag_and_membership: tuple[Flag, Membership] = Depends(require_flag_role(MemberRole.DEVELOPER)),
-    _env_and_membership: tuple[Environment, Membership] = Depends(
+    env_and_membership: tuple[Environment, Membership] = Depends(
         require_environment_role(MemberRole.DEVELOPER, param_name="env_id")
     ),
     current_user: User = Depends(get_current_user),
-) -> FlagEnvironmentSetting:
+):
     flag, _ = flag_and_membership
+    env, _ = env_and_membership
+
+    # Rule: is_production = True -> DO NOT apply directly, create PENDING ChangeRequest
+    if env.is_production:
+        cr = await change_request_service.create_change_request(
+            db=db,
+            env_id=env.id,
+            user_id=current_user.id,
+            title=f"Update flag setting for {flag.key}",
+            description="Auto-generated change request for production environment",
+            payload={
+                "type": "flag_setting",
+                "flag_id": str(flag.id),
+                "flag_key": flag.key,
+                "setting": payload.model_dump(exclude_unset=True, mode="json"),
+            },
+            status=ChangeRequestStatus.PENDING,
+        )
+        current_setting = await flag_service.get_flag_setting(db, flag.id, env_id)
+        return JSONResponse(
+            status_code=status.HTTP_202_ACCEPTED,
+            content={
+                "id": str(current_setting.id),
+                "flag_id": str(current_setting.flag_id),
+                "environment_id": str(current_setting.environment_id),
+                "enabled": current_setting.enabled,
+                "default_variation_id": str(current_setting.default_variation_id)
+                if current_setting.default_variation_id
+                else None,
+                "off_variation_id": str(current_setting.off_variation_id)
+                if current_setting.off_variation_id
+                else None,
+                "bucketing_key": current_setting.bucketing_key,
+                "change_request_id": str(cr.id),
+                "change_request_status": cr.status.value,
+                "message": "Change request created in PENDING status for production environment",
+            },
+            headers={"X-Change-Request-Id": str(cr.id)},
+        )
+
     return await flag_service.update_flag_setting(
         db=db, flag=flag, env_id=env_id, user=current_user, payload=payload
     )

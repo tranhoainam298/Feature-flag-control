@@ -48,6 +48,7 @@ from app.schemas.eval import (
     EvaluationResponse,
     EventItem,
 )
+from app.services import ruleset_cache
 
 
 class EvaluationTracker:
@@ -361,7 +362,16 @@ async def get_ruleset_payload(
     env: Environment,
     scope: ApiKeyScope,
 ) -> dict[str, Any]:
-    """Serialize the ruleset for SDK / in-process evaluation."""
+    """Serialize the ruleset for SDK / in-process evaluation.
+
+    Uses Redis cache when available. Only SERVER scope payloads are cached
+    to avoid scope-mixing (CLIENT payload is a subset).
+    """
+    if scope == ApiKeyScope.SERVER:
+        cached = await ruleset_cache.get_cached_ruleset(env.id)
+        if cached is not None:
+            return cached
+
     ruleset, _, _ = await load_ruleset_bundle(db, env, scope)
 
     flags_dict: dict[str, Any] = {}
@@ -410,11 +420,16 @@ async def get_ruleset_payload(
             ],
         }
 
-    return {
+    payload = {
         "rulesetVersion": ruleset.ruleset_version,
         "flags": flags_dict,
         "segments": ruleset.segments,
     }
+
+    if scope == ApiKeyScope.SERVER:
+        await ruleset_cache.set_cached_ruleset(env.id, payload)
+
+    return payload
 
 
 async def record_events_batch(
@@ -435,6 +450,7 @@ async def record_events_batch(
                 variation_id=evt.variation_id,
                 reason=evt.reason[:30],
                 context_key_hash=key_hash,
+                context=evt.context or {"targeting_key": evt.context_key},
                 created_at=evt.created_at or now,
             )
         )

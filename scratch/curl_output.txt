@@ -1,0 +1,554 @@
+
+=======================================================
+STEP: 1. Register User
+$ curl.exe -s -X POST http://localhost:8000/api/v1/auth/register -H Content-Type: application/json -d {"email": "curl_demo_2d5032@flagops.io", "password": "StrongPassword123!", "full_name": "Curl Demo User"}
+{
+  "id": "23f2cb5c-8ddd-4835-a782-a9a48810d782",
+  "email": "curl_demo_2d5032@flagops.io",
+  "full_name": "Curl Demo User",
+  "is_active": true,
+  "created_at": "2026-09-17T05:05:16.970019Z",
+  "last_login_at": null
+}
+
+=======================================================
+STEP: 2. Login to get JWT Token
+$ curl.exe -s -X POST http://localhost:8000/api/v1/auth/login -H Content-Type: application/json -d {"email": "curl_demo_2d5032@flagops.io", "password": "StrongPassword123!"}
+{
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyM2YyY2I1Yy04ZGRkLTQ4MzUtYTc4Mi1hOWE0ODgxMGQ3ODIiLCJleHAiOjE3ODk2MjMzMTcsInR5cGUiOiJhY2Nlc3MifQ.l-h8K4wtpjhvdH9dC65p-ZMhZQ-qWPwGxV6LqclcZrg",
+  "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyM2YyY2I1Yy04ZGRkLTQ4MzUtYTc4Mi1hOWE0ODgxMGQ3ODIiLCJleHAiOjE3OTAyMjYzMTcsInR5cGUiOiJyZWZyZXNoIiwianRpIjoiZ2tnLUJLalBOMkJxQktWU1F5Qm1lYVFqTE15dnBmSGcwdW9VWmhhODFsTSJ9.hr16DFX4fxXqktcFYnyCxgkVwVzThrQFpSc1cAFCU9o",
+  "token_type": "bearer"
+}
+
+=======================================================
+STEP: 3. Create Organization
+$ curl.exe -s -X POST http://localhost:8000/api/v1/organizations -H Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyM2YyY2I1Yy04ZGRkLTQ4MzUtYTc4Mi1hOWE0ODgxMGQ3ODIiLCJleHAiOjE3ODk2MjMzMTcsInR5cGUiOiJhY2Nlc3MifQ.l-h8K4wtpjhvdH9dC65p-ZMhZQ-qWPwGxV6LqclcZrg -H Content-Type: application/json -d {"name": "Demo Org 2d5032", "slug": "demo-org-2d5032"}
+{
+  "id": "f0307bf6-f6bd-4103-adfd-097b6028a35c",
+  "name": "Demo Org 2d5032",
+  "slug": "demo-org-2d5032",
+  "created_at": "2026-09-17T05:05:17.140656Z",
+  "updated_at": "2026-09-17T05:05:17.140656Z"
+}
+
+=======================================================
+STEP: 4. Create Project
+$ curl.exe -s -X POST http://localhost:8000/api/v1/organizations/f0307bf6-f6bd-4103-adfd-097b6028a35c/projects -H Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyM2YyY2I1Yy04ZGRkLTQ4MzUtYTc4Mi1hOWE0ODgxMGQ3ODIiLCJleHAiOjE3ODk2MjMzMTcsInR5cGUiOiJhY2Nlc3MifQ.l-h8K4wtpjhvdH9dC65p-ZMhZQ-qWPwGxV6LqclcZrg -H Content-Type: application/json -d {"name": "Billing App", "slug": "billing-app-2d5032"}
+{
+  "id": "a93aef19-65f8-4342-8f3d-ceeed36f4a52",
+  "organization_id": "f0307bf6-f6bd-4103-adfd-097b6028a35c",
+  "name": "Billing App",
+  "slug": "billing-app-2d5032",
+  "default_stale_days": 30,
+  "created_at": "2026-09-17T05:05:17.166297Z",
+  "updated_at": "2026-09-17T05:05:17.166297Z"
+}
+
+=======================================================
+STEP: 5. Get Environments
+$ curl.exe -s -H Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyM2YyY2I1Yy04ZGRkLTQ4MzUtYTc4Mi1hOWE0ODgxMGQ3ODIiLCJleHAiOjE3ODk2MjMzMTcsInR5cGUiOiJhY2Nlc3MifQ.l-h8K4wtpjhvdH9dC65p-ZMhZQ-qWPwGxV6LqclcZrg http://localhost:8000/api/v1/projects/a93aef19-65f8-4342-8f3d-ceeed36f4a52/environments
+[
+  {
+    "id": "a17ff9fd-a40d-4c23-a7f1-fe59a6f2965a",
+    "project_id": "a93aef19-65f8-4342-8f3d-ceeed36f4a52",
+    "name": "Development",
+    "key": "development",
+    "is_production": false,
+    "ruleset_version": 0,
+    "created_at": "2026-09-17T05:05:17.166297Z",
+    "updated_at": "2026-09-17T05:05:17.166297Z"
+  },
+  {
+    "id": "0a5eaf62-0701-4d8d-8e99-60526199ded8",
+    "project_id": "a93aef19-65f8-4342-8f3d-ceeed36f4a52",
+    "name": "Staging",
+    "key": "staging",
+    "is_production": false,
+    "ruleset_version": 0,
+    "created_at": "2026-09-17T05:05:17.166297Z",
+    "updated_at": "2026-09-17T05:05:17.166297Z"
+  },
+  {
+    "id": "8d463c29-9aa9-4a15-8e93-949e35bd48ff",
+    "project_id": "a93aef19-65f8-4342-8f3d-ceeed36f4a52",
+    "name": "Production",
+    "key": "production",
+    "is_production": true,
+    "ruleset_version": 0,
+    "created_at": "2026-09-17T05:05:17.166297Z",
+    "updated_at": "2026-09-17T05:05:17.166297Z"
+  }
+]
+
+=======================================================
+STEP: 6. Create Server API Key
+$ curl.exe -s -X POST http://localhost:8000/api/v1/environments/a17ff9fd-a40d-4c23-a7f1-fe59a6f2965a/api-keys -H Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyM2YyY2I1Yy04ZGRkLTQ4MzUtYTc4Mi1hOWE0ODgxMGQ3ODIiLCJleHAiOjE3ODk2MjMzMTcsInR5cGUiOiJhY2Nlc3MifQ.l-h8K4wtpjhvdH9dC65p-ZMhZQ-qWPwGxV6LqclcZrg -H Content-Type: application/json -d {"name": "Server API Key", "scope": "SERVER"}
+{
+  "id": "5fb43493-c22e-4074-91d5-4989b2d142c8",
+  "environment_id": "a17ff9fd-a40d-4c23-a7f1-fe59a6f2965a",
+  "name": "Server API Key",
+  "key_prefix": "fo_srv_WOJee",
+  "key": "fo_srv_WOJee-i1J_zR7bPqj-NOMQIkOK7EOhSqVWKbn4jT8oM",
+  "scope": "SERVER",
+  "expires_at": null,
+  "created_at": "2026-09-17T05:05:17.221278Z"
+}
+
+=======================================================
+STEP: 7. Create Namespace
+$ curl.exe -s -X POST http://localhost:8000/api/v1/environments/a17ff9fd-a40d-4c23-a7f1-fe59a6f2965a/namespaces -H Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyM2YyY2I1Yy04ZGRkLTQ4MzUtYTc4Mi1hOWE0ODgxMGQ3ODIiLCJleHAiOjE3ODk2MjMzMTcsInR5cGUiOiJhY2Nlc3MifQ.l-h8K4wtpjhvdH9dC65p-ZMhZQ-qWPwGxV6LqclcZrg -H Content-Type: application/json -d {"name": "billing-service", "format": "JSON"}
+{
+  "id": "b4f6903d-534e-4407-833f-31b9318bd3f4",
+  "environment_id": "a17ff9fd-a40d-4c23-a7f1-fe59a6f2965a",
+  "name": "billing-service",
+  "format": "JSON",
+  "current_release_id": null,
+  "created_at": "2026-09-17T05:05:17.249541Z",
+  "updated_at": "2026-09-17T05:05:17.249541Z"
+}
+
+=======================================================
+STEP: 8. Sửa bản nháp (PUT /items)
+$ curl.exe -s -X PUT http://localhost:8000/api/v1/namespaces/b4f6903d-534e-4407-833f-31b9318bd3f4/items -H Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyM2YyY2I1Yy04ZGRkLTQ4MzUtYTc4Mi1hOWE0ODgxMGQ3ODIiLCJleHAiOjE3ODk2MjMzMTcsInR5cGUiOiJhY2Nlc3MifQ.l-h8K4wtpjhvdH9dC65p-ZMhZQ-qWPwGxV6LqclcZrg -H Content-Type: application/json -d {"items": [{"key": "database.url", "value": "postgresql://pg:5432/billing", "value_type": "STRING"}, {"key": "max_connections", "value": "20", "value_type": "INT"}, {"key": "api.secret", "value": "very-secret-token-xyz", "value_type": "STRING", "is_secret": true}]}
+[
+  {
+    "id": "bb42778f-191d-4496-86d5-8716224fef70",
+    "namespace_id": "b4f6903d-534e-4407-833f-31b9318bd3f4",
+    "key": "database.url",
+    "value": "postgresql://pg:5432/billing",
+    "value_type": "STRING",
+    "is_secret": false,
+    "json_schema": null,
+    "comment": null,
+    "created_at": "2026-09-17T05:05:17.279271Z",
+    "updated_at": "2026-09-17T05:05:17.279271Z"
+  },
+  {
+    "id": "9d11fe4c-b675-4ac4-af9d-ee9c694fcb05",
+    "namespace_id": "b4f6903d-534e-4407-833f-31b9318bd3f4",
+    "key": "max_connections",
+    "value": "20",
+    "value_type": "INT",
+    "is_secret": false,
+    "json_schema": null,
+    "comment": null,
+    "created_at": "2026-09-17T05:05:17.279271Z",
+    "updated_at": "2026-09-17T05:05:17.279271Z"
+  },
+  {
+    "id": "02aebf83-1eea-4397-867d-8ddc56125769",
+    "namespace_id": "b4f6903d-534e-4407-833f-31b9318bd3f4",
+    "key": "api.secret",
+    "value": "••••••",
+    "value_type": "STRING",
+    "is_secret": true,
+    "json_schema": null,
+    "comment": null,
+    "created_at": "2026-09-17T05:05:17.279271Z",
+    "updated_at": "2026-09-17T05:05:17.279271Z"
+  }
+]
+
+=======================================================
+STEP: 9. Xem Diff trước khi publish (GET /pending-diff)
+$ curl.exe -s -H Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyM2YyY2I1Yy04ZGRkLTQ4MzUtYTc4Mi1hOWE0ODgxMGQ3ODIiLCJleHAiOjE3ODk2MjMzMTcsInR5cGUiOiJhY2Nlc3MifQ.l-h8K4wtpjhvdH9dC65p-ZMhZQ-qWPwGxV6LqclcZrg http://localhost:8000/api/v1/namespaces/b4f6903d-534e-4407-833f-31b9318bd3f4/pending-diff
+{
+  "added": {
+    "api.secret": "••••••",
+    "database.url": "postgresql://pg:5432/billing",
+    "max_connections": "20"
+  },
+  "removed": {},
+  "changed": {},
+  "unchanged": {}
+}
+
+=======================================================
+STEP: 10. Publish Release v1 (POST /releases)
+$ curl.exe -s -X POST http://localhost:8000/api/v1/namespaces/b4f6903d-534e-4407-833f-31b9318bd3f4/releases -H Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyM2YyY2I1Yy04ZGRkLTQ4MzUtYTc4Mi1hOWE0ODgxMGQ3ODIiLCJleHAiOjE3ODk2MjMzMTcsInR5cGUiOiJhY2Nlc3MifQ.l-h8K4wtpjhvdH9dC65p-ZMhZQ-qWPwGxV6LqclcZrg -H Content-Type: application/json -d {"comment": "Initial release of billing configs"}
+{
+  "id": "d9bbc13d-5f03-4a52-afcf-85e47b606360",
+  "namespace_id": "b4f6903d-534e-4407-833f-31b9318bd3f4",
+  "version": 1,
+  "snapshot": {
+    "items": [
+      {
+        "key": "database.url",
+        "value": "postgresql://pg:5432/billing",
+        "comment": null,
+        "is_secret": false,
+        "value_type": "STRING",
+        "json_schema": null
+      },
+      {
+        "key": "max_connections",
+        "value": "20",
+        "comment": null,
+        "is_secret": false,
+        "value_type": "INT",
+        "json_schema": null
+      },
+      {
+        "key": "api.secret",
+        "value": "7DqSqDkI/sve3ch4B2msgYWZhF6cfMWN7GmsI32Xh1D/84a1jIvBPwBeI1j9sRPxBQ==",
+        "comment": null,
+        "is_secret": true,
+        "value_type": "STRING",
+        "json_schema": null
+      }
+    ],
+    "configs": {
+      "api.secret": "7DqSqDkI/sve3ch4B2msgYWZhF6cfMWN7GmsI32Xh1D/84a1jIvBPwBeI1j9sRPxBQ==",
+      "database.url": "postgresql://pg:5432/billing",
+      "max_connections": "20"
+    },
+    "secrets": [
+      "api.secret"
+    ]
+  },
+  "comment": "Initial release of billing configs",
+  "released_by": "23f2cb5c-8ddd-4835-a782-a9a48810d782",
+  "released_at": "2026-09-17T05:05:17.336336Z",
+  "is_rollback_of": null
+}
+
+=======================================================
+STEP: 11. Client SDK đọc config v1 (/eval/v1/config/billing-service)
+$ curl.exe -s -H X-FlagOps-Key: fo_srv_WOJee-i1J_zR7bPqj-NOMQIkOK7EOhSqVWKbn4jT8oM http://localhost:8000/eval/v1/config/billing-service
+{
+  "version": 1,
+  "namespace": "billing-service",
+  "configs": {
+    "api.secret": "very-secret-token-xyz",
+    "database.url": "postgresql://pg:5432/billing",
+    "max_connections": "20"
+  }
+}
+
+=======================================================
+STEP: 12. Sửa bản nháp lần 2 (Sửa max_conn, xóa db.url, thêm stripe.mode)
+$ curl.exe -s -X PUT http://localhost:8000/api/v1/namespaces/b4f6903d-534e-4407-833f-31b9318bd3f4/items -H Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyM2YyY2I1Yy04ZGRkLTQ4MzUtYTc4Mi1hOWE0ODgxMGQ3ODIiLCJleHAiOjE3ODk2MjMzMTcsInR5cGUiOiJhY2Nlc3MifQ.l-h8K4wtpjhvdH9dC65p-ZMhZQ-qWPwGxV6LqclcZrg -H Content-Type: application/json -d {"items": [{"key": "max_connections", "value": "50", "value_type": "INT"}, {"key": "api.secret", "value": "\u2022\u2022\u2022\u2022\u2022\u2022", "value_type": "STRING", "is_secret": true}, {"key": "stripe.mode", "value": "live", "value_type": "STRING"}]}
+[
+  {
+    "id": "a633b7b7-84c8-4e05-9454-95807258d6d3",
+    "namespace_id": "b4f6903d-534e-4407-833f-31b9318bd3f4",
+    "key": "max_connections",
+    "value": "50",
+    "value_type": "INT",
+    "is_secret": false,
+    "json_schema": null,
+    "comment": null,
+    "created_at": "2026-09-17T05:05:17.393697Z",
+    "updated_at": "2026-09-17T05:05:17.393697Z"
+  },
+  {
+    "id": "ec9f79b5-3218-4508-8224-8cdd191d9496",
+    "namespace_id": "b4f6903d-534e-4407-833f-31b9318bd3f4",
+    "key": "api.secret",
+    "value": "••••••",
+    "value_type": "STRING",
+    "is_secret": true,
+    "json_schema": null,
+    "comment": null,
+    "created_at": "2026-09-17T05:05:17.393697Z",
+    "updated_at": "2026-09-17T05:05:17.393697Z"
+  },
+  {
+    "id": "6c20be62-6a1a-4b4e-91d9-0d230d305652",
+    "namespace_id": "b4f6903d-534e-4407-833f-31b9318bd3f4",
+    "key": "stripe.mode",
+    "value": "live",
+    "value_type": "STRING",
+    "is_secret": false,
+    "json_schema": null,
+    "comment": null,
+    "created_at": "2026-09-17T05:05:17.393697Z",
+    "updated_at": "2026-09-17T05:05:17.393697Z"
+  }
+]
+
+=======================================================
+STEP: 13. Xem Diff giữa Release v1 và bản nháp mới
+$ curl.exe -s -H Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyM2YyY2I1Yy04ZGRkLTQ4MzUtYTc4Mi1hOWE0ODgxMGQ3ODIiLCJleHAiOjE3ODk2MjMzMTcsInR5cGUiOiJhY2Nlc3MifQ.l-h8K4wtpjhvdH9dC65p-ZMhZQ-qWPwGxV6LqclcZrg http://localhost:8000/api/v1/namespaces/b4f6903d-534e-4407-833f-31b9318bd3f4/pending-diff
+{
+  "added": {
+    "stripe.mode": "live"
+  },
+  "removed": {
+    "database.url": "postgresql://pg:5432/billing"
+  },
+  "changed": {
+    "max_connections": {
+      "old": "20",
+      "new": "50"
+    }
+  },
+  "unchanged": {
+    "api.secret": "••••••"
+  }
+}
+
+=======================================================
+STEP: 14. Publish Release v2
+$ curl.exe -s -X POST http://localhost:8000/api/v1/namespaces/b4f6903d-534e-4407-833f-31b9318bd3f4/releases -H Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyM2YyY2I1Yy04ZGRkLTQ4MzUtYTc4Mi1hOWE0ODgxMGQ3ODIiLCJleHAiOjE3ODk2MjMzMTcsInR5cGUiOiJhY2Nlc3MifQ.l-h8K4wtpjhvdH9dC65p-ZMhZQ-qWPwGxV6LqclcZrg -H Content-Type: application/json -d {"comment": "Bump max_connections and enable stripe live"}
+{
+  "id": "ef16979c-4f8f-476b-9e14-9d4ac92538b7",
+  "namespace_id": "b4f6903d-534e-4407-833f-31b9318bd3f4",
+  "version": 2,
+  "snapshot": {
+    "items": [
+      {
+        "key": "max_connections",
+        "value": "50",
+        "comment": null,
+        "is_secret": false,
+        "value_type": "INT",
+        "json_schema": null
+      },
+      {
+        "key": "api.secret",
+        "value": "7DqSqDkI/sve3ch4B2msgYWZhF6cfMWN7GmsI32Xh1D/84a1jIvBPwBeI1j9sRPxBQ==",
+        "comment": null,
+        "is_secret": true,
+        "value_type": "STRING",
+        "json_schema": null
+      },
+      {
+        "key": "stripe.mode",
+        "value": "live",
+        "comment": null,
+        "is_secret": false,
+        "value_type": "STRING",
+        "json_schema": null
+      }
+    ],
+    "configs": {
+      "api.secret": "7DqSqDkI/sve3ch4B2msgYWZhF6cfMWN7GmsI32Xh1D/84a1jIvBPwBeI1j9sRPxBQ==",
+      "stripe.mode": "live",
+      "max_connections": "50"
+    },
+    "secrets": [
+      "api.secret"
+    ]
+  },
+  "comment": "Bump max_connections and enable stripe live",
+  "released_by": "23f2cb5c-8ddd-4835-a782-a9a48810d782",
+  "released_at": "2026-09-17T05:05:17.445484Z",
+  "is_rollback_of": null
+}
+
+=======================================================
+STEP: 15. Client SDK đọc config v2
+$ curl.exe -s -H X-FlagOps-Key: fo_srv_WOJee-i1J_zR7bPqj-NOMQIkOK7EOhSqVWKbn4jT8oM http://localhost:8000/eval/v1/config/billing-service
+{
+  "version": 2,
+  "namespace": "billing-service",
+  "configs": {
+    "api.secret": "very-secret-token-xyz",
+    "stripe.mode": "live",
+    "max_connections": "50"
+  }
+}
+
+=======================================================
+STEP: 16. Rollback về Release v1 (POST /releases/1/rollback)
+$ curl.exe -s -X POST http://localhost:8000/api/v1/namespaces/b4f6903d-534e-4407-833f-31b9318bd3f4/releases/1/rollback -H Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyM2YyY2I1Yy04ZGRkLTQ4MzUtYTc4Mi1hOWE0ODgxMGQ3ODIiLCJleHAiOjE3ODk2MjMzMTcsInR5cGUiOiJhY2Nlc3MifQ.l-h8K4wtpjhvdH9dC65p-ZMhZQ-qWPwGxV6LqclcZrg -H Content-Type: application/json -d {"comment": "Emergency rollback to v1"}
+{
+  "id": "06d5274b-49d6-4713-a659-79cb050458ec",
+  "namespace_id": "b4f6903d-534e-4407-833f-31b9318bd3f4",
+  "version": 3,
+  "snapshot": {
+    "items": [
+      {
+        "key": "database.url",
+        "value": "postgresql://pg:5432/billing",
+        "comment": null,
+        "is_secret": false,
+        "value_type": "STRING",
+        "json_schema": null
+      },
+      {
+        "key": "max_connections",
+        "value": "20",
+        "comment": null,
+        "is_secret": false,
+        "value_type": "INT",
+        "json_schema": null
+      },
+      {
+        "key": "api.secret",
+        "value": "7DqSqDkI/sve3ch4B2msgYWZhF6cfMWN7GmsI32Xh1D/84a1jIvBPwBeI1j9sRPxBQ==",
+        "comment": null,
+        "is_secret": true,
+        "value_type": "STRING",
+        "json_schema": null
+      }
+    ],
+    "configs": {
+      "api.secret": "7DqSqDkI/sve3ch4B2msgYWZhF6cfMWN7GmsI32Xh1D/84a1jIvBPwBeI1j9sRPxBQ==",
+      "database.url": "postgresql://pg:5432/billing",
+      "max_connections": "20"
+    },
+    "secrets": [
+      "api.secret"
+    ]
+  },
+  "comment": "Rollback to v1",
+  "released_by": "23f2cb5c-8ddd-4835-a782-a9a48810d782",
+  "released_at": "2026-09-17T05:05:17.496431Z",
+  "is_rollback_of": "d9bbc13d-5f03-4a52-afcf-85e47b606360"
+}
+
+=======================================================
+STEP: 17. Xem lịch sử releases (GET /releases)
+$ curl.exe -s -H Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyM2YyY2I1Yy04ZGRkLTQ4MzUtYTc4Mi1hOWE0ODgxMGQ3ODIiLCJleHAiOjE3ODk2MjMzMTcsInR5cGUiOiJhY2Nlc3MifQ.l-h8K4wtpjhvdH9dC65p-ZMhZQ-qWPwGxV6LqclcZrg http://localhost:8000/api/v1/namespaces/b4f6903d-534e-4407-833f-31b9318bd3f4/releases
+[
+  {
+    "id": "06d5274b-49d6-4713-a659-79cb050458ec",
+    "namespace_id": "b4f6903d-534e-4407-833f-31b9318bd3f4",
+    "version": 3,
+    "snapshot": {
+      "items": [
+        {
+          "key": "database.url",
+          "value": "postgresql://pg:5432/billing",
+          "comment": null,
+          "is_secret": false,
+          "value_type": "STRING",
+          "json_schema": null
+        },
+        {
+          "key": "max_connections",
+          "value": "20",
+          "comment": null,
+          "is_secret": false,
+          "value_type": "INT",
+          "json_schema": null
+        },
+        {
+          "key": "api.secret",
+          "value": "7DqSqDkI/sve3ch4B2msgYWZhF6cfMWN7GmsI32Xh1D/84a1jIvBPwBeI1j9sRPxBQ==",
+          "comment": null,
+          "is_secret": true,
+          "value_type": "STRING",
+          "json_schema": null
+        }
+      ],
+      "configs": {
+        "api.secret": "7DqSqDkI/sve3ch4B2msgYWZhF6cfMWN7GmsI32Xh1D/84a1jIvBPwBeI1j9sRPxBQ==",
+        "database.url": "postgresql://pg:5432/billing",
+        "max_connections": "20"
+      },
+      "secrets": [
+        "api.secret"
+      ]
+    },
+    "comment": "Rollback to v1",
+    "released_by": "23f2cb5c-8ddd-4835-a782-a9a48810d782",
+    "released_at": "2026-09-17T05:05:17.496431Z",
+    "is_rollback_of": "d9bbc13d-5f03-4a52-afcf-85e47b606360"
+  },
+  {
+    "id": "ef16979c-4f8f-476b-9e14-9d4ac92538b7",
+    "namespace_id": "b4f6903d-534e-4407-833f-31b9318bd3f4",
+    "version": 2,
+    "snapshot": {
+      "items": [
+        {
+          "key": "max_connections",
+          "value": "50",
+          "comment": null,
+          "is_secret": false,
+          "value_type": "INT",
+          "json_schema": null
+        },
+        {
+          "key": "api.secret",
+          "value": "7DqSqDkI/sve3ch4B2msgYWZhF6cfMWN7GmsI32Xh1D/84a1jIvBPwBeI1j9sRPxBQ==",
+          "comment": null,
+          "is_secret": true,
+          "value_type": "STRING",
+          "json_schema": null
+        },
+        {
+          "key": "stripe.mode",
+          "value": "live",
+          "comment": null,
+          "is_secret": false,
+          "value_type": "STRING",
+          "json_schema": null
+        }
+      ],
+      "configs": {
+        "api.secret": "7DqSqDkI/sve3ch4B2msgYWZhF6cfMWN7GmsI32Xh1D/84a1jIvBPwBeI1j9sRPxBQ==",
+        "stripe.mode": "live",
+        "max_connections": "50"
+      },
+      "secrets": [
+        "api.secret"
+      ]
+    },
+    "comment": "Bump max_connections and enable stripe live",
+    "released_by": "23f2cb5c-8ddd-4835-a782-a9a48810d782",
+    "released_at": "2026-09-17T05:05:17.445484Z",
+    "is_rollback_of": null
+  },
+  {
+    "id": "d9bbc13d-5f03-4a52-afcf-85e47b606360",
+    "namespace_id": "b4f6903d-534e-4407-833f-31b9318bd3f4",
+    "version": 1,
+    "snapshot": {
+      "items": [
+        {
+          "key": "database.url",
+          "value": "postgresql://pg:5432/billing",
+          "comment": null,
+          "is_secret": false,
+          "value_type": "STRING",
+          "json_schema": null
+        },
+        {
+          "key": "max_connections",
+          "value": "20",
+          "comment": null,
+          "is_secret": false,
+          "value_type": "INT",
+          "json_schema": null
+        },
+        {
+          "key": "api.secret",
+          "value": "7DqSqDkI/sve3ch4B2msgYWZhF6cfMWN7GmsI32Xh1D/84a1jIvBPwBeI1j9sRPxBQ==",
+          "comment": null,
+          "is_secret": true,
+          "value_type": "STRING",
+          "json_schema": null
+        }
+      ],
+      "configs": {
+        "api.secret": "7DqSqDkI/sve3ch4B2msgYWZhF6cfMWN7GmsI32Xh1D/84a1jIvBPwBeI1j9sRPxBQ==",
+        "database.url": "postgresql://pg:5432/billing",
+        "max_connections": "20"
+      },
+      "secrets": [
+        "api.secret"
+      ]
+    },
+    "comment": "Initial release of billing configs",
+    "released_by": "23f2cb5c-8ddd-4835-a782-a9a48810d782",
+    "released_at": "2026-09-17T05:05:17.336336Z",
+    "is_rollback_of": null
+  }
+]
+
+=======================================================
+STEP: 18. Client SDK đọc config sau rollback (v3 mang giá trị v1)
+$ curl.exe -s -H X-FlagOps-Key: fo_srv_WOJee-i1J_zR7bPqj-NOMQIkOK7EOhSqVWKbn4jT8oM http://localhost:8000/eval/v1/config/billing-service
+{
+  "version": 3,
+  "namespace": "billing-service",
+  "configs": {
+    "api.secret": "very-secret-token-xyz",
+    "database.url": "postgresql://pg:5432/billing",
+    "max_connections": "20"
+  }
+}

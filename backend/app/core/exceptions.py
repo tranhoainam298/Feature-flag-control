@@ -28,6 +28,10 @@ def get_request_id(request: Request) -> str:
 def register_exception_handlers(app: FastAPI) -> None:
     @app.exception_handler(FlagOpsError)
     async def flagops_exception_handler(request: Request, exc: FlagOpsError) -> JSONResponse:
+        headers: dict[str, str] = {}
+        if exc.status_code == 429:
+            headers["Retry-After"] = str(exc.details.get("retry_after", 60))
+            headers["X-RateLimit-Remaining"] = str(exc.details.get("remaining", 0))
         return JSONResponse(
             status_code=exc.status_code,
             content={
@@ -38,6 +42,7 @@ def register_exception_handlers(app: FastAPI) -> None:
                 },
                 "request_id": get_request_id(request),
             },
+            headers=headers or None,
         )
 
     @app.exception_handler(RequestValidationError)

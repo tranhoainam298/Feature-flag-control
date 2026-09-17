@@ -1,0 +1,66 @@
+/* Taste-skill & FlagOps Design Tokens — Dark Tech Theme */
+:root {
+  /* Surfaces & Canvas */
+  --bg-canvas: #09090b;
+  --bg-surface: #121215;
+  --bg-surface-elevated: #18181b;
+  --bg-surface-hover: #202025;
+  --bg-surface-active: #27272a;
+
+  /* Hairline Borders */
+  --border-subtle: #27272a;
+  --border-default: #3f3f46;
+  --border-strong: #52525b;
+
+  /* Typography (High Contrast WCAG AA) */
+  --text-primary: #f4f4f5;
+  --text-secondary: #a1a1aa;
+  --text-muted: #71717a;
+  --text-inverse: #09090b;
+
+  /* Brand / Primary Accent */
+  --primary: #6366f1;
+  --primary-hover: #4f46e5;
+  --primary-active: #4338ca;
+  --primary-glow: rgba(99, 102, 241, 0.15);
+  --focus-ring: #818cf8;
+
+  /* Semantic Flag Status */
+  --flag-on: #10b981;
+  --flag-on-bg: rgba(16, 185, 129, 0.12);
+  --flag-on-border: rgba(16, 185, 129, 0.28);
+
+  --flag-off: #71717a;
+  --flag-off-bg: rgba(113, 113, 122, 0.14);
+  --flag-off-border: rgba(113, 113, 122, 0.28);
+
+  /* Status Colors */
+  --color-success: #10b981;
+  --color-danger: #ef4444;
+  --color-warning: #f59e0b;
+  --color-info: #0ea5e9;
+
+  /* Radius */
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-full: 9999px;
+}
+
+/* Custom Scrollbar for dense data views */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-canvas);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-subtle);
+  border-radius: var(--radius-full);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border-default);
+}

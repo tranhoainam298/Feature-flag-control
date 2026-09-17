@@ -671,13 +671,23 @@ async def test_stream_emits_ruleset_updated_event() -> None:
                 select(Environment.ruleset_version).where(Environment.id == env_uuid)
             )
 
-        from app.api.eval.router import _ruleset_event_stream
+        import json
 
-        stream = _ruleset_event_stream(env_uuid, poll_interval=0.05, heartbeat_interval=0.05)
+        from app.api.eval.router import _ruleset_event_stream
+        from app.services import ruleset_cache
+
+        stream = _ruleset_event_stream(env_uuid, heartbeat_interval=25.0)
         try:
+            hb = await asyncio.wait_for(anext(stream), timeout=5)
+            assert hb.event == "heartbeat"
+
+            # Publish ruleset_updated
+            await ruleset_cache.invalidate(env_uuid, version=version or 0)
             frame = await asyncio.wait_for(anext(stream), timeout=5)
         finally:
             await stream.aclose()
 
-        assert frame.startswith("event: ruleset_updated")
-        assert f'"rulesetVersion": {version}' in frame
+        assert frame.event == "ruleset_updated"
+        payload = json.loads(str(frame.data))
+        assert payload["rulesetVersion"] == version
+        assert payload["environmentId"] == str(env_uuid)

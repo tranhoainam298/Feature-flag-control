@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FlagOps Demo Portal — Feature Flag & Configuration Showcase</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+  <!-- Top Navigation -->
+  <header class="navbar">
+    <div class="brand">
+      <div class="brand-icon">⚑</div>
+      <div>
+        <div class="brand-title">FlagOps Demo Portal</div>
+        <div class="brand-subtitle">Python SDK (in_process mode · 5s sync)</div>
+      </div>
+    </div>
+    <div class="nav-badges">
+      <span class="badge badge-neutral">ENV: DEV</span>
+      <span id="sdk-status-badge" class="badge {% if sdk_health.is_ready %}badge-ready{% else %}badge-degraded{% endif %}">
+        <span class="dot {% if sdk_health.is_ready %}pulse{% endif %}"></span>
+        <span id="sdk-status-text">{{ sdk_health.status_label }}</span>
+      </span>
+      <span id="ruleset-badge" class="badge badge-neutral">Ruleset: v<span id="ruleset-ver">{{ sdk_health.ruleset_version }}</span></span>
+      <span id="polling-badge" class="badge badge-neutral">Sync in: <span id="polling-timer">5</span>s</span>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <!-- KPI Summary Row -->
+    <div class="grid-cards">
+      <div class="card-kpi">
+        <span class="kpi-label">Primary Flag</span>
+        <span class="kpi-value" id="kpi-checkout-state">
+          {% if checkout_eval_vn.value %}checkout-v2 (ON){% else %}checkout-v2 (OFF){% endif %}
+        </span>
+        <span class="kpi-desc">Targeting rule: VN Premium users</span>
+      </div>
+
+      <div class="card-kpi">
+        <span class="kpi-label">Config Center</span>
+        <span class="kpi-value" id="kpi-timeout-val">{{ payment_timeout_ms }}ms</span>
+        <span class="kpi-desc">Gateway: <strong id="kpi-gateway-val">{{ payment_gateway }}</strong> (payment-service)</span>
+      </div>
+
+      <div class="card-kpi">
+        <span class="kpi-label">Engine Mode</span>
+        <span class="kpi-value">In-Process</span>
+        <span class="kpi-desc">Sub-millisecond zero-network evaluations</span>
+      </div>
+    </div>
+
+    <!-- Section 1: Live Checkout Feature Toggle Showcase -->
+    <section class="section">
+      <div class="section-header">
+        <div>
+          <h2 class="section-title">Feature Showcase: checkout-v2</h2>
+          <p class="section-subtitle">Toggling this flag on the backend will update this UI in &lt; 10 seconds without restarting or reloading.</p>
+        </div>
+        <div class="badge badge-neutral">
+          Live Status: <strong id="checkout-live-label" style="margin-left: 4px; color: {% if checkout_eval_vn.value %}var(--accent-emerald){% else %}var(--text-secondary){% endif %};">
+            {% if checkout_eval_vn.value %}Active (V2){% else %}Inactive (Legacy){% endif %}
+          </strong>
+        </div>
+      </div>
+
+      <div class="checkout-container">
+        <!-- Flow A: Modern V2 Checkout -->
+        <div id="flow-v2-box" class="checkout-box {% if checkout_eval_vn.value %}active-flow{% endif %}">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span class="flow-tag modern">checkout-v2 = TRUE</span>
+            <span class="badge badge-ready" style="font-size: 11px;">Single-Click Experience</span>
+          </div>
+          <div>
+            <h3 style="font-size: 18px; font-weight: 600;">Express 1-Click Checkout</h3>
+            <p style="font-size: 13px; color: var(--text-secondary); margin-top: 4px;">Streamlined single-page checkout with biometric payment integration.</p>
+          </div>
+          
+          <div style="background-color: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <div style="font-size: 14px; font-weight: 600;">FlagOps Enterprise Plan</div>
+              <div style="font-size: 12px; color: var(--text-muted);">Billed annually ($99/mo)</div>
+            </div>
+            <div style="font-size: 18px; font-weight: 700;">$1,188</div>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 6px;">
+            <button class="btn btn-apple" type="button" onclick="alert('Demo: Express Apple Pay triggered via checkout-v2!')">
+               Pay with Apple Pay
+            </button>
+            <button class="btn btn-primary" type="button" onclick="alert('Demo: Instant 1-Click Pay confirmed!')">
+              ⚡ Instant 1-Click Pay ($1,188)
+            </button>
+          </div>
+          <div style="font-size: 12px; color: var(--text-muted); text-align: center; font-family: var(--font-mono);">
+            Reason: <span id="v2-reason-tag">{{ checkout_eval_vn.reason.value }}</span> · Variant: true
+          </div>
+        </div>
+
+        <!-- Flow B: Legacy Multi-Step Checkout -->
+        <div id="flow-legacy-box" class="checkout-box {% if not checkout_eval_vn.value %}active-flow{% endif %}">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span class="flow-tag legacy">checkout-v2 = FALSE</span>
+            <span class="badge badge-neutral" style="font-size: 11px;">Legacy 3-Step Multi-Page</span>
+          </div>
+          <div>
+            <h3 style="font-size: 18px; font-weight: 600;">Traditional 3-Step Checkout</h3>
+            <p style="font-size: 13px; color: var(--text-secondary); margin-top: 4px;">Older checkout flow with sequential form steps and manual address input.</p>
+          </div>
+
+          <div style="background-color: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px; display: flex; flex-direction: column; gap: 8px;">
+            <div style="display: flex; gap: 10px; font-size: 12px; font-family: var(--font-mono);">
+              <span style="color: var(--accent-blue); font-weight: 600;">[1. Shipping]</span>
+              <span style="color: var(--text-muted);">[2. Payment]</span>
+              <span style="color: var(--text-muted);">[3. Review]</span>
+            </div>
+            <input class="form-input" type="text" placeholder="Shipping Address..." readonly value="123 Nguyen Hue, District 1, HCMC">
+            <input class="form-input" type="text" placeholder="Card Number..." readonly value="•••• •••• •••• 4242">
+          </div>
+
+          <button class="btn btn-secondary" type="button" onclick="alert('Demo: Legacy multi-step checkout form')">
+            Continue to Next Step →
+          </button>
+          <div style="font-size: 12px; color: var(--text-muted); text-align: center; font-family: var(--font-mono);">
+            Reason: <span id="legacy-reason-tag">{{ checkout_eval_us.reason.value }}</span> · Variant: false
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 2: Interactive Context Evaluation Playground -->
+    <section class="section">
+      <div class="section-header">
+        <div>
+          <h2 class="section-title">Context Evaluation Playground</h2>
+          <p class="section-subtitle">Evaluate any flag with custom user attributes. Executed purely in-process with zero network overhead.</p>
+        </div>
+        <div class="badge badge-neutral">Pure Zero-I/O Engine</div>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label" for="eval-flag">Target Flag Key</label>
+          <select id="eval-flag" class="form-select">
+            <option value="checkout-v2">checkout-v2 (Rule: VN + Premium)</option>
+            <option value="new-homepage">new-homepage (Rollout: 20/80)</option>
+            <option value="dark-mode">dark-mode (100% on in dev)</option>
+            <option value="payment-v2">payment-v2 (Multivariate: 34/33/33)</option>
+            <option value="recommendation-engine">recommendation-engine (JSON config)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="eval-user">User ID (userId)</label>
+          <input id="eval-user" class="form-input" type="text" value="user_vn_vip">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="eval-country">Country</label>
+          <select id="eval-country" class="form-select">
+            <option value="VN">VN (Vietnam)</option>
+            <option value="US">US (United States)</option>
+            <option value="SG">SG (Singapore)</option>
+            <option value="JP">JP (Japan)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="eval-plan">Subscription Plan</label>
+          <select id="eval-plan" class="form-select">
+            <option value="premium">premium (Premium Tier)</option>
+            <option value="standard">standard (Standard Tier)</option>
+            <option value="free">free (Free Tier)</option>
+          </select>
+        </div>
+      </div>
+
+      <button class="btn btn-primary" type="button" id="btn-run-eval">
+        ⚡ Evaluate Flag In-Process
+      </button>
+
+      <!-- Evaluation Output -->
+      <div id="eval-output-container" style="margin-top: 18px; display: none;">
+        <div class="eval-result-card">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 13px; font-weight: 600; color: var(--text-secondary);">Evaluation Result</span>
+            <span class="badge badge-ready" id="eval-latency-tag">0.05 ms</span>
+          </div>
+          <div class="eval-details">
+            <div><span class="eval-prop">Value: </span><span class="eval-val" id="res-val">-</span></div>
+            <div><span class="eval-prop">Variant: </span><span class="eval-val" id="res-var">-</span></div>
+            <div><span class="eval-prop">Reason: </span><span class="eval-val" id="res-reason">-</span></div>
+          </div>
+          <pre id="res-json" style="display: none;"></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 3: 1,000-User Monte Carlo Rollout Simulator -->
+    <section class="section">
+      <div class="section-header">
+        <div>
+          <h2 class="section-title">1,000-User Monte Carlo Rollout Simulator</h2>
+          <p class="section-subtitle">Simulate 1,000 distinct users through MurmurHash3 bucketing to verify real-world percentage distribution.</p>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 16px; align-items: center; flex-wrap: wrap;">
+        <select id="sim-flag" class="form-select" style="max-width: 320px;">
+          <option value="new-homepage">new-homepage (Expected: 20% True / 80% False)</option>
+          <option value="payment-v2">payment-v2 (Expected: 34% Control / 33% A / 33% B)</option>
+        </select>
+        <button class="btn btn-secondary" type="button" id="btn-run-sim">
+          ▶ Run 1,000 In-Process Evaluations
+        </button>
+      </div>
+
+      <div id="sim-output" class="sim-results" style="display: none;">
+        <div style="display: flex; justify-content: space-between; font-size: 13px; color: var(--text-secondary);">
+          <span>Distribution Bar (<span id="sim-total-evals">1,000</span> evaluations in <span id="sim-time">--</span>ms):</span>
+          <span>Avg latency: <strong id="sim-avg-us">--</strong> µs/eval</span>
+        </div>
+
+        <div class="progress-track" id="sim-progress-track">
+          <!-- Dynamic progress segments -->
+        </div>
+
+        <table class="table-stats" id="sim-stats-table">
+          <thead>
+            <tr>
+              <th>Variation</th>
+              <th>Sample Count</th>
+              <th>Observed %</th>
+            </tr>
+          </thead>
+          <tbody id="sim-stats-body">
+            <!-- Dynamic rows -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    // Live polling every 3 seconds for seamless demo without restart
+    let pollingSeconds = 5;
+    const pollingTimerEl = document.getElementById("polling-timer");
+    const sdkBadgeEl = document.getElementById("sdk-status-badge");
+    const sdkStatusTextEl = document.getElementById("sdk-status-text");
+    const rulesetVerEl = document.getElementById("ruleset-ver");
+    const flowV2Box = document.getElementById("flow-v2-box");
+    const flowLegacyBox = document.getElementById("flow-legacy-box");
+    const liveLabel = document.getElementById("checkout-live-label");
+    const kpiCheckoutState = document.getElementById("kpi-checkout-state");
+    const kpiTimeoutVal = document.getElementById("kpi-timeout-val");
+
+    async function checkStatus() {
+      try {
+        const resp = await fetch("/api/status");
+        if (resp.ok) {
+          const data = await resp.json();
+          // Update SDK badge
+          if (data.is_ready) {
+            sdkBadgeEl.className = "badge badge-ready";
+            sdkStatusTextEl.innerText = data.status_label;
+          } else {
+            sdkBadgeEl.className = "badge badge-degraded";
+            sdkStatusTextEl.innerText = "SDK Degraded (Serving Cache)";
+          }
+
+          // Update ruleset version
+          rulesetVerEl.innerText = data.ruleset_version;
+          kpiTimeoutVal.innerText = data.payment_timeout_ms + "ms";
+
+          // Dynamically toggle checkout UI
+          if (data.checkout_v2_enabled) {
+            flowV2Box.classList.add("active-flow");
+            flowLegacyBox.classList.remove("active-flow");
+            liveLabel.innerText = "Active (V2)";
+            liveLabel.style.color = "var(--accent-emerald)";
+            kpiCheckoutState.innerText = "checkout-v2 (ON)";
+          } else {
+            flowV2Box.classList.remove("active-flow");
+            flowLegacyBox.classList.add("active-flow");
+            liveLabel.innerText = "Inactive (Legacy)";
+            liveLabel.style.color = "var(--text-secondary)";
+            kpiCheckoutState.innerText = "checkout-v2 (OFF)";
+          }
+        }
+      } catch (err) {
+        // Backend offline or unreachable
+        sdkBadgeEl.className = "badge badge-degraded";
+        sdkStatusTextEl.innerText = "SDK Offline (Using Cache)";
+      }
+    }
+
+    // Countdown interval
+    setInterval(() => {
+      pollingSeconds -= 1;
+      if (pollingSeconds <= 0) {
+        pollingSeconds = 5;
+        checkStatus();
+      }
+      pollingTimerEl.innerText = pollingSeconds;
+    }, 1000);
+
+    // Context Evaluation button handler
+    document.getElementById("btn-run-eval").addEventListener("click", async () => {
+      const flagKey = document.getElementById("eval-flag").value;
+      const userId = document.getElementById("eval-user").value;
+      const country = document.getElementById("eval-country").value;
+      const plan = document.getElementById("eval-plan").value;
+
+      try {
+        const res = await fetch("/api/evaluate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ flag_key: flagKey, user_id: userId, country: country, plan: plan })
+        });
+        const data = await res.json();
+        
+        document.getElementById("eval-output-container").style.display = "block";
+        document.getElementById("res-val").innerText = typeof data.value === "object" ? JSON.stringify(data.value) : data.value;
+        document.getElementById("res-var").innerText = data.variant;
+        document.getElementById("res-reason").innerText = data.reason;
+        document.getElementById("eval-latency-tag").innerText = data.latency_us + " µs";
+
+        const pre = document.getElementById("res-json");
+        if (typeof data.value === "object") {
+          pre.style.display = "block";
+          pre.innerText = JSON.stringify(data.value, null, 2);
+        } else {
+          pre.style.display = "none";
+        }
+      } catch (e) {
+        alert("Evaluation request failed: " + e);
+      }
+    });
+
+    // 1000 User Simulation handler
+    document.getElementById("btn-run-sim").addEventListener("click", async () => {
+      const flagKey = document.getElementById("sim-flag").value;
+      const btn = document.getElementById("btn-run-sim");
+      btn.innerText = "Running 1,000 evaluations...";
+      btn.disabled = true;
+
+      try {
+        const res = await fetch("/api/simulate-1000", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ flag_key: flagKey, sample_size: 1000 })
+        });
+        const data = await res.json();
+
+        document.getElementById("sim-output").style.display = "flex";
+        document.getElementById("sim-total-evals").innerText = data.sample_size;
+        document.getElementById("sim-time").innerText = data.total_time_ms;
+        document.getElementById("sim-avg-us").innerText = data.avg_eval_us;
+
+        // Render progress segments and stats table
+        const track = document.getElementById("sim-progress-track");
+        const tbody = document.getElementById("sim-stats-body");
+        track.innerHTML = "";
+        tbody.innerHTML = "";
+
+        const colors = ["seg-0", "seg-1", "seg-2", "seg-3"];
+        let idx = 0;
+
+        for (const [v, pct] of Object.entries(data.percentages)) {
+          const seg = document.createElement("div");
+          seg.className = `progress-segment ${colors[idx % colors.length]}`;
+          seg.style.width = pct + "%";
+          seg.innerText = `${v}: ${pct}%`;
+          track.appendChild(seg);
+
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td><strong>${v}</strong></td>
+            <td>${data.counts[v]} users</td>
+            <td><strong>${pct}%</strong></td>
+          `;
+          tbody.appendChild(row);
+          idx++;
+        }
+      } catch (err) {
+        alert("Simulation failed: " + err);
+      } finally {
+        btn.innerText = "▶ Run 1,000 In-Process Evaluations";
+        btn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>

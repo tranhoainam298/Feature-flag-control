@@ -46,6 +46,7 @@ services:
     volumes:
       - ./backend:/app
       - ./docs:/docs
+      - ./sdk:/sdk
     ports:
       - "8000:8000"
     depends_on:
@@ -72,6 +73,28 @@ services:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:3000/"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  demo:
+    build:
+      context: .
+      dockerfile: demo-app/Dockerfile
+    container_name: flagops-demo
+    restart: unless-stopped
+    environment:
+      FLAGOPS_BASE_URL: http://api:8000
+      FLAGOPS_API_KEY: fo_srv_dev_secret_key_demo_12345678
+      FLAGOPS_POLLING_INTERVAL: "5.0"
+      PORT: "3001"
+    ports:
+      - "3001:3001"
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/"]
       interval: 5s
       timeout: 5s
       retries: 5

@@ -2,13 +2,14 @@ from typing import Any
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, status
+from fastapi.responses import JSONResponse
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.exceptions import FlagOpsError
 from app.core.permissions import require_flag_role
-from app.models.enums import MemberRole
+from app.models.enums import ChangeRequestStatus, MemberRole
 from app.models.flag import Flag
 from app.models.project import Environment
 from app.schemas.targeting import (
@@ -20,6 +21,7 @@ from app.schemas.targeting import (
     TargetingRulesUpdate,
 )
 from app.services import targeting as targeting_service
+from app.services.change_request import change_request_service
 
 router = APIRouter(
     prefix="/api/v1/flags/{flag_id}/environments/{env_id}",
@@ -62,10 +64,42 @@ async def put_targeting_rules_atomic(
     rules_data: TargetingRulesUpdate,
     flag_and_member: tuple[Flag, Any] = Depends(require_flag_role(MemberRole.DEVELOPER)),
     db: AsyncSession = Depends(get_db),
-) -> list[TargetingRuleResponse]:
+):
     """Atomically replace all targeting rules for a flag in an environment."""
     flag, membership = flag_and_member
     env = await _get_env_in_flag_project(db, flag, env_id)
+
+    # Rule: is_production = True -> DO NOT apply directly, create PENDING ChangeRequest
+    if env.is_production:
+        cr = await change_request_service.create_change_request(
+            db=db,
+            env_id=env.id,
+            user_id=membership.user_id,
+            title=f"Update targeting rules for {flag.key}",
+            description="Auto-generated change request for production environment",
+            payload={
+                "type": "targeting_rules",
+                "flag_id": str(flag.id),
+                "flag_key": flag.key,
+                "rules": [r.model_dump(mode="json") for r in rules_data.rules],
+            },
+            status=ChangeRequestStatus.PENDING,
+        )
+        existing_rules = await targeting_service.get_targeting_rules(db, flag.id, env_id)
+        return JSONResponse(
+            status_code=status.HTTP_202_ACCEPTED,
+            content={
+                "change_request_id": str(cr.id),
+                "change_request_status": cr.status.value,
+                "message": "Change request created in PENDING status for production environment",
+                "rules": [
+                    TargetingRuleResponse.model_validate(r).model_dump(mode="json")
+                    for r in existing_rules
+                ],
+            },
+            headers={"X-Change-Request-Id": str(cr.id)},
+        )
+
     new_rules = await targeting_service.set_targeting_rules_atomic(
         db, flag=flag, env=env, rules_data=rules_data, user_id=membership.user_id
     )

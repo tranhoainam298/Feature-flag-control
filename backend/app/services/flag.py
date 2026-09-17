@@ -15,10 +15,11 @@ from app.models.flag import Flag, FlagEnvironmentSetting, Variation
 from app.models.project import Environment, Project
 from app.models.user import User
 from app.schemas.flag import FlagCreate, FlagSettingUpdate, FlagUpdate, VariationCreate
+from app.services import ruleset_cache
 
 
 async def bump_ruleset_version(db: AsyncSession, env_id: UUID) -> int:
-    """Increment environment.ruleset_version by 1 on any write mutation."""
+    """Increment environment.ruleset_version by 1, then invalidate Redis cache."""
     stmt = (
         update(Environment)
         .where(Environment.id == env_id)
@@ -26,7 +27,9 @@ async def bump_ruleset_version(db: AsyncSession, env_id: UUID) -> int:
         .returning(Environment.ruleset_version)
     )
     result = await db.scalar(stmt)
-    return result or 0
+    new_ver = result or 0
+    await ruleset_cache.invalidate(env_id, version=new_ver)
+    return new_ver
 
 
 async def create_audit_log(

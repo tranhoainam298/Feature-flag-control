@@ -4,7 +4,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=[".env", "../.env"],
         env_file_encoding="utf-8",
         extra="ignore",
     )
@@ -13,6 +13,9 @@ class Settings(BaseSettings):
         default="postgresql+asyncpg://postgres:flagops@localhost:5432/flagops"
     )
     REDIS_URL: str = Field(default="redis://localhost:6379/0")
+    REDIS_ENABLED: bool = Field(default=True)
+    RULESET_CACHE_TTL_SECONDS: int = Field(default=300)
+    EVAL_RATE_LIMIT_PER_MINUTE: int = Field(default=1000)
 
     SECRET_KEY: str = Field(default="change-me-to-a-random-string-at-least-32-chars")
     JWT_ALGORITHM: str = Field(default="HS256")
@@ -27,6 +30,12 @@ class Settings(BaseSettings):
     LOG_LEVEL: str = Field(default="INFO")
 
     CORS_ORIGINS: str = Field(default="http://localhost:3000,http://localhost:5173")
+
+    # Flag lifecycle debt score weights (must sum to 1.0)
+    DEBT_W_AGE: float = Field(default=0.25)
+    DEBT_W_ROLLOUT: float = Field(default=0.35)
+    DEBT_W_STALENESS: float = Field(default=0.25)
+    DEBT_W_TEMPORARY: float = Field(default=0.15)
 
     @property
     def cors_origins_list(self) -> list[str]:

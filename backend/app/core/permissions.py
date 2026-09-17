@@ -18,6 +18,8 @@ from sqlalchemy.orm import selectinload
 from app.core.database import get_db
 from app.core.deps import get_current_user
 from app.core.exceptions import FlagOpsError
+from app.models.change_request import ChangeRequest
+from app.models.config import ConfigNamespace
 from app.models.enums import MemberRole
 from app.models.flag import Flag
 from app.models.organization import Membership
@@ -349,5 +351,49 @@ def require_flag_role(min_role: MemberRole = MemberRole.VIEWER) -> Callable:
                 status_code=403,
             )
         return flag, membership
+
+    return _check
+
+
+def require_namespace_role(min_role: MemberRole = MemberRole.VIEWER) -> Callable:
+    """Check user has access to namespace's environment AND has role >= min_role."""
+    min_rank = ROLE_RANK[min_role]
+
+    async def _check(
+        namespace_id: UUID,
+        user: User = Depends(get_current_user),
+        db: AsyncSession = Depends(get_db),
+    ) -> tuple[ConfigNamespace, Membership]:
+        ns = await db.scalar(select(ConfigNamespace).where(ConfigNamespace.id == namespace_id))
+        if not ns:
+            raise FlagOpsError(
+                code="NAMESPACE_NOT_FOUND",
+                message="Namespace not found",
+                status_code=404,
+            )
+        _, membership = await _check_env_impl(ns.environment_id, user, db, min_rank)
+        return ns, membership
+
+    return _check
+
+
+def require_change_request_role(min_role: MemberRole = MemberRole.VIEWER) -> Callable:
+    """Check user has access to change request's environment AND has role >= min_role."""
+    min_rank = ROLE_RANK[min_role]
+
+    async def _check(
+        change_request_id: UUID,
+        user: User = Depends(get_current_user),
+        db: AsyncSession = Depends(get_db),
+    ) -> tuple[ChangeRequest, Membership]:
+        cr = await db.scalar(select(ChangeRequest).where(ChangeRequest.id == change_request_id))
+        if not cr:
+            raise FlagOpsError(
+                code="CHANGE_REQUEST_NOT_FOUND",
+                message="Change request not found",
+                status_code=404,
+            )
+        _, membership = await _check_env_impl(cr.environment_id, user, db, min_rank)
+        return cr, membership
 
     return _check
