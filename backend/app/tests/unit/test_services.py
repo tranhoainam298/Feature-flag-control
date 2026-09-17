@@ -259,7 +259,6 @@ class TestConfigServiceOperations:
         ns_payload = ConfigNamespaceCreate(
             name=f"billing-ns-{uuid4().hex[:6]}",
             format=ConfigFormat.JSON,
-            description="Billing configuration",
         )
         ns = await config_service.create_namespace(db_session, env, ns_payload, test_user)
         assert ns.id is not None
@@ -1607,7 +1606,9 @@ class TestTenancyService:
         # Project CRUD
         proj_slug = f"proj-{uuid.uuid4().hex[:6]}"
         project = await tenancy_service.create_project(
-            db_session, org.id, ProjectCreate(name="Tenancy Project", slug=proj_slug)
+            db_session,
+            org.id,
+            ProjectCreate(name="Tenancy Project", slug=proj_slug, default_stale_days=30),
         )
         assert project.slug == proj_slug
         projs = await tenancy_service.list_projects(db_session, org.id)
@@ -1674,7 +1675,9 @@ class TestTenancyService:
 
         with pytest.raises(FlagOpsError) as exc_info:
             await tenancy_service.create_project(
-                db_session, org.id, ProjectCreate(name="Dup Proj", slug=proj_slug)
+                db_session,
+                org.id,
+                ProjectCreate(name="Dup Proj", slug=proj_slug, default_stale_days=30),
             )
         assert exc_info.value.code == "CONFLICT"
 
@@ -1688,7 +1691,7 @@ class TestTenancyService:
 
         # Update project and environment
         updated_proj = await tenancy_service.update_project(
-            db_session, project, ProjectUpdate(name="Renamed Proj")
+            db_session, project, ProjectUpdate(name="Renamed Proj", default_stale_days=30)
         )
         assert updated_proj.name == "Renamed Proj"
 
@@ -1739,8 +1742,6 @@ class TestFlagAndEvalService:
             description="Test flag",
             tags=["eval", "core"],
             is_temporary=False,
-            default_on_variation="true",
-            default_off_variation="false",
         )
         flag = await flag_service.create_flag(db_session, project.id, test_user, flag_in)
         assert flag.key == flag_in.key
@@ -1767,7 +1768,7 @@ class TestFlagAndEvalService:
             flag,
             env.id,
             test_user,
-            FlagSettingUpdate(enabled=True),
+            FlagSettingUpdate(enabled=True, bucketing_key="user_id"),
         )
         assert updated_setting.enabled is True
 
