@@ -11,7 +11,7 @@ interface ConfigDiffModalProps {
 }
 
 export const ConfigDiffModal: React.FC<ConfigDiffModalProps> = ({
-  title = 'So sánh thay đổi cấu hình (Diff)',
+  title = 'Configuration Diff',
   diff,
   isOpen,
   onClose,
@@ -26,19 +26,19 @@ export const ConfigDiffModal: React.FC<ConfigDiffModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
-      <div className="w-full max-w-5xl rounded-xl border border-[var(--border)] bg-[var(--surface)] p-6 shadow-2xl space-y-4 max-h-[90vh] flex flex-col">
+      <div className="w-full max-w-5xl rounded-md border border-border-default bg-surface p-5 shadow-2xl space-y-3.5 max-h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-[var(--border)] pb-3">
+        <div className="flex items-center justify-between border-b border-border-subtle pb-3">
           <div>
-            <h3 className="text-base font-semibold text-[var(--text-primary)]">{title}</h3>
-            <p className="text-xs text-[var(--text-tertiary)] mt-0.5">
-              Tổng cộng {totalChanges} thay đổi so với phiên bản so sánh
+            <h3 className="text-sm font-semibold text-primary">{title}</h3>
+            <p className="text-[11px] text-muted mt-0.5">
+              {totalChanges} {totalChanges === 1 ? 'change' : 'changes'} compared to base configuration
             </p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="rounded p-1 text-[var(--text-tertiary)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)]"
+            className="rounded-xs p-1 text-muted hover:bg-surface-elevated hover:text-primary transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
@@ -47,36 +47,36 @@ export const ConfigDiffModal: React.FC<ConfigDiffModalProps> = ({
         {/* 3-column Diff View */}
         <div className="flex-1 overflow-y-auto">
           {totalChanges === 0 ? (
-            <div className="p-12 text-center text-sm text-[var(--text-tertiary)]">
-              Không có bất kỳ thay đổi nào giữa hai phiên bản cấu hình này.
+            <div className="p-10 text-center text-xs text-muted">
+              No differences detected between these configuration versions.
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               {/* Column 1: ADDED (Green) */}
-              <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-3 flex flex-col">
-                <div className="flex items-center justify-between border-b border-emerald-500/20 pb-2 mb-2 text-emerald-400 font-semibold text-xs">
+              <div className="rounded-xs border border-status-success/30 bg-status-success/5 p-2.5 flex flex-col">
+                <div className="flex items-center justify-between border-b border-status-success/20 pb-2 mb-2 text-status-success font-medium text-xs">
                   <span className="flex items-center gap-1.5">
                     <PlusCircle className="w-3.5 h-3.5" />
-                    Được thêm mới (Added)
+                    Added
                   </span>
-                  <span className="rounded-full bg-emerald-500/20 px-2 py-0.5 text-[10px]">
+                  <span className="rounded-xs bg-status-success/20 px-1.5 py-0.2 text-[10px] font-mono">
                     {addedEntries.length}
                   </span>
                 </div>
 
-                <div className="space-y-2 overflow-y-auto max-h-96 pr-1">
+                <div className="space-y-1.5 overflow-y-auto max-h-96 pr-1">
                   {addedEntries.length === 0 ? (
-                    <span className="text-xs text-[var(--text-tertiary)] italic">Không có</span>
+                    <span className="text-xs text-muted italic">None</span>
                   ) : (
                     addedEntries.map(([key, val]) => (
                       <div
                         key={key}
-                        className="rounded bg-[var(--surface)] p-2 border border-emerald-500/20 text-xs"
+                        className="rounded-xs bg-surface p-2 border border-status-success/20 text-xs"
                       >
-                        <div className="font-mono font-semibold text-emerald-300 break-all">
+                        <div className="font-mono font-semibold text-status-success break-all">
                           +{key}
                         </div>
-                        <div className="mt-1 font-mono text-[11px] text-[var(--text-secondary)] break-all bg-[var(--surface-sunken)] p-1 rounded">
+                        <div className="mt-1 font-mono text-[11px] text-secondary break-all bg-surface-elevated p-1 rounded-xs">
                           {typeof val === 'object' ? JSON.stringify(val) : String(val)}
                         </div>
                       </div>
@@ -86,34 +86,34 @@ export const ConfigDiffModal: React.FC<ConfigDiffModalProps> = ({
               </div>
 
               {/* Column 2: CHANGED (Yellow/Amber) */}
-              <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 flex flex-col">
-                <div className="flex items-center justify-between border-b border-amber-500/20 pb-2 mb-2 text-amber-400 font-semibold text-xs">
+              <div className="rounded-xs border border-status-warning/30 bg-status-warning/5 p-2.5 flex flex-col">
+                <div className="flex items-center justify-between border-b border-status-warning/20 pb-2 mb-2 text-status-warning font-medium text-xs">
                   <span className="flex items-center gap-1.5">
                     <AlertCircle className="w-3.5 h-3.5" />
-                    Đã thay đổi (Changed)
+                    Changed
                   </span>
-                  <span className="rounded-full bg-amber-500/20 px-2 py-0.5 text-[10px]">
+                  <span className="rounded-xs bg-status-warning/20 px-1.5 py-0.2 text-[10px] font-mono">
                     {changedEntries.length}
                   </span>
                 </div>
 
-                <div className="space-y-2 overflow-y-auto max-h-96 pr-1">
+                <div className="space-y-1.5 overflow-y-auto max-h-96 pr-1">
                   {changedEntries.length === 0 ? (
-                    <span className="text-xs text-[var(--text-tertiary)] italic">Không có</span>
+                    <span className="text-xs text-muted italic">None</span>
                   ) : (
                     changedEntries.map(([key, item]: [string, any]) => (
                       <div
                         key={key}
-                        className="rounded bg-[var(--surface)] p-2 border border-amber-500/20 text-xs"
+                        className="rounded-xs bg-surface p-2 border border-status-warning/20 text-xs"
                       >
-                        <div className="font-mono font-semibold text-amber-300 break-all">
+                        <div className="font-mono font-semibold text-status-warning break-all">
                           ~ {key}
                         </div>
                         <div className="mt-1 space-y-1 font-mono text-[11px]">
-                          <div className="rounded bg-rose-500/10 p-1 text-rose-300 border border-rose-500/20 break-all">
+                          <div className="rounded-xs bg-status-danger/10 p-1 text-status-danger border border-status-danger/20 break-all">
                             - {typeof item?.old === 'object' ? JSON.stringify(item.old) : String(item?.old)}
                           </div>
-                          <div className="rounded bg-emerald-500/10 p-1 text-emerald-300 border border-emerald-500/20 break-all">
+                          <div className="rounded-xs bg-status-success/10 p-1 text-status-success border border-status-success/20 break-all">
                             + {typeof item?.new === 'object' ? JSON.stringify(item.new) : String(item?.new)}
                           </div>
                         </div>
@@ -124,30 +124,30 @@ export const ConfigDiffModal: React.FC<ConfigDiffModalProps> = ({
               </div>
 
               {/* Column 3: REMOVED (Red) */}
-              <div className="rounded-lg border border-rose-500/30 bg-rose-500/5 p-3 flex flex-col">
-                <div className="flex items-center justify-between border-b border-rose-500/20 pb-2 mb-2 text-rose-400 font-semibold text-xs">
+              <div className="rounded-xs border border-status-danger/30 bg-status-danger/5 p-2.5 flex flex-col">
+                <div className="flex items-center justify-between border-b border-status-danger/20 pb-2 mb-2 text-status-danger font-medium text-xs">
                   <span className="flex items-center gap-1.5">
                     <MinusCircle className="w-3.5 h-3.5" />
-                    Bị xóa bỏ (Removed)
+                    Removed
                   </span>
-                  <span className="rounded-full bg-rose-500/20 px-2 py-0.5 text-[10px]">
+                  <span className="rounded-xs bg-status-danger/20 px-1.5 py-0.2 text-[10px] font-mono">
                     {removedEntries.length}
                   </span>
                 </div>
 
-                <div className="space-y-2 overflow-y-auto max-h-96 pr-1">
+                <div className="space-y-1.5 overflow-y-auto max-h-96 pr-1">
                   {removedEntries.length === 0 ? (
-                    <span className="text-xs text-[var(--text-tertiary)] italic">Không có</span>
+                    <span className="text-xs text-muted italic">None</span>
                   ) : (
                     removedEntries.map(([key, val]) => (
                       <div
                         key={key}
-                        className="rounded bg-[var(--surface)] p-2 border border-rose-500/20 text-xs"
+                        className="rounded-xs bg-surface p-2 border border-status-danger/20 text-xs"
                       >
-                        <div className="font-mono font-semibold text-rose-300 break-all">
+                        <div className="font-mono font-semibold text-status-danger break-all">
                           -{key}
                         </div>
-                        <div className="mt-1 font-mono text-[11px] text-[var(--text-secondary)] line-through break-all bg-[var(--surface-sunken)] p-1 rounded opacity-70">
+                        <div className="mt-1 font-mono text-[11px] text-muted line-through break-all bg-surface-elevated p-1 rounded-xs opacity-75">
                           {typeof val === 'object' ? JSON.stringify(val) : String(val)}
                         </div>
                       </div>
@@ -160,13 +160,13 @@ export const ConfigDiffModal: React.FC<ConfigDiffModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-2 border-t border-[var(--border)] pt-4">
+        <div className="flex items-center justify-end gap-2 border-t border-border-subtle pt-3">
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-4 py-2 text-xs font-medium text-[var(--text-secondary)] hover:bg-[var(--surface-hover)]"
+            className="rounded-xs border border-border-default bg-surface px-3 py-1.5 text-xs font-medium text-secondary hover:bg-surface-elevated hover:text-primary transition-colors"
           >
-            Đóng
+            Close
           </button>
           {onPublishClick && totalChanges > 0 && (
             <button
@@ -175,9 +175,9 @@ export const ConfigDiffModal: React.FC<ConfigDiffModalProps> = ({
                 onClose();
                 onPublishClick();
               }}
-              className="rounded-lg bg-indigo-600 px-4 py-2 text-xs font-medium text-white hover:bg-indigo-500 shadow-sm"
+              className="rounded-xs bg-brand px-3.5 py-1.5 text-xs font-medium text-white hover:bg-brand-hover shadow-xs transition-colors"
             >
-              Tiến hành phát hành
+              Proceed to Publish
             </button>
           )}
         </div>

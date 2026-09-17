@@ -19,18 +19,18 @@ export const SegmentCard: React.FC<SegmentCardProps> = ({
       : 0;
 
   return (
-    <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-sm hover:border-indigo-500/40 transition-all flex flex-col justify-between">
-      <div className="space-y-3">
+    <div className="rounded-md border border-border-default bg-surface p-3.5 shadow-xs hover:border-border-hover transition-colors flex flex-col justify-between">
+      <div className="space-y-2.5">
         <div className="flex items-start justify-between gap-2">
           <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-400">
-              <Users className="w-4 h-4" />
+            <div className="flex h-7 w-7 items-center justify-center rounded-xs bg-brand/10 text-brand border border-brand/20">
+              <Users className="w-3.5 h-3.5" />
             </div>
             <div>
-              <h4 className="text-sm font-semibold text-[var(--text-primary)]">
+              <h4 className="text-xs font-semibold text-primary">
                 {segment.name}
               </h4>
-              <span className="font-mono text-xs text-indigo-400/90">
+              <span className="font-mono text-[11px] text-muted">
                 {segment.key}
               </span>
             </div>
@@ -38,42 +38,42 @@ export const SegmentCard: React.FC<SegmentCardProps> = ({
 
           <button
             type="button"
-            title="Xóa segment"
+            title="Delete segment"
             disabled={disabled}
             onClick={() => {
-              if (window.confirm(`Bạn có chắc muốn xóa segment "${segment.name}"?`)) {
+              if (window.confirm(`Are you sure you want to delete segment "${segment.name}"?`)) {
                 onDelete(segment.id);
               }
             }}
-            className="rounded p-1.5 text-[var(--text-tertiary)] hover:bg-rose-500/10 hover:text-rose-400 transition-colors disabled:opacity-40"
+            className="rounded-xs p-1 text-muted hover:bg-status-danger/10 hover:text-status-danger transition-colors disabled:opacity-40"
           >
             <Trash2 className="w-3.5 h-3.5" />
           </button>
         </div>
 
         {segment.description && (
-          <p className="text-xs text-[var(--text-secondary)] line-clamp-2">
+          <p className="text-xs text-secondary line-clamp-2">
             {segment.description}
           </p>
         )}
 
         {/* Condition preview */}
-        <div className="rounded-lg bg-[var(--surface-sunken)] p-2.5 border border-[var(--border)] text-xs">
-          <div className="flex items-center justify-between text-[11px] text-[var(--text-tertiary)] mb-1">
-            <span className="flex items-center gap-1 font-medium">
-              <Code2 className="w-3 h-3 text-indigo-400" />
-              Toán tử: {segment.conditions?.operator || 'AND'}
+        <div className="rounded-xs bg-surface-elevated p-2 border border-border-subtle text-xs">
+          <div className="flex items-center justify-between text-[11px] text-muted mb-1">
+            <span className="flex items-center gap-1 font-medium text-secondary">
+              <Code2 className="w-3 h-3 text-brand" />
+              Operator: <span className="font-mono font-bold text-primary">{segment.conditions?.operator || 'AND'}</span>
             </span>
-            <span>{condCount} điều kiện</span>
+            <span className="font-mono text-[11px]">{condCount} {condCount === 1 ? 'clause' : 'clauses'}</span>
           </div>
-          <pre className="max-h-20 overflow-y-auto font-mono text-[11px] text-[var(--text-secondary)]">
+          <pre className="max-h-20 overflow-y-auto font-mono text-[11px] text-secondary">
             {JSON.stringify(segment.conditions, null, 2)}
           </pre>
         </div>
       </div>
 
-      <div className="mt-4 pt-3 border-t border-[var(--border)] text-[11px] text-[var(--text-tertiary)] flex justify-between">
-        <span>Tạo: {new Date(segment.created_at).toLocaleDateString()}</span>
+      <div className="mt-3 pt-2.5 border-t border-border-subtle text-[11px] text-muted flex justify-between font-mono">
+        <span>Created: {new Date(segment.created_at).toLocaleDateString()}</span>
       </div>
     </div>
   );

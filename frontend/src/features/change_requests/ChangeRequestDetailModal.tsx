@@ -60,7 +60,7 @@ export const ChangeRequestDetailModal: React.FC<Props> = ({
       const msg =
         err?.response?.data?.error?.message ||
         err?.response?.data?.detail ||
-        'Không thể duyệt Change Request.';
+        'Failed to approve Change Request.';
       setActionError(msg);
     },
   });
@@ -75,7 +75,7 @@ export const ChangeRequestDetailModal: React.FC<Props> = ({
       const msg =
         err?.response?.data?.error?.message ||
         err?.response?.data?.detail ||
-        'Không thể từ chối Change Request.';
+        'Failed to reject Change Request.';
       setActionError(msg);
     },
   });
@@ -90,7 +90,7 @@ export const ChangeRequestDetailModal: React.FC<Props> = ({
       const msg =
         err?.response?.data?.error?.message ||
         err?.response?.data?.detail ||
-        'Không thể hủy Change Request.';
+        'Failed to cancel Change Request.';
       setActionError(msg);
     },
   });
@@ -128,10 +128,10 @@ export const ChangeRequestDetailModal: React.FC<Props> = ({
       description={`CR ID: ${changeRequest.id}`}
       maxWidth="xl"
     >
-      <div className="space-y-6 text-sm pb-2">
+      <div className="space-y-4 text-xs pb-2">
         {/* Error Notification */}
         {actionError && (
-          <div className="p-3 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-md text-xs flex items-start gap-2">
+          <div className="p-2.5 bg-status-danger/10 border border-status-danger/20 text-status-danger rounded-xs text-xs flex items-start gap-2">
             <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
             <span>{actionError}</span>
           </div>
@@ -139,49 +139,49 @@ export const ChangeRequestDetailModal: React.FC<Props> = ({
 
         {/* Four-Eyes Principle Warning */}
         {isCreator && isPending && (
-          <div className="p-3.5 bg-amber-500/10 border border-amber-500/20 text-amber-300 rounded-md text-xs flex items-start gap-2.5">
-            <ShieldAlert className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+          <div className="p-3 bg-status-warning/10 border border-status-warning/20 text-status-warning rounded-xs text-xs flex items-start gap-2.5">
+            <ShieldAlert className="w-4 h-4 shrink-0 mt-0.5" />
             <div>
-              <span className="font-semibold block">Nguyên tắc bốn mắt (Four-Eyes Principle)</span>
+              <span className="font-semibold block">Four-Eyes Principle Enforced</span>
               <span>
-                Bạn là người tạo Change Request này. Để đảm bảo an toàn cho môi trường Production, bạn không được phép tự duyệt. Yêu cầu một Quản trị viên (ADMIN/OWNER) khác phê duyệt.
+                You created this Change Request. Production policies strictly require an independent review. Another administrator (ADMIN or OWNER) must approve this change.
               </span>
             </div>
           </div>
         )}
 
         {/* Header Metadata Cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <div className="p-3 rounded-md bg-canvas border border-border-subtle">
-            <span className="text-[11px] text-muted block mb-1">Trạng thái</span>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+          <div className="p-2.5 rounded-xs bg-surface-elevated/40 border border-border-default">
+            <span className="text-[10px] text-muted uppercase tracking-wider block mb-1">Status</span>
             <div>{getStatusBadge(changeRequest.status)}</div>
           </div>
 
-          <div className="p-3 rounded-md bg-canvas border border-border-subtle">
-            <span className="text-[11px] text-muted block mb-1">Người yêu cầu</span>
+          <div className="p-2.5 rounded-xs bg-surface-elevated/40 border border-border-default">
+            <span className="text-[10px] text-muted uppercase tracking-wider block mb-1">Requester</span>
             <div className="flex items-center gap-1.5 text-xs text-primary font-mono truncate">
               <User className="w-3.5 h-3.5 text-muted shrink-0" />
               <span className="truncate">{changeRequest.requested_by.slice(0, 8)}...</span>
-              {isCreator && <span className="text-[10px] text-brand">(Bạn)</span>}
+              {isCreator && <span className="text-[10px] text-brand font-sans">(You)</span>}
             </div>
           </div>
 
-          <div className="p-3 rounded-md bg-canvas border border-border-subtle">
-            <span className="text-[11px] text-muted block mb-1">Ngày tạo</span>
+          <div className="p-2.5 rounded-xs bg-surface-elevated/40 border border-border-default">
+            <span className="text-[10px] text-muted uppercase tracking-wider block mb-1">Created At</span>
             <div className="flex items-center gap-1.5 text-xs text-secondary font-mono truncate">
               <Clock className="w-3.5 h-3.5 text-muted shrink-0" />
               <span>{new Date(changeRequest.created_at).toLocaleDateString()}</span>
             </div>
           </div>
 
-          <div className="p-3 rounded-md bg-canvas border border-border-subtle">
-            <span className="text-[11px] text-muted block mb-1">Hẹn giờ (Scheduled)</span>
+          <div className="p-2.5 rounded-xs bg-surface-elevated/40 border border-border-default">
+            <span className="text-[10px] text-muted uppercase tracking-wider block mb-1">Scheduled For</span>
             <div className="flex items-center gap-1.5 text-xs text-secondary font-mono truncate">
               <Calendar className="w-3.5 h-3.5 text-muted shrink-0" />
               <span>
                 {changeRequest.scheduled_at
                   ? new Date(changeRequest.scheduled_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                  : 'Ngay tức thì'}
+                  : 'Immediate'}
               </span>
             </div>
           </div>
@@ -189,25 +189,25 @@ export const ChangeRequestDetailModal: React.FC<Props> = ({
 
         {/* Description if present */}
         {changeRequest.description && (
-          <div className="p-3 bg-surface border border-border-subtle rounded-md text-xs text-secondary">
-            <span className="font-semibold text-primary block mb-1">Mô tả lý do:</span>
+          <div className="p-2.5 bg-surface-elevated/40 border border-border-default rounded-xs text-xs text-secondary">
+            <span className="font-semibold text-primary block mb-0.5">Business Justification:</span>
             {changeRequest.description}
           </div>
         )}
 
         {/* Impact Simulation Section — Pure Evaluation Engine Highlight */}
-        <div className="p-4 rounded-lg bg-surface border border-brand/20 shadow-sm relative overflow-hidden">
-          <div className="flex items-center justify-between mb-3 border-b border-border-subtle pb-2.5">
+        <div className="p-3.5 rounded-md bg-surface border border-brand/20 shadow-xs relative overflow-hidden space-y-3">
+          <div className="flex items-center justify-between border-b border-border-subtle pb-2.5">
             <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-md bg-brand/10 flex items-center justify-center text-brand">
+              <div className="w-6 h-6 rounded-xs bg-brand/10 flex items-center justify-center text-brand border border-brand/20">
                 <GitCompare className="w-3.5 h-3.5" />
               </div>
               <div>
                 <h3 className="text-xs font-semibold text-primary">
-                  Mô phỏng tác động (Impact Simulation)
+                  In-Memory Impact Simulation
                 </h3>
                 <span className="text-[10px] text-muted">
-                  Đánh giá pure engine trên dữ liệu context thực tế mà không cần ghi DB
+                  Pure evaluation engine executed over historical live context events without database writes
                 </span>
               </div>
             </div>
@@ -216,61 +216,61 @@ export const ChangeRequestDetailModal: React.FC<Props> = ({
               size="sm"
               onClick={() => runImpactSimulation()}
               disabled={isFetchingImpact}
-              className="gap-1.5 text-xs"
+              className="gap-1.5 text-xs h-7 px-2"
             >
               {isFetchingImpact ? (
                 <Loader2 className="w-3 h-3 animate-spin" />
               ) : (
                 <PlayCircle className="w-3 h-3 text-brand" />
               )}
-              <span>Chạy lại mô phỏng</span>
+              <span>Rerun Simulation</span>
             </Button>
           </div>
 
           {isLoadingImpact || isFetchingImpact ? (
-            <div className="py-6 flex flex-col items-center justify-center text-secondary gap-2">
-              <Loader2 className="w-5 h-5 animate-spin text-brand" />
+            <div className="py-5 flex flex-col items-center justify-center text-secondary gap-2">
+              <Loader2 className="w-4 h-4 animate-spin text-brand" />
               <span className="text-xs font-mono">
-                Đang chạy pure evaluation engine trên 1,000 context gần nhất...
+                Executing pure engine evaluation on recent contexts...
               </span>
             </div>
           ) : impact ? (
-            <div className="space-y-3">
+            <div className="space-y-2.5">
               {/* Summary message */}
               <div
-                className={`p-3 rounded-md border text-xs ${
+                className={`p-2.5 rounded-xs border text-xs ${
                   impact.affected_contexts > 0
-                    ? 'bg-amber-500/10 border-amber-500/20 text-amber-300'
-                    : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-300'
+                    ? 'bg-status-warning/10 border-status-warning/20 text-status-warning'
+                    : 'bg-status-success/10 border-status-success/20 text-status-success'
                 }`}
               >
                 <div className="flex items-center gap-2 font-medium">
                   {impact.affected_contexts > 0 ? (
-                    <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
+                    <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
                   ) : (
-                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                    <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
                   )}
                   <span>{impact.summary}</span>
                 </div>
               </div>
 
               {/* Stats row */}
-              <div className="grid grid-cols-3 gap-3">
-                <div className="p-2.5 bg-canvas rounded border border-border-subtle text-center">
-                  <span className="text-[11px] text-muted block">Tổng context khảo sát</span>
-                  <span className="text-base font-bold text-primary font-mono">
+              <div className="grid grid-cols-3 gap-2.5">
+                <div className="p-2 bg-surface-elevated/40 rounded-xs border border-border-default text-center">
+                  <span className="text-[10px] text-muted uppercase tracking-wider block">Sampled Contexts</span>
+                  <span className="text-sm font-bold text-primary font-mono">
                     {impact.total_contexts.toLocaleString()}
                   </span>
                 </div>
-                <div className="p-2.5 bg-canvas rounded border border-border-subtle text-center">
-                  <span className="text-[11px] text-muted block">Số lượng đổi kết quả</span>
-                  <span className="text-base font-bold text-amber-400 font-mono">
+                <div className="p-2 bg-surface-elevated/40 rounded-xs border border-border-default text-center">
+                  <span className="text-[10px] text-muted uppercase tracking-wider block">Altered Outcomes</span>
+                  <span className="text-sm font-bold text-status-warning font-mono">
                     {impact.affected_contexts.toLocaleString()}
                   </span>
                 </div>
-                <div className="p-2.5 bg-canvas rounded border border-border-subtle text-center">
-                  <span className="text-[11px] text-muted block">Tỉ lệ ảnh hưởng</span>
-                  <span className="text-base font-bold text-brand font-mono">
+                <div className="p-2 bg-surface-elevated/40 rounded-xs border border-border-default text-center">
+                  <span className="text-[10px] text-muted uppercase tracking-wider block">Impact Percentage</span>
+                  <span className="text-sm font-bold text-brand font-mono">
                     {impact.change_percentage}%
                   </span>
                 </div>
@@ -279,26 +279,26 @@ export const ChangeRequestDetailModal: React.FC<Props> = ({
               {/* Transitions breakdown */}
               {impact.transitions.length > 0 && (
                 <div className="space-y-1.5 pt-1">
-                  <span className="text-[11px] font-semibold text-secondary uppercase tracking-wider block">
-                    Bảng chuyển dịch Variation:
+                  <span className="text-[10px] font-semibold text-secondary uppercase tracking-wider block">
+                    Variation Transition Matrix:
                   </span>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
                     {impact.transitions.map((t, idx) => (
                       <div
                         key={idx}
-                        className="p-2 bg-canvas/80 border border-border-subtle rounded flex items-center justify-between text-xs"
+                        className="p-1.5 bg-surface-elevated border border-border-default rounded-xs flex items-center justify-between text-xs"
                       >
-                        <div className="flex items-center gap-2 font-mono">
-                          <span className="px-1.5 py-0.5 rounded bg-surface text-muted">
+                        <div className="flex items-center gap-1.5 font-mono">
+                          <span className="px-1.5 py-0.2 rounded-xs bg-surface text-muted text-[11px] border border-border-subtle">
                             {t.from_variation}
                           </span>
-                          <span className="text-muted">→</span>
-                          <span className="px-1.5 py-0.5 rounded bg-brand/10 text-brand font-semibold">
+                          <span className="text-muted text-[11px]">→</span>
+                          <span className="px-1.5 py-0.2 rounded-xs bg-brand/10 text-brand font-semibold text-[11px] border border-brand/20">
                             {t.to_variation}
                           </span>
                         </div>
                         <span className="font-mono text-xs font-semibold text-primary">
-                          {t.count} users
+                          {t.count} {t.count === 1 ? 'context' : 'contexts'}
                         </span>
                       </div>
                     ))}
@@ -311,16 +311,16 @@ export const ChangeRequestDetailModal: React.FC<Props> = ({
 
         {/* Payload Diff Section */}
         <div>
-          <span className="text-xs font-semibold text-secondary uppercase tracking-wider block mb-2">
-            Tập thay đổi (Payload Diff)
+          <span className="text-[10px] font-semibold text-secondary uppercase tracking-wider block mb-1.5">
+            Proposed Mutation (Payload Diff)
           </span>
-          <div className="bg-[#0f141c] border border-border-subtle rounded-md p-3 font-mono text-xs text-emerald-400 overflow-x-auto max-h-48">
+          <div className="bg-canvas border border-border-default rounded-xs p-2.5 font-mono text-xs text-status-success overflow-x-auto max-h-48">
             <pre>{JSON.stringify(changeRequest.payload, null, 2)}</pre>
           </div>
         </div>
 
         {/* Modal Actions */}
-        <div className="flex items-center justify-between pt-4 border-t border-border-subtle">
+        <div className="flex items-center justify-between pt-3 border-t border-border-subtle">
           <div>
             {!isApplied && !isRejected && (
               <Button
@@ -328,10 +328,10 @@ export const ChangeRequestDetailModal: React.FC<Props> = ({
                 size="sm"
                 onClick={() => cancelMutation.mutate()}
                 disabled={cancelMutation.isPending}
-                className="gap-1.5 text-muted hover:text-rose-400 hover:border-rose-500/30"
+                className="gap-1.5 text-muted hover:text-status-danger hover:border-status-danger/30 text-xs h-7 px-2.5"
               >
                 <Ban className="w-3.5 h-3.5" />
-                <span>Hủy yêu cầu</span>
+                <span>Cancel Request</span>
               </Button>
             )}
           </div>
@@ -344,10 +344,10 @@ export const ChangeRequestDetailModal: React.FC<Props> = ({
                   size="sm"
                   onClick={() => rejectMutation.mutate()}
                   disabled={rejectMutation.isPending}
-                  className="gap-1.5 text-rose-400 hover:bg-rose-500/10 border-rose-500/20"
+                  className="gap-1.5 text-status-danger hover:bg-status-danger/10 border-status-danger/20 text-xs h-7 px-2.5"
                 >
                   <XCircle className="w-3.5 h-3.5" />
-                  <span>Từ chối (Reject)</span>
+                  <span>Reject</span>
                 </Button>
 
                 <Button
@@ -357,31 +357,31 @@ export const ChangeRequestDetailModal: React.FC<Props> = ({
                   disabled={isCreator || approveMutation.isPending}
                   title={
                     isCreator
-                      ? 'Nguyên tắc bốn mắt: Người tạo không thể tự duyệt'
-                      : 'Duyệt Change Request'
+                      ? 'Four-Eyes Principle: Requester cannot self-approve'
+                      : 'Approve Change Request'
                   }
-                  className="gap-1.5"
+                  className="gap-1.5 text-xs h-7 px-3"
                 >
                   {approveMutation.isPending ? (
                     <Loader2 className="w-3.5 h-3.5 animate-spin" />
                   ) : (
                     <Check className="w-3.5 h-3.5" />
                   )}
-                  <span>Duyệt & Áp dụng</span>
+                  <span>Approve & Apply</span>
                 </Button>
               </>
             )}
 
             {isApproved && (
               <span className="text-xs text-muted font-mono italic">
-                Đã duyệt — Đang chờ APScheduler đến giờ áp dụng...
+                Approved — Awaiting background scheduler window...
               </span>
             )}
 
             {isApplied && (
-              <span className="text-xs text-emerald-400 font-mono flex items-center gap-1.5">
+              <span className="text-xs text-status-success font-mono flex items-center gap-1.5">
                 <CheckCircle2 className="w-3.5 h-3.5" />
-                <span>Thay đổi đã áp dụng vào production</span>
+                <span>Changes successfully applied to production</span>
               </span>
             )}
           </div>

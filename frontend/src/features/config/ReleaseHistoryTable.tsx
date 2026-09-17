@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { configApi } from './api';
 import { CompareReleasesModal } from './CompareReleasesModal';
-import { History, RotateCcw, GitCompare, Calendar } from 'lucide-react';
+import { History, RotateCcw, GitCompare, Calendar, AlertCircle } from 'lucide-react';
 import { SkeletonTable } from '../../components/ui/SkeletonTable';
 
 interface ReleaseHistoryTableProps {
@@ -39,7 +39,7 @@ export const ReleaseHistoryTable: React.FC<ReleaseHistoryTableProps> = ({
         err.response?.data?.message ||
         err.response?.data?.detail ||
         err.message ||
-        'Rollback thất bại';
+        'Rollback failed';
       setActionError(typeof msg === 'object' ? JSON.stringify(msg) : String(msg));
     },
   });
@@ -47,7 +47,7 @@ export const ReleaseHistoryTable: React.FC<ReleaseHistoryTableProps> = ({
   const handleRollback = (version: number) => {
     if (
       window.confirm(
-        `XÁC NHẬN ROLLBACK: Bạn có chắc chắn muốn rollback cấu hình về phiên bản v${version} không? Thao tác này sẽ tạo một release mới ghi đè cấu hình hiện tại.`
+        `CONFIRM ROLLBACK: Are you sure you want to rollback to v${version}? This will generate a new release snapshot restoring this version's configuration.`
       )
     ) {
       rollbackMutation.mutate(version);
@@ -57,8 +57,8 @@ export const ReleaseHistoryTable: React.FC<ReleaseHistoryTableProps> = ({
   if (isLoading) return <SkeletonTable rows={4} columns={4} />;
   if (isError) {
     return (
-      <div className="rounded-lg border border-rose-500/30 bg-rose-500/10 p-4 text-xs text-rose-400">
-        Lỗi tải lịch sử release.
+      <div className="rounded-md border border-status-danger/30 bg-status-danger/10 p-3 text-xs text-status-danger">
+        Failed to load release history.
       </div>
     );
   }
@@ -66,13 +66,13 @@ export const ReleaseHistoryTable: React.FC<ReleaseHistoryTableProps> = ({
   const sortedReleases = [...releases].sort((a, b) => b.version - a.version);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {/* Action Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <History className="w-4 h-4 text-indigo-400" />
-          <h3 className="text-sm font-semibold text-[var(--text-primary)]">
-            Lịch sử các phiên bản phát hành ({releases.length})
+          <History className="w-4 h-4 text-brand" />
+          <h3 className="text-xs font-semibold text-primary">
+            Published Release History ({releases.length})
           </h3>
         </div>
 
@@ -80,10 +80,10 @@ export const ReleaseHistoryTable: React.FC<ReleaseHistoryTableProps> = ({
           <button
             type="button"
             onClick={() => setIsCompareOpen(true)}
-            className="flex items-center gap-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 text-xs font-medium text-[var(--text-primary)] hover:bg-[var(--surface-hover)] shadow-sm"
+            className="flex items-center gap-1.5 rounded-xs border border-border-default bg-surface px-2.5 py-1 text-xs font-medium text-secondary hover:text-primary hover:bg-surface-elevated shadow-xs transition-colors"
           >
-            <GitCompare className="w-3.5 h-3.5 text-indigo-400" />
-            <span>So sánh 2 phiên bản</span>
+            <GitCompare className="w-3.5 h-3.5 text-brand" />
+            <span>Compare Two Releases</span>
           </button>
         )}
       </div>
@@ -91,61 +91,62 @@ export const ReleaseHistoryTable: React.FC<ReleaseHistoryTableProps> = ({
       {actionError && (
         <div
           role="alert"
-          className="rounded-lg border border-rose-500/30 bg-rose-500/10 p-3 text-xs text-rose-400 font-mono"
+          className="flex items-center gap-2 rounded-xs border border-status-danger/30 bg-status-danger/10 p-2.5 text-xs text-status-danger font-mono"
         >
-          {actionError}
+          <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+          <span>{actionError}</span>
         </div>
       )}
 
       {sortedReleases.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-[var(--border)] p-10 text-center text-xs text-[var(--text-tertiary)]">
-          Chưa có phiên bản release nào được phát hành cho namespace này.
+        <div className="rounded-md border border-dashed border-border-default p-10 text-center text-xs text-muted bg-surface/50">
+          No configuration releases have been published for this namespace yet.
         </div>
       ) : (
-        <div className="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-sm">
+        <div className="overflow-hidden rounded-md border border-border-default bg-surface shadow-xs">
           <table className="w-full text-left text-xs">
-            <thead className="border-b border-[var(--border)] bg-[var(--surface-sunken)] text-[var(--text-secondary)]">
+            <thead className="border-b border-border-default bg-surface-elevated/40 text-secondary font-medium uppercase tracking-wider text-[10px]">
               <tr>
-                <th className="py-3 px-4 font-semibold">Phiên bản</th>
-                <th className="py-3 px-4 font-semibold">Ghi chú (Comment)</th>
-                <th className="py-3 px-4 font-semibold">Thời điểm phát hành</th>
-                <th className="py-3 px-4 font-semibold text-right">Thao tác</th>
+                <th className="py-2.5 px-3 font-semibold">Version</th>
+                <th className="py-2.5 px-3 font-semibold">Changelog / Comment</th>
+                <th className="py-2.5 px-3 font-semibold">Published At</th>
+                <th className="py-2.5 px-3 font-semibold text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[var(--border)]">
+            <tbody className="divide-y divide-border-subtle">
               {sortedReleases.map((rel, idx) => (
-                <tr key={rel.id} className="hover:bg-[var(--surface-hover)] transition-colors">
-                  <td className="py-3 px-4 font-mono font-bold text-indigo-400">
+                <tr key={rel.id} className="hover:bg-surface-elevated/50 transition-colors">
+                  <td className="py-2.5 px-3 font-mono font-bold text-brand">
                     <span className="flex items-center gap-1.5">
                       v{rel.version}
                       {idx === 0 && (
-                        <span className="rounded bg-emerald-500/20 px-1.5 py-0.5 text-[10px] font-sans font-semibold text-emerald-300">
-                          Hiện tại
+                        <span className="rounded-xs bg-status-success/15 px-1.5 py-0.2 text-[10px] font-mono font-semibold text-status-success border border-status-success/30">
+                          Active
                         </span>
                       )}
                       {rel.is_rollback_of && (
-                        <span className="rounded bg-amber-500/20 px-1.5 py-0.5 text-[10px] font-sans font-medium text-amber-300">
-                          Rollback
+                        <span className="rounded-xs bg-status-warning/15 px-1.5 py-0.2 text-[10px] font-mono font-medium text-status-warning border border-status-warning/30">
+                          Rollback of v{rel.is_rollback_of}
                         </span>
                       )}
                     </span>
                   </td>
-                  <td className="py-3 px-4 text-[var(--text-primary)]">
-                    {rel.comment || <span className="text-[var(--text-tertiary)] italic">Không có</span>}
+                  <td className="py-2.5 px-3 text-primary">
+                    {rel.comment || <span className="text-muted italic">No comment provided</span>}
                   </td>
-                  <td className="py-3 px-4 text-[var(--text-secondary)]">
-                    <div className="flex items-center gap-1">
-                      <Calendar className="w-3 h-3 text-[var(--text-tertiary)]" />
+                  <td className="py-2.5 px-3 text-secondary">
+                    <div className="flex items-center gap-1 font-mono text-[11px]">
+                      <Calendar className="w-3 h-3 text-muted" />
                       <span>{new Date(rel.released_at).toLocaleString()}</span>
                     </div>
                   </td>
-                  <td className="py-3 px-4 text-right">
+                  <td className="py-2.5 px-3 text-right">
                     {idx !== 0 && (
                       <button
                         type="button"
                         disabled={rollbackMutation.isPending}
                         onClick={() => handleRollback(rel.version)}
-                        className="inline-flex items-center gap-1 rounded border border-amber-500/30 bg-amber-500/10 px-2.5 py-1 text-xs font-medium text-amber-400 hover:bg-amber-500/20 transition-colors disabled:opacity-40"
+                        className="inline-flex items-center gap-1 rounded-xs border border-status-warning/30 bg-status-warning/10 px-2 py-1 text-xs font-medium text-status-warning hover:bg-status-warning/20 transition-colors disabled:opacity-40"
                       >
                         <RotateCcw className="w-3 h-3" />
                         <span>Rollback</span>

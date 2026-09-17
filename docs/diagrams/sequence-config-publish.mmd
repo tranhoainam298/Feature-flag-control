@@ -1,0 +1,44 @@
+sequenceDiagram
+    autonumber
+    participant Dev as Developer / Web Dashboard
+    participant API as FlagOps Admin API (/api/v1)
+    participant Crypto as Crypto Module (AES-256-GCM)
+    participant Schema as JSON Schema Validator
+    participant PG as PostgreSQL 16
+    participant Audit as Audit Logger
+    participant Redis as Redis Pub/Sub
+
+    Dev->>API: PUT /namespaces/{ns}/items (key, value, is_secret, json_schema)
+    alt is_secret == True
+        API->>Crypto: encrypt_secret(value, master_key)
+        Crypto-->>API: encrypted_ciphertext
+    end
+    alt json_schema is not null
+        API->>Schema: validate_json_schema(value, json_schema)
+    end
+    API->>PG: Upsert ConfigItem (trạng thái Draft nháp)
+    API-->>Dev: 200 OK (Item updated as draft)
+
+    Dev->>API: GET /namespaces/{ns}/diff (So sánh Draft vs Current Release)
+    API->>PG: Load current release snapshot & draft items
+    API->>API: Compute 3-way diff (Added, Modified, Removed)
+    API-->>Dev: 200 OK (diff items payload)
+
+    Dev->>API: POST /namespaces/{ns}/publish (comment="Release v5")
+    API->>PG: BEGIN TRANSACTION
+    API->>PG: Freeze draft items into new ConfigRelease(version=N+1, snapshot=JSONB)
+    API->>PG: Update ConfigNamespace.current_release_id
+    API->>Audit: Ghi nhận AuditLog(action="CONFIG_PUBLISH", entity="release")
+    API->>PG: COMMIT
+    API->>Redis: PUBLISH flagops:invalidation (event="config_published")
+    API-->>Dev: 201 Created (Release v5 active)
+
+    Note over Dev, Redis: Quy trình Rollback (Nếu bản phát hành mới gặp sự cố)
+    Dev->>API: POST /releases/{old_release_id}/rollback
+    API->>PG: BEGIN TRANSACTION
+    API->>PG: Tạo ConfigRelease mới (version=N+2, is_rollback_of=old_release_id, snapshot=old_snapshot)
+    API->>PG: Đồng bộ ngược lại ConfigItems
+    API->>Audit: Ghi nhận AuditLog(action="CONFIG_ROLLBACK")
+    API->>PG: COMMIT
+    API->>Redis: PUBLISH flagops:invalidation
+    API-->>Dev: 200 OK (Rollback thành công)

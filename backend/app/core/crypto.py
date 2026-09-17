@@ -18,6 +18,7 @@ MASKED_SECRET = "••••••"
 
 
 def _get_master_key_bytes() -> bytes:
+    settings.validate_production_security()
     raw = settings.CONFIG_MASTER_KEY.encode("utf-8")
     if len(raw) == 32:
         return raw

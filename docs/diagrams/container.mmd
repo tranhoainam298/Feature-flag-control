@@ -1,0 +1,31 @@
+graph TB
+    subgraph ClientTier ["Tầng Trình duyệt & Người dùng"]
+        SPA["<b>FlagOps Web Dashboard</b><br/>React 18 + TypeScript + Vite<br/>Tailwind CSS & Lucide Icons"]
+    end
+
+    subgraph AppTier ["Tầng Ứng dụng Khách"]
+        APP["<b>Dịch vụ Nghiệp vụ</b><br/>FastAPI / Django / Node.js"]
+        SDK["<b>FlagOps SDK</b><br/>Python / JavaScript<br/>(In-memory Cache + SSE Subscriber)"]
+        APP --> SDK
+    end
+
+    subgraph CoreTier ["Tầng Dịch vụ Lõi FlagOps"]
+        API["<b>FlagOps Core API</b><br/>FastAPI + Python 3.12 (Uvicorn)<br/>- Admin API (/api/v1)<br/>- Eval API (/eval/v1)"]
+        SSE_HUB["<b>SSE Realtime Hub</b><br/>Asynchronous Event Streamer<br/>(/eval/v1/stream)"]
+        SCHEDULER["<b>Background Scheduler</b><br/>APScheduler 3.x<br/>(Scheduled Changes & Stale Sweep)"]
+    end
+
+    subgraph DataTier ["Tầng Lưu trữ & Bộ đệm"]
+        PG[("<b>PostgreSQL 16</b><br/>Nguồn sự thật chính<br/>- JSONB Rules & Release Snapshots<br/>- Partitioned Evaluation Events")]
+        REDIS[("<b>Redis 7</b><br/>- Distributed Ruleset Cache<br/>- Pub/Sub Invalidation Bus<br/>- Sliding Window Rate Limiting")]
+    end
+
+    SPA -->|"HTTPS / REST API (JWT Bearer)"| API
+    SDK -->|"HTTP Polling (X-FlagOps-Key, ETag)"| API
+    SDK -->|"Server-Sent Events (SSE Stream)"| SSE_HUB
+
+    API -->|"SQLAlchemy 2.0 Async (asyncpg)"| PG
+    API -->|"Cache Read/Write, Invalidation Pub"| REDIS
+    SSE_HUB -->|"Subscribe 'flagops:invalidation'"| REDIS
+    SCHEDULER -->|"Query & Apply Scheduled Changes"| PG
+    SCHEDULER -->|"Publish Invalidation Event"| REDIS

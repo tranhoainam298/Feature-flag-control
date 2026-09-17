@@ -1,26 +1,21 @@
 import React from 'react';
 
-export interface EmptyStateProps {
+interface Props {
   icon: React.ReactNode;
   title: string;
-  description: string;
+  description?: string;
   action?: React.ReactNode;
 }
 
-export const EmptyState: React.FC<EmptyStateProps> = ({
-  icon,
-  title,
-  description,
-  action,
-}) => {
+export const EmptyState: React.FC<Props> = ({ icon, title, description, action }) => {
   return (
-    <div className="flex flex-col items-center justify-center p-12 text-center border border-dashed border-border-default rounded-lg bg-surface/50 my-6">
-      <div className="p-3 bg-surface-elevated rounded-full text-secondary mb-3.5 border border-border-subtle">
-        {icon}
-      </div>
-      <h3 className="text-base font-medium text-primary mb-1">{title}</h3>
-      <p className="text-sm text-secondary max-w-sm mb-5">{description}</p>
-      {action && <div>{action}</div>}
+    <div className="border border-border-subtle border-dashed rounded-md px-8 py-12 flex flex-col items-center justify-center text-center">
+      <div className="text-muted mb-3">{icon}</div>
+      <h3 className="text-xs font-semibold text-primary mb-1">{title}</h3>
+      {description && (
+        <p className="text-[11px] text-muted max-w-xs mb-4">{description}</p>
+      )}
+      {action}
     </div>
   );
 };

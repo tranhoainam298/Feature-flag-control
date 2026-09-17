@@ -1,0 +1,22 @@
+graph TD
+    PM["Product Manager<br/>(Quản lý phát hành, A/B testing)"]
+    DEV["Software Engineer<br/>(Tích hợp SDK, khai báo cờ)"]
+    SRE["SRE / DevOps Engineer<br/>(Vận hành, Kill switch, Change Request)"]
+    AUDIT["Compliance Auditor<br/>(Kiểm toán, Tra cứu Audit log)"]
+
+    subgraph Boundaries ["Ranh giới Doanh nghiệp"]
+        FLAGOPS["<b>FlagOps Platform</b><br/>(Hệ thống Quản trị Feature Flag & Cấu hình)"]
+        CLIENT_APPS["<b>Ứng dụng Nghiệp vụ</b><br/>(Web, Microservices, Mobile Backend)"]
+    end
+
+    EXT_MONITORING["Hệ thống Quan sát<br/>(Prometheus / Grafana / OTel)"]
+
+    PM -->|"Quản trị Flag, % Rollout"| FLAGOPS
+    DEV -->|"Định cấu hình, Rule builder"| FLAGOPS
+    SRE -->|"Phê duyệt Change Request, Khóa khẩn cấp"| FLAGOPS
+    AUDIT -->|"Tra cứu lịch sử kiểm toán"| FLAGOPS
+
+    CLIENT_APPS -->|"Tải ruleset (ETag/304), Nghe sự kiện SSE"| FLAGOPS
+    CLIENT_APPS -->|"Đánh giá Flag (In-process / Remote API)"| FLAGOPS
+
+    FLAGOPS -->|"Xuất độ đo Prometheus (/metrics)"| EXT_MONITORING

@@ -29,7 +29,7 @@ export const FlagTable: React.FC<Props> = ({
   onOpenCreate,
 }) => {
   if (isLoading) {
-    return <SkeletonTable rows={5} columns={5} />;
+    return <SkeletonTable rows={8} columns={5} />;
   }
 
   if (isError) {
@@ -39,17 +39,17 @@ export const FlagTable: React.FC<Props> = ({
   if (!flags || flags.length === 0) {
     return (
       <EmptyState
-        icon={<FlagIcon className="w-6 h-6" />}
-        title="No feature flags found"
-        description="Get started by creating your first flag or adjust your search filter."
+        icon={<FlagIcon className="w-5 h-5" />}
+        title="No feature flags"
+        description="Create your first flag to start managing feature rollouts."
         action={
           <Button
             variant="primary"
             size="sm"
             onClick={onOpenCreate}
-            leftIcon={<Plus className="w-4 h-4" />}
+            leftIcon={<Plus className="w-3.5 h-3.5" />}
           >
-            Create Feature Flag
+            Create Flag
           </Button>
         }
       />
@@ -57,25 +57,25 @@ export const FlagTable: React.FC<Props> = ({
   }
 
   return (
-    <div className="border border-border-default rounded-lg overflow-hidden bg-surface shadow-sm">
+    <div className="border border-border-subtle rounded-md overflow-hidden bg-surface">
       <div className="overflow-x-auto">
         <table className="w-full text-left text-xs border-collapse">
-          <thead className="bg-surface-elevated border-b border-border-subtle text-muted uppercase font-mono text-[10px] tracking-wider">
-            <tr>
-              <th className="p-3.5 pl-4">Feature Flag</th>
-              <th className="p-3.5">Type</th>
-              <th className="p-3.5">Tags</th>
-              <th className="p-3.5">Status ({envName || 'Environment'})</th>
-              <th className="p-3.5 pr-4 text-right">Variations</th>
+          <thead className="bg-surface-elevated border-b border-border-subtle">
+            <tr className="text-[10px] font-mono text-muted uppercase tracking-wider">
+              <th className="px-4 py-2 font-medium">Flag Key</th>
+              <th className="px-3 py-2 font-medium">Type</th>
+              <th className="px-3 py-2 font-medium">Tags</th>
+              <th className="px-3 py-2 font-medium">Status</th>
+              <th className="px-3 py-2 font-medium text-right pr-4">Variations</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-border-subtle text-secondary">
+          <tbody className="divide-y divide-border-subtle">
             {flags.map((flag) => (
               <FlagRow
                 key={flag.id}
                 flag={flag}
                 envId={envId || ''}
-                envName={envName || 'Selected Environment'}
+                envName={envName || 'Environment'}
               />
             ))}
           </tbody>

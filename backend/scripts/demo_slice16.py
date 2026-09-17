@@ -7,11 +7,13 @@ Demonstrates:
 4. Dev attempts to self-approve -> 403 SELF_APPROVAL_FORBIDDEN
 5. Owner logs in (owner@demo.local)
 6. Owner simulates impact -> engine runs on historical contexts and outputs transition summary
-7. Owner approves Change Request -> status becomes APPLIED, live flag setting updates, ruleset_version increments
+7. Owner approves Change Request -> status becomes APPLIED, live flag setting updates,
+   and ruleset_version increments
 """
 
 import asyncio
 import sys
+
 import httpx
 
 if sys.stdout.encoding != "utf-8":
@@ -54,14 +56,23 @@ async def main():
         # Find demo project & prod environment
         orgs_res = await client.get("/api/v1/organizations", headers=owner_headers)
         demo_org = orgs_res.json()[0]
-        projs_res = await client.get(f"/api/v1/organizations/{demo_org['id']}/projects", headers=owner_headers)
+        projs_res = await client.get(
+            f"/api/v1/organizations/{demo_org['id']}/projects", headers=owner_headers
+        )
         demo_proj = projs_res.json()[0]
-        envs_res = await client.get(f"/api/v1/projects/{demo_proj['id']}/environments", headers=owner_headers)
+        envs_res = await client.get(
+            f"/api/v1/projects/{demo_proj['id']}/environments", headers=owner_headers
+        )
         prod_env = next(e for e in envs_res.json() if e.get("is_production") is True)
-        print(f"    -> Project: {demo_proj['name']} | Production Environment: {prod_env['name']} (ID: {prod_env['id']})")
+        print(
+            f"    -> Project: {demo_proj['name']} | "
+            f"Production Environment: {prod_env['name']} (ID: {prod_env['id']})"
+        )
 
         # Get or create a flag in this project
-        flags_res = await client.get(f"/api/v1/projects/{demo_proj['id']}/flags", headers=owner_headers)
+        flags_res = await client.get(
+            f"/api/v1/projects/{demo_proj['id']}/flags", headers=owner_headers
+        )
         flags = flags_res.json()
         if not flags:
             new_flag = await client.post(
@@ -84,7 +95,10 @@ async def main():
         print(f"    -> Giá trị hiện tại ở Production: enabled = {curr_enabled}")
 
         # Step 3: Developer modifies flag in Production -> Intercepted as CR
-        print(f"\n[3] Developer cố gắng sửa cờ '{flag['key']}' thành enabled = {target_enabled} trên Production...")
+        print(
+            f"\n[3] Developer cố gắng sửa cờ '{flag['key']}' "
+            f"thành enabled = {target_enabled} trên Production..."
+        )
         put_res = await client.put(
             f"/api/v1/flags/{flag['id']}/environments/{prod_env['id']}",
             json={"enabled": target_enabled},
@@ -102,7 +116,10 @@ async def main():
             headers=owner_headers,
         )
         assert verify_setting.json()["enabled"] == curr_enabled
-        print(f"    -> Kiểm tra cờ thực tế: vẫn giữ nguyên enabled = {verify_setting.json()['enabled']} (An toàn!)")
+        print(
+            f"    -> Kiểm tra cờ thực tế: vẫn giữ nguyên enabled = "
+            f"{verify_setting.json()['enabled']} (An toàn!)"
+        )
 
         # Step 4: Developer attempts self-approval
         print("\n[4] Developer cố gắng tự duyệt Change Request của chính mình (Vi phạm bốn mắt)...")
@@ -125,9 +142,15 @@ async def main():
         assert impact_res.status_code == 200
         impact = impact_res.json()
         print(f"    -> Kết quả mô phỏng: {impact['summary']}")
-        print(f"    -> Tổng context phân tích: {impact['total_contexts']} | Tỉ lệ thay đổi: {impact['change_percentage']}%")
-        for t in impact['transitions']:
-            print(f"       * Chuyển dịch: {t['from_variation']} -> {t['to_variation']} ({t['count']} users)")
+        print(
+            f"    -> Tổng context phân tích: {impact['total_contexts']} | "
+            f"Tỉ lệ thay đổi: {impact['change_percentage']}%"
+        )
+        for t in impact["transitions"]:
+            print(
+                f"       * Chuyển dịch: {t['from_variation']} -> {t['to_variation']} "
+                f"({t['count']} users)"
+            )
 
         # Step 6: Owner approves Change Request
         print("\n[6] Owner tiến hành phê duyệt Change Request...")
@@ -146,7 +169,7 @@ async def main():
             f"/api/v1/flags/{flag['id']}/environments/{prod_env['id']}",
             headers=owner_headers,
         )
-        print(f"\n[7] Kiểm tra giá trị cờ thực tế trên Production sau khi duyệt:")
+        print("\n[7] Kiểm tra giá trị cờ thực tế trên Production sau khi duyệt:")
         print(f"    -> enabled = {final_setting.json()['enabled']} (Đã đổi thành công!)")
         assert final_setting.json()["enabled"] == target_enabled
 

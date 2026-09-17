@@ -1,4 +1,7 @@
-"""Change Request API Router — Multi-environment Governance, Four-Eyes Approval, and Impact Simulation."""
+"""Change Request API Router.
+
+Multi-environment Governance, Four-Eyes Approval, and Impact Simulation.
+"""
 
 from uuid import UUID
 
@@ -63,16 +66,16 @@ async def create_change_request(
 )
 async def list_change_requests(
     environment_id: UUID,
-    status: ChangeRequestStatus | None = Query(None, description="Lọc theo trạng thái change request"),
+    status: ChangeRequestStatus | None = Query(
+        None, description="Lọc theo trạng thái change request"
+    ),
     db: AsyncSession = Depends(get_db),
     env_and_membership: tuple[Environment, Membership] = Depends(
         require_environment_role(MemberRole.VIEWER)
     ),
 ) -> list[ChangeRequest]:
     env, _ = env_and_membership
-    return await change_request_service.list_change_requests(
-        db=db, env_id=env.id, status=status
-    )
+    return await change_request_service.list_change_requests(db=db, env_id=env.id, status=status)
 
 
 @router.get(

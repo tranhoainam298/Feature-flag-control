@@ -95,18 +95,18 @@ export const FlagHealthPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border-default pb-3">
         <div>
-          <div className="flex items-center gap-2.5">
-            <h1 className="text-xl font-bold tracking-tight text-primary">Flag Lifecycle & Health</h1>
-            <span className="px-2 py-0.5 rounded-full text-[11px] font-mono font-medium bg-brand/10 text-brand border border-brand/20">
-              Slice 14
+          <div className="flex items-center gap-2">
+            <h1 className="text-base font-semibold tracking-tight text-primary">Flag Lifecycle & Health</h1>
+            <span className="px-1.5 py-0.5 rounded-xs text-[10px] font-mono font-medium bg-brand/10 text-brand border border-brand/20">
+              AUDIT ENGINE
             </span>
           </div>
-          <p className="text-xs text-secondary mt-1">
-            Theo dõi nợ kỹ thuật (technical debt), máy trạng thái vòng đời, và đề xuất dọn dẹp cờ tính năng trong{' '}
+          <p className="text-xs text-secondary mt-0.5">
+            Monitor technical debt scores, lifecycle state transitions, and cleanup recommendations for{' '}
             <span className="text-primary font-medium">{currentProject?.name || 'Project'}</span>.
           </p>
         </div>
@@ -114,55 +114,55 @@ export const FlagHealthPage: React.FC = () => {
 
       {/* Summary KPI Cards */}
       {summary && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
-          <div className="p-3.5 rounded-md bg-surface border border-border-subtle flex flex-col justify-between">
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2.5">
+          <div className="p-3 rounded-md bg-surface border border-border-default flex flex-col justify-between">
             <span className="text-[11px] text-muted font-medium flex items-center gap-1.5">
-              <Layers className="w-3.5 h-3.5 text-secondary" /> Tổng flag
+              <Layers className="w-3.5 h-3.5 text-secondary" /> Total Flags
             </span>
-            <span className="text-xl font-bold font-mono text-primary mt-2">{summary.total}</span>
+            <span className="text-lg font-bold font-mono text-primary mt-1.5">{summary.total}</span>
           </div>
 
-          <div className="p-3.5 rounded-md bg-surface border border-border-subtle flex flex-col justify-between">
+          <div className="p-3 rounded-md bg-surface border border-border-default flex flex-col justify-between">
             <span className="text-[11px] text-muted font-medium flex items-center gap-1.5">
               <CircleDot className="w-3.5 h-3.5 text-muted" /> Draft
             </span>
-            <span className="text-xl font-bold font-mono text-secondary mt-2">{summary.draft_count}</span>
+            <span className="text-lg font-bold font-mono text-secondary mt-1.5">{summary.draft_count}</span>
           </div>
 
-          <div className="p-3.5 rounded-md bg-surface border border-border-subtle flex flex-col justify-between">
+          <div className="p-3 rounded-md bg-surface border border-border-default flex flex-col justify-between">
             <span className="text-[11px] text-muted font-medium flex items-center gap-1.5">
               <PlayCircle className="w-3.5 h-3.5 text-emerald-400" /> Active
             </span>
-            <span className="text-xl font-bold font-mono text-emerald-400 mt-2">{summary.active_count}</span>
+            <span className="text-lg font-bold font-mono text-emerald-400 mt-1.5">{summary.active_count}</span>
           </div>
 
-          <div className="p-3.5 rounded-md bg-surface border border-border-subtle flex flex-col justify-between">
+          <div className="p-3 rounded-md bg-surface border border-border-default flex flex-col justify-between">
             <span className="text-[11px] text-muted font-medium flex items-center gap-1.5">
               <CheckCircle2 className="w-3.5 h-3.5 text-sky-400" /> Rolled Out
             </span>
-            <span className="text-xl font-bold font-mono text-sky-400 mt-2">{summary.rolled_out_count}</span>
+            <span className="text-lg font-bold font-mono text-sky-400 mt-1.5">{summary.rolled_out_count}</span>
           </div>
 
-          <div className="p-3.5 rounded-md bg-surface border border-amber-500/20 bg-amber-500/5 flex flex-col justify-between">
-            <span className="text-[11px] text-amber-400 font-medium flex items-center gap-1.5">
-              <AlertTriangle className="w-3.5 h-3.5 text-amber-400" /> Stale (Cần xử lý)
+          <div className="p-3 rounded-md bg-surface border border-status-warning/30 bg-status-warning/5 flex flex-col justify-between">
+            <span className="text-[11px] text-status-warning font-medium flex items-center gap-1.5">
+              <AlertTriangle className="w-3.5 h-3.5 text-status-warning" /> Stale (Action Needed)
             </span>
-            <span className="text-xl font-bold font-mono text-amber-400 mt-2">{summary.stale_count}</span>
+            <span className="text-lg font-bold font-mono text-status-warning mt-1.5">{summary.stale_count}</span>
           </div>
 
-          <div className="p-3.5 rounded-md bg-surface border border-border-subtle flex flex-col justify-between">
+          <div className="p-3 rounded-md bg-surface border border-border-default flex flex-col justify-between">
             <span className="text-[11px] text-muted font-medium flex items-center gap-1.5">
-              <Archive className="w-3.5 h-3.5 text-rose-400" /> Archived
+              <Archive className="w-3.5 h-3.5 text-muted" /> Archived
             </span>
-            <span className="text-xl font-bold font-mono text-muted mt-2">{summary.archived_count}</span>
+            <span className="text-lg font-bold font-mono text-muted mt-1.5">{summary.archived_count}</span>
           </div>
 
-          <div className="p-3.5 rounded-md bg-surface border border-border-subtle flex flex-col justify-between">
+          <div className="p-3 rounded-md bg-surface border border-border-default flex flex-col justify-between">
             <span className="text-[11px] text-muted font-medium flex items-center gap-1.5">
-              <HeartPulse className="w-3.5 h-3.5 text-brand" /> ĐTB Nợ Flag
+              <HeartPulse className="w-3.5 h-3.5 text-brand" /> Avg Debt Score
             </span>
-            <div className="flex items-baseline gap-1.5 mt-2">
-              <span className={cn('text-xl font-bold font-mono', getScoreColor(summary.avg_score).split(' ')[0])}>
+            <div className="flex items-baseline gap-1 mt-1.5">
+              <span className={cn('text-lg font-bold font-mono', getScoreColor(summary.avg_score).split(' ')[0])}>
                 {summary.avg_score}
               </span>
               <span className="text-[10px] text-muted font-mono">/100</span>
@@ -172,34 +172,34 @@ export const FlagHealthPage: React.FC = () => {
       )}
 
       {/* Filter and Search Bar */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-surface p-3 rounded-md border border-border-subtle">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-surface p-2.5 rounded-md border border-border-default">
         {/* Search Input */}
         <div className="relative w-full sm:w-72">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
+          <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted" />
           <input
             type="text"
-            placeholder="Tìm theo key hoặc tên flag..."
+            placeholder="Search by flag name or key..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-3 py-1.5 text-xs bg-canvas border border-border-subtle rounded-md text-primary placeholder:text-muted focus:outline-hidden focus:border-brand transition-colors"
+            className="w-full pl-8 pr-3 py-1.5 text-xs bg-surface-elevated border border-border-default rounded-xs text-primary placeholder:text-muted focus:outline-hidden focus:border-brand transition-colors"
           />
         </div>
 
         {/* Filters Group */}
-        <div className="flex items-center gap-2.5 w-full sm:w-auto overflow-x-auto">
+        <div className="flex items-center gap-2 w-full sm:w-auto overflow-x-auto">
           {/* State Filter */}
-          <div className="flex items-center gap-1.5 text-xs text-secondary">
+          <div className="flex items-center gap-1 text-xs text-secondary">
             <SlidersHorizontal className="w-3.5 h-3.5 text-muted shrink-0" />
             <select
               value={selectedState}
               onChange={(e) => setSelectedState(e.target.value)}
-              className="bg-canvas border border-border-subtle rounded-md px-2.5 py-1.5 text-xs text-primary focus:outline-hidden focus:border-brand"
+              className="bg-surface-elevated border border-border-default rounded-xs px-2 py-1 text-xs text-primary focus:outline-hidden focus:border-brand"
             >
-              <option value="ALL">Tất cả trạng thái</option>
+              <option value="ALL">All States</option>
               <option value="DRAFT">DRAFT</option>
               <option value="ACTIVE">ACTIVE</option>
               <option value="ROLLED_OUT">ROLLED OUT</option>
-              <option value="STALE">STALE (Cần thu hồi)</option>
+              <option value="STALE">STALE (Deprecate)</option>
               <option value="ARCHIVED">ARCHIVED</option>
             </select>
           </div>
@@ -208,11 +208,11 @@ export const FlagHealthPage: React.FC = () => {
           <select
             value={minScore}
             onChange={(e) => setMinScore(Number(e.target.value))}
-            className="bg-canvas border border-border-subtle rounded-md px-2.5 py-1.5 text-xs text-primary focus:outline-hidden focus:border-brand"
+            className="bg-surface-elevated border border-border-default rounded-xs px-2 py-1 text-xs text-primary focus:outline-hidden focus:border-brand"
           >
-            <option value="0">Tất cả điểm nợ</option>
-            <option value="30">Điểm nợ ≥ 30 (Vừa & Cao)</option>
-            <option value="60">Điểm nợ ≥ 60 (Cao)</option>
+            <option value="0">All Debt Scores</option>
+            <option value="30">Debt Score ≥ 30 (Moderate & High)</option>
+            <option value="60">Debt Score ≥ 60 (High)</option>
           </select>
 
           {/* Sort By */}
@@ -221,11 +221,11 @@ export const FlagHealthPage: React.FC = () => {
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="bg-canvas border border-border-subtle rounded-md px-2.5 py-1.5 text-xs text-primary focus:outline-hidden focus:border-brand"
+              className="bg-surface-elevated border border-border-default rounded-xs px-2 py-1 text-xs text-primary focus:outline-hidden focus:border-brand"
             >
-              <option value="score">Sắp xếp: Điểm nợ cao nhất</option>
-              <option value="name">Sắp xếp: Tên A-Z</option>
-              <option value="state">Sắp xếp: Trạng thái</option>
+              <option value="score">Sort: Highest Debt Score</option>
+              <option value="name">Sort: Flag Name A-Z</option>
+              <option value="state">Sort: Lifecycle State</option>
             </select>
           </div>
         </div>
@@ -236,15 +236,15 @@ export const FlagHealthPage: React.FC = () => {
         <SkeletonTable rows={5} columns={5} />
       ) : isError ? (
         <ErrorAlert
-          title="Không tải được dữ liệu sức khỏe flag"
+          title="Failed to load flag health metrics"
           error={error}
           onRetry={() => refetch()}
         />
       ) : filteredItems.length === 0 ? (
         <EmptyState
           icon={<HeartPulse className="w-6 h-6 text-muted" />}
-          title="Không tìm thấy cờ tính năng nào"
-          description="Không có cờ tính năng nào khớp với tiêu chí tìm kiếm hoặc bộ lọc hiện tại."
+          title="No feature flags match criteria"
+          description="No feature flags match the selected filters or search query."
           action={
             <Button
               variant="outline"
@@ -255,21 +255,21 @@ export const FlagHealthPage: React.FC = () => {
                 setSearch('');
               }}
             >
-              Đặt lại bộ lọc
+              Reset Filters
             </Button>
           }
         />
       ) : (
-        <div className="border border-border-subtle rounded-md overflow-hidden bg-surface">
+        <div className="border border-border-default rounded-md overflow-hidden bg-surface">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs border-collapse">
               <thead>
-                <tr className="border-b border-border-subtle bg-surface-subtle text-secondary font-medium uppercase tracking-wider text-[10px]">
-                  <th className="py-2.5 px-4">Flag / Định danh</th>
-                  <th className="py-2.5 px-3">Trạng thái</th>
-                  <th className="py-2.5 px-3 w-52">Điểm nợ kỹ thuật (0-100)</th>
-                  <th className="py-2.5 px-4">Đề xuất hành động</th>
-                  <th className="py-2.5 px-4 text-right">Thao tác</th>
+                <tr className="border-b border-border-default bg-surface-elevated/40 text-secondary font-medium uppercase tracking-wider text-[10px]">
+                  <th className="py-2.5 px-3">Flag / Identifier</th>
+                  <th className="py-2.5 px-3">Lifecycle State</th>
+                  <th className="py-2.5 px-3 w-52">Technical Debt Score (0-100)</th>
+                  <th className="py-2.5 px-3">Recommendations</th>
+                  <th className="py-2.5 px-3 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border-subtle">
@@ -281,24 +281,24 @@ export const FlagHealthPage: React.FC = () => {
                     <tr
                       key={item.flag_id}
                       className={cn(
-                        'hover:bg-surface-hover/60 transition-colors group',
+                        'hover:bg-surface-elevated/50 transition-colors group',
                         isArchived && 'opacity-60 bg-surface/30'
                       )}
                     >
                       {/* Flag Details */}
-                      <td className="py-3 px-4">
+                      <td className="py-2.5 px-3">
                         <div className="flex flex-col">
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1.5">
                             <Link
                               to={`/flags/${item.flag_id}`}
                               className="font-medium text-primary hover:text-brand transition-colors flex items-center gap-1"
                             >
                               <span>{item.flag_name}</span>
-                              <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                              <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity text-muted" />
                             </Link>
                             {item.is_temporary && (
-                              <span className="px-1.5 py-0.2 rounded-xs text-[10px] font-mono bg-surface-active text-muted border border-border-subtle">
-                                Tạm thời
+                              <span className="px-1.5 py-0.2 rounded-xs text-[10px] font-mono bg-surface-elevated text-muted border border-border-subtle">
+                                Temporary
                               </span>
                             )}
                           </div>
@@ -307,29 +307,29 @@ export const FlagHealthPage: React.FC = () => {
                       </td>
 
                       {/* Lifecycle State */}
-                      <td className="py-3 px-3">
+                      <td className="py-2.5 px-3">
                         <FlagHealthBadge state={item.state} />
                       </td>
 
                       {/* Debt Score & Breakdown */}
-                      <td className="py-3 px-3">
-                        <div className="flex flex-col gap-1.5">
+                      <td className="py-2.5 px-3">
+                        <div className="flex flex-col gap-1">
                           <div className="flex items-center justify-between">
                             <span
                               className={cn(
-                                'font-mono font-bold text-xs px-1.5 py-0.5 rounded border',
+                                'font-mono font-bold text-xs px-1.5 py-0.5 rounded-xs border',
                                 getScoreBorderColor(item.score)
                               )}
                             >
                               {item.score} / 100
                             </span>
                             <span className="text-[10px] text-muted">
-                              {item.score < 30 ? 'Khỏe mạnh' : item.score < 60 ? 'Cảnh báo' : 'Nguy cấp'}
+                              {item.score < 30 ? 'Healthy' : item.score < 60 ? 'Warning' : 'Critical'}
                             </span>
                           </div>
 
                           {/* Progress Bar */}
-                          <div className="w-full bg-surface-active rounded-full h-2 overflow-hidden">
+                          <div className="w-full bg-surface-elevated rounded-full h-1.5 overflow-hidden">
                             <div
                               className={cn('h-full transition-all duration-300', scoreColor.split(' ')[1])}
                               style={{ width: `${Math.max(item.score, 4)}%` }}
@@ -338,28 +338,28 @@ export const FlagHealthPage: React.FC = () => {
 
                           {/* Micro Breakdown Indicator */}
                           <div className="flex items-center justify-between text-[10px] font-mono text-muted pt-0.5">
-                            <span title="Tuổi flag">Tuổi: {item.age_score}</span>
-                            <span title="Thời gian rollout 100%">Rollout: {item.rollout_score}</span>
-                            <span title="Staleness">Cũ: {item.staleness_score}</span>
+                            <span title="Flag age score">Age: {item.age_score}</span>
+                            <span title="Full rollout score">Rollout: {item.rollout_score}</span>
+                            <span title="Staleness score">Stale: {item.staleness_score}</span>
                             {item.is_temporary && (
-                              <span title="Penalty tạm thời">Tạm: {item.temporary_score}</span>
+                              <span title="Temporary flag penalty">Temp: {item.temporary_score}</span>
                             )}
                           </div>
                         </div>
                       </td>
 
                       {/* Recommendations */}
-                      <td className="py-3 px-4">
+                      <td className="py-2.5 px-3">
                         {item.recommendations.length === 0 ? (
-                          <span className="text-muted text-[11px] italic">Không có cảnh báo</span>
+                          <span className="text-muted text-[11px] italic">No active warnings</span>
                         ) : (
-                          <div className="space-y-1">
+                          <div className="space-y-0.5">
                             {item.recommendations.map((rec, idx) => (
                               <div
                                 key={idx}
                                 className="flex items-start gap-1.5 text-[11px] text-secondary leading-tight"
                               >
-                                <span className="text-amber-400 shrink-0 mt-0.5">•</span>
+                                <span className="text-status-warning shrink-0 mt-0.5">•</span>
                                 <span>{rec}</span>
                               </div>
                             ))}
@@ -368,19 +368,19 @@ export const FlagHealthPage: React.FC = () => {
                       </td>
 
                       {/* Actions */}
-                      <td className="py-3 px-4 text-right">
+                      <td className="py-2.5 px-3 text-right">
                         {!isArchived ? (
                           <Button
                             variant="danger"
                             size="sm"
                             onClick={() => setFlagToArchive(item)}
-                            className="inline-flex items-center gap-1 text-xs"
+                            className="inline-flex items-center gap-1 text-xs h-7 px-2.5"
                           >
-                            <Archive className="w-3.5 h-3.5" />
+                            <Archive className="w-3 h-3" />
                             <span>Archive</span>
                           </Button>
                         ) : (
-                          <span className="text-[11px] text-muted italic font-mono">Đã lưu trữ</span>
+                          <span className="text-[11px] text-muted italic font-mono">Archived</span>
                         )}
                       </td>
                     </tr>
@@ -397,26 +397,26 @@ export const FlagHealthPage: React.FC = () => {
         <Modal
           isOpen={true}
           onClose={() => setFlagToArchive(null)}
-          title="Xác nhận Archive cờ tính năng"
-          description={`Bạn có chắc chắn muốn archive cờ "${flagToArchive.flag_name}" (${flagToArchive.flag_key}) không?`}
+          title="Confirm Archive Feature Flag"
+          description={`Are you sure you want to archive "${flagToArchive.flag_name}" (${flagToArchive.flag_key})?`}
         >
-          <div className="space-y-4 pt-2">
-            <div className="p-3 bg-rose-500/10 border border-rose-500/20 rounded-md text-xs text-rose-300 flex items-start gap-2">
-              <Info className="w-4 h-4 shrink-0 mt-0.5 text-rose-400" />
+          <div className="space-y-3.5 pt-2">
+            <div className="p-3 bg-status-danger/10 border border-status-danger/20 rounded-xs text-xs text-status-danger flex items-start gap-2">
+              <Info className="w-4 h-4 shrink-0 mt-0.5" />
               <div>
-                Hành động này sẽ đánh dấu cờ là <strong>ARCHIVED</strong>, ghi nhận vào audit log, và
-                khuyến cáo loại bỏ kiểm tra cờ này khỏi mã nguồn ứng dụng để giảm nợ kỹ thuật.
+                Archiving this flag sets its lifecycle state to <strong>ARCHIVED</strong>, records an audit event,
+                and recommends removing the flag check from application source code to eliminate technical debt.
               </div>
             </div>
 
-            <div className="flex justify-end gap-2 pt-2">
+            <div className="flex justify-end gap-2 pt-2 border-t border-border-subtle">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setFlagToArchive(null)}
                 disabled={archiveMutation.isPending}
               >
-                Hủy bỏ
+                Cancel
               </Button>
               <Button
                 variant="danger"
@@ -424,7 +424,7 @@ export const FlagHealthPage: React.FC = () => {
                 onClick={() => archiveMutation.mutate(flagToArchive.flag_id)}
                 disabled={archiveMutation.isPending}
               >
-                {archiveMutation.isPending ? 'Đang archive...' : 'Xác nhận Archive'}
+                {archiveMutation.isPending ? 'Archiving...' : 'Confirm Archive'}
               </Button>
             </div>
           </div>

@@ -7,7 +7,7 @@ import { FlagVariations } from '../features/flags/FlagVariations';
 import { FlagSimulator } from '../features/flags/FlagSimulator';
 import { RuleBuilder } from '../features/targeting/RuleBuilder';
 import { useApp } from '../context/AppContext';
-import { ArrowLeft, Layers, Sliders, Play, Settings } from 'lucide-react';
+import { ArrowLeft, Layers, Crosshair, Terminal, Settings } from 'lucide-react';
 import { Switch } from '../components/ui/Switch';
 import { SkeletonTable } from '../components/ui/SkeletonTable';
 import { ErrorAlert } from '../components/ui/ErrorAlert';
@@ -55,48 +55,52 @@ export const FlagDetailPage: React.FC = () => {
     },
   });
 
-  if (isLoading) return <SkeletonTable rows={4} columns={3} />;
+  if (isLoading) return <SkeletonTable rows={6} columns={3} />;
   if (isError || !flag) {
     return <ErrorAlert error={error || 'Flag not found'} onRetry={() => refetch()} />;
   }
 
+  const tabs = [
+    { key: 'targeting', label: 'Targeting Rules', icon: Crosshair },
+    { key: 'simulator', label: 'Evaluation Workbench', icon: Terminal },
+    { key: 'variations', label: `Variations (${flag.variations.length})`, icon: Settings },
+  ];
+
   return (
-    <div className="space-y-6">
-      {/* Back Link */}
-      <div>
-        <Link
-          to="/flags"
-          className="inline-flex items-center gap-1.5 text-xs text-muted hover:text-primary transition-colors font-medium"
-        >
-          <ArrowLeft className="w-3.5 h-3.5" />
-          <span>Quay lại danh sách Flag</span>
-        </Link>
-      </div>
+    <div className="space-y-4">
+      {/* Breadcrumb */}
+      <Link
+        to="/flags"
+        className="inline-flex items-center gap-1 text-[11px] text-muted hover:text-primary transition-colors font-medium"
+      >
+        <ArrowLeft className="w-3 h-3" />
+        <span>Flags</span>
+      </Link>
 
       {/* Header */}
       <FlagHeader flag={flag} />
 
-      {/* Environment Selector & Switch */}
-      <div className="border border-border-default rounded-xl bg-surface overflow-hidden shadow-xs">
-        <div className="p-3.5 border-b border-border-subtle bg-surface-elevated flex flex-wrap items-center justify-between gap-3">
+      {/* Environment Bar */}
+      <div className="border border-border-subtle rounded-md bg-surface overflow-hidden">
+        <div className="px-4 py-2.5 border-b border-border-subtle bg-surface-elevated flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <Layers className="w-4 h-4 text-brand" />
-            <span className="text-xs font-semibold text-primary uppercase tracking-wide">
-              Môi trường làm việc:
+            <Layers className="w-3.5 h-3.5 text-muted" />
+            <span className="text-[10px] font-mono text-muted uppercase tracking-wider">
+              Environment
             </span>
           </div>
 
-          {/* Environment Tabs */}
-          <div className="flex items-center gap-1 bg-surface-active/50 p-1 rounded-lg border border-border-subtle">
+          {/* Env Tabs */}
+          <div className="flex items-center gap-0.5 bg-surface-active/40 p-0.5 rounded-sm border border-border-subtle">
             {environments.map((env) => (
               <button
                 key={env.id}
                 type="button"
                 onClick={() => setSelectedEnvId(env.id)}
-                className={`px-3 py-1 text-xs font-medium rounded-md transition-all cursor-pointer ${
+                className={`px-2.5 py-1 text-[11px] font-medium rounded-xs transition-all cursor-pointer ${
                   activeEnvId === env.id
-                    ? 'bg-surface-elevated text-primary shadow-xs border border-border-default font-semibold'
-                    : 'text-muted hover:text-primary'
+                    ? 'bg-surface-elevated text-primary shadow-sm border border-border-default'
+                    : 'text-muted hover:text-secondary'
                 }`}
               >
                 {env.name}
@@ -105,93 +109,68 @@ export const FlagDetailPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Environment Toggle & Status */}
-        <div className="p-4 flex items-center justify-between">
+        {/* Toggle Status */}
+        <div className="px-4 py-2.5 flex items-center justify-between">
           <div>
-            <h4 className="text-sm font-medium text-primary">
-              Trạng thái Flag tại {activeEnv?.name || 'Môi trường'}
-            </h4>
-            <p className="text-xs text-muted mt-0.5">
-              Khi TẮT, cờ sẽ trả về fallback variation mà không chạy bất kỳ quy tắc targeting nào.
-            </p>
+            <span className="text-xs font-medium text-primary">
+              Flag state in {activeEnv?.name || 'environment'}
+            </span>
           </div>
-
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5">
             <span
-              className={`text-xs font-mono font-semibold ${
-                setting?.enabled ? 'text-flag-on' : 'text-muted'
+              className={`text-[10px] font-mono font-semibold ${
+                setting?.enabled ? 'text-brand' : 'text-muted'
               }`}
             >
-              {setting?.enabled ? 'BẬT (ENABLED)' : 'TẮT (DISABLED)'}
+              {setting?.enabled ? 'ENABLED' : 'DISABLED'}
             </span>
             <Switch
               checked={setting?.enabled ?? false}
               onChange={(checked) => toggleMutation.mutate(checked)}
               isLoading={isSettingLoading || toggleMutation.isPending}
-              ariaLabel={`Bật tắt flag ${flag.key} trong ${activeEnv?.name}`}
+              ariaLabel={`Toggle ${flag.key} in ${activeEnv?.name}`}
+              size="sm"
             />
           </div>
         </div>
       </div>
 
-      {/* Main Tab Bar */}
-      <div className="border-b border-border-default">
-        <nav className="flex space-x-6" aria-label="Tabs">
-          <button
-            type="button"
-            onClick={() => setSearchParams({ tab: 'targeting' })}
-            className={`flex items-center gap-2 py-3 border-b-2 text-xs font-semibold transition-colors ${
-              activeTab === 'targeting'
-                ? 'border-indigo-500 text-indigo-400'
-                : 'border-transparent text-muted hover:text-primary'
-            }`}
-          >
-            <Sliders className="w-4 h-4" />
-            <span>Targeting & Quy tắc</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setSearchParams({ tab: 'simulator' })}
-            className={`flex items-center gap-2 py-3 border-b-2 text-xs font-semibold transition-colors ${
-              activeTab === 'simulator'
-                ? 'border-indigo-500 text-indigo-400'
-                : 'border-transparent text-muted hover:text-primary'
-            }`}
-          >
-            <Play className="w-4 h-4" />
-            <span>Mô phỏng đánh giá (Simulator)</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setSearchParams({ tab: 'variations' })}
-            className={`flex items-center gap-2 py-3 border-b-2 text-xs font-semibold transition-colors ${
-              activeTab === 'variations'
-                ? 'border-indigo-500 text-indigo-400'
-                : 'border-transparent text-muted hover:text-primary'
-            }`}
-          >
-            <Settings className="w-4 h-4" />
-            <span>Variations ({flag.variations.length})</span>
-          </button>
+      {/* Tab Bar */}
+      <div className="border-b border-border-subtle">
+        <nav className="flex gap-0" aria-label="Flag detail tabs">
+          {tabs.map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.key;
+            return (
+              <button
+                key={tab.key}
+                type="button"
+                onClick={() => setSearchParams({ tab: tab.key })}
+                className={`flex items-center gap-1.5 px-3 py-2 text-[11px] font-medium border-b-2 transition-colors ${
+                  isActive
+                    ? 'border-brand text-brand'
+                    : 'border-transparent text-muted hover:text-secondary'
+                }`}
+              >
+                <Icon className="w-3.5 h-3.5" />
+                <span>{tab.label}</span>
+              </button>
+            );
+          })}
         </nav>
       </div>
 
       {/* Tab Panels */}
       {activeTab === 'targeting' && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-sm font-semibold text-primary">
-                Quy tắc Targeting — {activeEnv?.name}
-              </h3>
-              <p className="text-xs text-muted">
-                Quy tắc được đánh giá từ trên xuống dưới (độ ưu tiên #1 trước). Khi khớp điều kiện, rollout sẽ phân phối theo tỉ lệ.
-              </p>
-            </div>
+        <div className="space-y-3">
+          <div>
+            <h3 className="text-xs font-semibold text-primary">
+              Targeting Rules — {activeEnv?.name}
+            </h3>
+            <p className="text-[10px] text-muted mt-0.5">
+              Rules evaluated top-to-bottom by priority. First match wins.
+            </p>
           </div>
-
           <RuleBuilder
             flagId={flag.id}
             envId={activeEnvId}
@@ -204,7 +183,7 @@ export const FlagDetailPage: React.FC = () => {
         <FlagSimulator
           flagId={flag.id}
           envId={activeEnvId}
-          envName={activeEnv?.name || 'Môi trường'}
+          envName={activeEnv?.name || 'Environment'}
         />
       )}
 

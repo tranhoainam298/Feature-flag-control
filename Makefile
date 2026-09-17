@@ -13,13 +13,14 @@ migrate:
 	docker compose exec api alembic upgrade head
 
 seed:
+	docker compose exec api alembic upgrade head
 	docker compose exec api python -m app.seed
 
 test:
 	docker compose exec -T api pytest
 
 test-engine:
-	docker compose exec -T api pytest app/engine
+	docker compose exec -T api pytest app/tests/unit/engine --cov=app/engine --cov-fail-under=95
 
 lint:
 	docker compose exec -T api ruff check .

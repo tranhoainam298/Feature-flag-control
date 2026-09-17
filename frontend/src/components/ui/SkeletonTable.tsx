@@ -1,33 +1,31 @@
 import React from 'react';
 
-export interface SkeletonTableProps {
+interface Props {
   rows?: number;
   columns?: number;
 }
 
-export const SkeletonTable: React.FC<SkeletonTableProps> = ({ rows = 5, columns = 5 }) => {
+export const SkeletonTable: React.FC<Props> = ({ rows = 5, columns = 5 }) => {
   return (
-    <div className="w-full border border-border-subtle rounded-md overflow-hidden animate-pulse">
-      {/* Table Header */}
-      <div className="bg-surface-elevated border-b border-border-subtle p-3 flex gap-4">
+    <div className="border border-border-subtle rounded-md overflow-hidden">
+      {/* Header */}
+      <div className="bg-surface-elevated border-b border-border-subtle px-4 py-2.5 flex gap-6">
         {Array.from({ length: columns }).map((_, i) => (
-          <div key={i} className="h-4 bg-surface-active rounded-xs flex-1" />
+          <div key={`h-${i}`} className="skeleton h-3 rounded-xs" style={{ width: `${60 + i * 20}px` }} />
         ))}
       </div>
-      {/* Table Rows */}
-      <div className="divide-y divide-border-subtle bg-surface">
-        {Array.from({ length: rows }).map((_, r) => (
-          <div key={r} className="p-4 flex items-center gap-4">
-            {Array.from({ length: columns }).map((_, c) => (
-              <div
-                key={c}
-                className="h-3.5 bg-surface-hover rounded-xs"
-                style={{ width: `${Math.max(40, 90 - c * 12)}%`, flex: 1 }}
-              />
-            ))}
-          </div>
-        ))}
-      </div>
+      {/* Rows */}
+      {Array.from({ length: rows }).map((_, r) => (
+        <div key={`r-${r}`} className="px-4 py-3 border-b border-border-subtle last:border-0 flex gap-6 items-center">
+          {Array.from({ length: columns }).map((_, c) => (
+            <div
+              key={`r-${r}-c-${c}`}
+              className="skeleton h-3 rounded-xs"
+              style={{ width: c === 0 ? '140px' : `${50 + c * 15}px` }}
+            />
+          ))}
+        </div>
+      ))}
     </div>
   );
 };

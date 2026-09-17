@@ -111,6 +111,53 @@ def _extract_segment_refs(conditions: Any) -> list[str]:
     return refs
 
 
+def _is_valid_uuid(val: Any) -> bool:
+    try:
+        UUID(str(val))
+        return True
+    except (ValueError, TypeError):
+        return False
+
+
+async def check_cyclic_segment_reference(
+    db: AsyncSession,
+    project_id: UUID,
+    current_key: str,
+    conditions: Any,
+    visited: set[str] | None = None,
+) -> None:
+    """Detect circular references between segments."""
+    if visited is None:
+        visited = {current_key}
+    else:
+        visited = set(visited)
+        visited.add(current_key)
+
+    refs = _extract_segment_refs(conditions)
+    for ref in refs:
+        if ref in visited:
+            raise FlagOpsError(
+                code="CYCLIC_SEGMENT_REFERENCE",
+                message=f"Cyclic segment reference detected involving '{ref}'",
+                status_code=400,
+            )
+        query = select(Segment).where(Segment.project_id == project_id)
+        if _is_valid_uuid(ref):
+            query = query.where((Segment.key == ref) | (Segment.id == UUID(str(ref))))
+        else:
+            query = query.where(Segment.key == ref)
+
+        referenced_seg = await db.scalar(query)
+        if referenced_seg and referenced_seg.conditions:
+            await check_cyclic_segment_reference(
+                db=db,
+                project_id=project_id,
+                current_key=referenced_seg.key,
+                conditions=referenced_seg.conditions,
+                visited=visited | {ref, referenced_seg.key},
+            )
+
+
 # ============================================================================
 # SEGMENT SERVICES
 # ============================================================================
@@ -144,6 +191,8 @@ async def create_segment(
 
     # Validate conditions
     validate_condition_tree(data.conditions)
+    if data.conditions:
+        await check_cyclic_segment_reference(db, project.id, data.key, data.conditions)
 
     segment = Segment(
         project_id=project.id,
@@ -207,6 +256,7 @@ async def update_segment(
 
     if data.conditions is not None:
         validate_condition_tree(data.conditions)
+        await check_cyclic_segment_reference(db, project.id, segment.key, data.conditions)
         segment.conditions = data.conditions
 
     if data.name is not None:

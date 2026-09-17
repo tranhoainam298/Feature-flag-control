@@ -31,6 +31,8 @@ class Settings(BaseSettings):
 
     CORS_ORIGINS: str = Field(default="http://localhost:3000,http://localhost:5173")
 
+    ENVIRONMENT: str = Field(default="development")
+
     # Flag lifecycle debt score weights (must sum to 1.0)
     DEBT_W_AGE: float = Field(default=0.25)
     DEBT_W_ROLLOUT: float = Field(default=0.35)
@@ -41,5 +43,25 @@ class Settings(BaseSettings):
     def cors_origins_list(self) -> list[str]:
         return [origin.strip() for origin in self.CORS_ORIGINS.split(",") if origin.strip()]
 
+    def validate_production_security(self) -> None:
+        """Enforce fail-secure startup rules in production/staging or non-debug mode."""
+        is_prod = self.ENVIRONMENT.lower() in ("production", "staging") or not self.DEBUG
+        if is_prod:
+            if (
+                self.CONFIG_MASTER_KEY == "change-me-32-bytes-key-here!!!!"
+                or len(self.CONFIG_MASTER_KEY.encode("utf-8")) != 32
+            ):
+                raise RuntimeError(
+                    "FATAL: Insecure CONFIG_MASTER_KEY detected in production environment. Application halted."
+                )
+            if (
+                self.SECRET_KEY == "change-me-to-a-random-string-at-least-32-chars"
+                or len(self.SECRET_KEY) < 32
+            ):
+                raise RuntimeError(
+                    "FATAL: Insecure SECRET_KEY detected in production environment. Application halted."
+                )
+
 
 settings = Settings()
+

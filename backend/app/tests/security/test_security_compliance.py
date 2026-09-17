@@ -24,17 +24,13 @@ from unittest.mock import patch
 
 import pytest
 from httpx import ASGITransport, AsyncClient
-from sqlalchemy import select
 
 from app.core.config import settings
 from app.core.database import async_session_factory
 from app.engine.operators import op_matches_regex
 from app.main import app
-from app.models.enums import ApiKeyScope, MemberRole
-from app.models.flag import Flag
-from app.models.organization import Membership, Organization
-from app.models.project import ApiKey, Environment, Project
-from app.models.user import User
+from app.models.enums import MemberRole
+from app.models.organization import Membership
 
 BASE = "http://test"
 AUTH_PREFIX = "/api/v1/auth"
@@ -48,7 +44,9 @@ def _unique_email() -> str:
     return f"sec_test_{uuid.uuid4().hex[:10]}@flagops.security"
 
 
-async def _create_user_and_token(client: AsyncClient, email: str | None = None) -> tuple[dict[str, Any], dict[str, str]]:
+async def _create_user_and_token(
+    client: AsyncClient, email: str | None = None
+) -> tuple[dict[str, Any], dict[str, str]]:
     """Register and login a new user, returning (user_data, auth_headers)."""
     target_email = email or _unique_email()
     reg = await client.post(
@@ -114,6 +112,7 @@ async def _create_api_key(
 # 1. API key dev gọi ruleset prod -> 403
 # ──────────────────────────────────────────────────────────────────────────────
 
+
 @pytest.mark.asyncio
 async def test_dev_api_key_cannot_access_prod_ruleset() -> None:
     """An API key bound to development cannot read production ruleset (HTTP 403)."""
@@ -143,6 +142,7 @@ async def test_dev_api_key_cannot_access_prod_ruleset() -> None:
 # 2. CLIENT key lấy flag is_client_visible=false -> KHÔNG có trong kết quả
 # ──────────────────────────────────────────────────────────────────────────────
 
+
 @pytest.mark.asyncio
 async def test_client_key_filters_non_client_visible_flags() -> None:
     """CLIENT-scoped API key cannot observe flags marked is_client_visible=False."""
@@ -154,7 +154,12 @@ async def test_client_key_filters_non_client_visible_flags() -> None:
         # Flag 1: Visible to clients
         f1_res = await client.post(
             f"{PROJECT_PREFIX}/{proj['id']}/flags",
-            json={"key": f"public_ui_{uuid.uuid4().hex[:6]}", "name": "Public UI", "type": "BOOLEAN", "is_client_visible": True},
+            json={
+                "key": f"public_ui_{uuid.uuid4().hex[:6]}",
+                "name": "Public UI",
+                "type": "BOOLEAN",
+                "is_client_visible": True,
+            },
             headers=auth_headers,
         )
         assert f1_res.status_code == 201
@@ -163,7 +168,12 @@ async def test_client_key_filters_non_client_visible_flags() -> None:
         # Flag 2: Backend only (is_client_visible = False)
         f2_res = await client.post(
             f"{PROJECT_PREFIX}/{proj['id']}/flags",
-            json={"key": f"secret_backend_{uuid.uuid4().hex[:6]}", "name": "Secret Backend", "type": "BOOLEAN", "is_client_visible": False},
+            json={
+                "key": f"secret_backend_{uuid.uuid4().hex[:6]}",
+                "name": "Secret Backend",
+                "type": "BOOLEAN",
+                "is_client_visible": False,
+            },
             headers=auth_headers,
         )
         assert f2_res.status_code == 201
@@ -174,7 +184,9 @@ async def test_client_key_filters_non_client_visible_flags() -> None:
         cli_raw_key = cli_key_data["key"]
 
         # Fetch ruleset with CLIENT key
-        ruleset_res = await client.get(f"{EVAL_PREFIX}/ruleset", headers={"X-FlagOps-Key": cli_raw_key})
+        ruleset_res = await client.get(
+            f"{EVAL_PREFIX}/ruleset", headers={"X-FlagOps-Key": cli_raw_key}
+        )
         assert ruleset_res.status_code == 200
         flags_payload = ruleset_res.json().get("flags", {})
 
@@ -197,6 +209,7 @@ async def test_client_key_filters_non_client_visible_flags() -> None:
 # 3. VIEWER gọi PUT /flags/{id} -> 403
 # ──────────────────────────────────────────────────────────────────────────────
 
+
 @pytest.mark.asyncio
 async def test_viewer_role_cannot_update_flag() -> None:
     """Users with VIEWER role cannot modify flags via PUT/PATCH (HTTP 403 Forbidden)."""
@@ -207,7 +220,11 @@ async def test_viewer_role_cannot_update_flag() -> None:
 
         flag_res = await client.post(
             f"{PROJECT_PREFIX}/{proj['id']}/flags",
-            json={"key": f"test_role_{uuid.uuid4().hex[:6]}", "name": "Role Test Flag", "type": "BOOLEAN"},
+            json={
+                "key": f"test_role_{uuid.uuid4().hex[:6]}",
+                "name": "Role Test Flag",
+                "type": "BOOLEAN",
+            },
             headers=admin_headers,
         )
         assert flag_res.status_code == 201
@@ -249,6 +266,7 @@ async def test_viewer_role_cannot_update_flag() -> None:
 # 4. User org A gọi GET project org B -> 404 (không phải 403)
 # ──────────────────────────────────────────────────────────────────────────────
 
+
 @pytest.mark.asyncio
 async def test_cross_org_access_returns_404_not_403() -> None:
     """Cross-organization access returns 404 NOT_FOUND to prevent tenant resource enumeration."""
@@ -274,6 +292,7 @@ async def test_cross_org_access_returns_404_not_403() -> None:
 # ──────────────────────────────────────────────────────────────────────────────
 # 5. API key đã revoke -> 401
 # ──────────────────────────────────────────────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_revoked_api_key_returns_401() -> None:
@@ -305,9 +324,13 @@ async def test_revoked_api_key_returns_401() -> None:
 # 6. Gửi vượt ngưỡng rate limit -> 429 + header Retry-After
 # ──────────────────────────────────────────────────────────────────────────────
 
+
 @pytest.mark.asyncio
-async def test_rate_limit_exceeded_returns_429_with_retry_after() -> None:
-    """When rate limit threshold is crossed, evaluation API returns 429 with Retry-After header."""
+async def test_rate_limit_exceeded_returns_429_with_retry_after(monkeypatch: pytest.MonkeyPatch) -> None:
+    """When rate limit threshold is crossed, evaluation API returns 429 with Retry-After and X-RateLimit-Remaining headers."""
+    # Set limit to 2 requests per minute to test actual sliding window limiter with real Redis without mocking
+    monkeypatch.setattr(settings, "EVAL_RATE_LIMIT_PER_MINUTE", 2)
+
     async with AsyncClient(transport=ASGITransport(app=app), base_url=BASE) as client:
         _, auth_headers = await _create_user_and_token(client)
         _, _, envs = await _setup_project_and_envs(client, auth_headers)
@@ -316,24 +339,36 @@ async def test_rate_limit_exceeded_returns_429_with_retry_after() -> None:
         key_data = await _create_api_key(client, auth_headers, dev_env["id"])
         raw_key = key_data["key"]
 
-        # Mock check_rate_limit to simulate threshold breach (allowed=False, remaining=0)
-        with patch("app.services.ruleset_cache.check_rate_limit", return_value=(False, 0)):
-            res = await client.get(f"{EVAL_PREFIX}/ruleset", headers={"X-FlagOps-Key": raw_key})
-            assert res.status_code == 429
-            assert res.headers.get("Retry-After") == "60"
-            data = res.json()
-            assert data["error"]["code"] == "RATE_LIMITED"
-            assert data["error"]["details"]["retry_after"] == 60
+        # Request 1: allowed (remaining: 1)
+        r1 = await client.get(f"{EVAL_PREFIX}/ruleset", headers={"X-FlagOps-Key": raw_key})
+        assert r1.status_code == 200
+
+        # Request 2: allowed (remaining: 0)
+        r2 = await client.get(f"{EVAL_PREFIX}/ruleset", headers={"X-FlagOps-Key": raw_key})
+        assert r2.status_code == 200
+
+        # Request 3: rate limit exceeded!
+        res = await client.get(f"{EVAL_PREFIX}/ruleset", headers={"X-FlagOps-Key": raw_key})
+        assert res.status_code == 429
+        assert res.headers.get("Retry-After") == "60"
+        assert res.headers.get("X-RateLimit-Remaining") == "0"
+        data = res.json()
+        assert data["error"]["code"] == "RATE_LIMITED"
+        assert data["error"]["details"]["retry_after"] == 60
+        assert data["error"]["details"]["remaining"] == 0
+
 
 
 # ──────────────────────────────────────────────────────────────────────────────
 # 7. Regex độc hại "(a+)+$" trong điều kiện -> xử lý < 200ms, không treo
 # ──────────────────────────────────────────────────────────────────────────────
 
+
 def test_evil_redos_regex_does_not_hang() -> None:
     """Catastrophic backtracking ReDoS pattern terminates in < 200ms with timeout."""
     evil_pattern = r"(a+)+$"
-    evil_input = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaX"  # 30 'a's followed by 'X' triggers exponential backtracking in standard re
+    # 30 'a's followed by 'X' triggers exponential backtracking in standard re
+    evil_input = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaX"
 
     start_time = time.perf_counter()
     # Execute regex matcher with built-in 50ms ReDoS timeout protection
@@ -348,9 +383,10 @@ def test_evil_redos_regex_does_not_hang() -> None:
 # 8. Điều kiện JSONB lồng 50 tầng -> 400 CONDITION_DEPTH_EXCEEDED
 # ──────────────────────────────────────────────────────────────────────────────
 
+
 @pytest.mark.asyncio
 async def test_deeply_nested_conditions_returns_400_condition_depth_exceeded() -> None:
-    """Targeting condition tree nested 50 levels deep is rejected with 400 CONDITION_DEPTH_EXCEEDED."""
+    """Condition tree nested 50 levels deep rejected with 400 CONDITION_DEPTH_EXCEEDED."""
     async with AsyncClient(transport=ASGITransport(app=app), base_url=BASE) as client:
         _, auth_headers = await _create_user_and_token(client)
         _, proj, envs = await _setup_project_and_envs(client, auth_headers)
@@ -359,7 +395,11 @@ async def test_deeply_nested_conditions_returns_400_condition_depth_exceeded() -
         # 1. Create a flag with variation
         flag_res = await client.post(
             f"{PROJECT_PREFIX}/{proj['id']}/flags",
-            json={"key": f"deep_cond_{uuid.uuid4().hex[:6]}", "name": "Deep Cond Flag", "type": "BOOLEAN"},
+            json={
+                "key": f"deep_cond_{uuid.uuid4().hex[:6]}",
+                "name": "Deep Cond Flag",
+                "type": "BOOLEAN",
+            },
             headers=auth_headers,
         )
         assert flag_res.status_code == 201
@@ -405,6 +445,7 @@ async def test_deeply_nested_conditions_returns_400_condition_depth_exceeded() -
 # 9. SQL injection qua query param lọc (' OR 1=1 --) -> không rò dữ liệu
 # ──────────────────────────────────────────────────────────────────────────────
 
+
 @pytest.mark.asyncio
 async def test_sql_injection_in_query_params_prevented() -> None:
     """SQL injection payloads in query parameters are strictly parameterized by ORM."""
@@ -415,7 +456,11 @@ async def test_sql_injection_in_query_params_prevented() -> None:
         # Create one normal flag
         await client.post(
             f"{PROJECT_PREFIX}/{proj['id']}/flags",
-            json={"key": f"legit_flag_{uuid.uuid4().hex[:6]}", "name": "Legit Flag", "type": "BOOLEAN"},
+            json={
+                "key": f"legit_flag_{uuid.uuid4().hex[:6]}",
+                "name": "Legit Flag",
+                "type": "BOOLEAN",
+            },
             headers=auth_headers,
         )
 
@@ -443,6 +488,7 @@ async def test_sql_injection_in_query_params_prevented() -> None:
 # ──────────────────────────────────────────────────────────────────────────────
 # 10. XSS: tên flag chứa <script>alert(1)</script> -> lưu nguyên, render escape
 # ──────────────────────────────────────────────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_xss_in_flag_name_stored_lossless_and_escaped() -> None:
@@ -475,14 +521,20 @@ async def test_xss_in_flag_name_stored_lossless_and_escaped() -> None:
 # 11. Response lỗi 500 KHÔNG chứa stack trace
 # ──────────────────────────────────────────────────────────────────────────────
 
+
 @pytest.mark.asyncio
 async def test_internal_error_does_not_leak_stack_trace() -> None:
     """Internal server errors (500) return an opaque error envelope without stack traces."""
-    async with AsyncClient(transport=ASGITransport(app=app, raise_app_exceptions=False), base_url=BASE) as client:
+    async with AsyncClient(
+        transport=ASGITransport(app=app, raise_app_exceptions=False), base_url=BASE
+    ) as client:
         _, auth_headers = await _create_user_and_token(client)
 
         # Trigger internal server error via mock
-        with patch("app.services.flag.flag_service.list_flags", side_effect=RuntimeError("Secret internal database crash")):
+        with patch(
+            "app.services.flag.flag_service.list_flags",
+            side_effect=RuntimeError("Secret internal database crash"),
+        ):
             res = await client.get(
                 f"{PROJECT_PREFIX}/{uuid.uuid4()}/flags",
                 headers=auth_headers,
@@ -490,11 +542,16 @@ async def test_internal_error_does_not_leak_stack_trace() -> None:
             # If cross-org check runs first it might be 404; check unhandled exception
             assert res.status_code in (404, 500)
 
-        with patch("app.api.eval.router.eval_service.get_ruleset_payload", side_effect=RuntimeError("Critical failure in internal subsystem")):
+        with patch(
+            "app.api.eval.router.eval_service.get_ruleset_payload",
+            side_effect=RuntimeError("Critical failure in internal subsystem"),
+        ):
             _, _, envs = await _setup_project_and_envs(client, auth_headers)
             key_data = await _create_api_key(client, auth_headers, envs[0]["id"])
 
-            err_res = await client.get(f"{EVAL_PREFIX}/ruleset", headers={"X-FlagOps-Key": key_data["key"]})
+            err_res = await client.get(
+                f"{EVAL_PREFIX}/ruleset", headers={"X-FlagOps-Key": key_data["key"]}
+            )
             assert err_res.status_code == 500
             err_json = err_res.json()
             assert err_json["error"]["code"] == "INTERNAL_SERVER_ERROR"
@@ -509,6 +566,7 @@ async def test_internal_error_does_not_leak_stack_trace() -> None:
 # ──────────────────────────────────────────────────────────────────────────────
 # 12. Không endpoint nào trả về password_hash, key_hash, hay master key
 # ──────────────────────────────────────────────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_sensitive_hashes_never_exposed_in_api() -> None:
@@ -538,8 +596,134 @@ async def test_sensitive_hashes_never_exposed_in_api() -> None:
         assert key_json["key_prefix"] == key_json["key"][:12]
 
         # List API Keys
-        list_keys_res = await client.get(f"/api/v1/environments/{dev_env['id']}/api-keys", headers=auth_headers)
+        list_keys_res = await client.get(
+            f"/api/v1/environments/{dev_env['id']}/api-keys", headers=auth_headers
+        )
         assert list_keys_res.status_code == 200
         for k in list_keys_res.json():
             assert "key_hash" not in k
             assert "key" not in k  # Raw key is never listed again
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# 13. Audit Log Tenancy Isolation & Validation
+# ──────────────────────────────────────────────────────────────────────────────
+
+
+@pytest.mark.asyncio
+async def test_audit_log_cross_tenant_isolation_returns_404() -> None:
+    """User in Org A attempting to access audit logs of Org B's project receives 404 NOT_FOUND."""
+    async with AsyncClient(transport=ASGITransport(app=app), base_url=BASE) as client:
+        # 1. Setup Org A and Project A
+        _, auth_a = await _create_user_and_token(client)
+        _, proj_a, _ = await _setup_project_and_envs(client, auth_a)
+
+        # 2. Setup Org B and Project B
+        _, auth_b = await _create_user_and_token(client)
+        _, proj_b, _ = await _setup_project_and_envs(client, auth_b)
+
+        # 3. User A attempts to read Audit Logs using Project B's ID -> must be 404
+        res = await client.get(f"/api/v1/audit?project_id={proj_b['id']}", headers=auth_a)
+        assert res.status_code == 404
+        data = res.json()
+        assert data["error"]["code"] == "PROJECT_NOT_FOUND"
+
+
+@pytest.mark.asyncio
+async def test_audit_log_missing_project_id_returns_422() -> None:
+    """Calling GET /api/v1/audit without required project_id returns 422 VALIDATION_ERROR."""
+    async with AsyncClient(transport=ASGITransport(app=app), base_url=BASE) as client:
+        _, auth = await _create_user_and_token(client)
+        res = await client.get("/api/v1/audit", headers=auth)
+        assert res.status_code == 422
+        data = res.json()
+        assert data["error"]["code"] == "VALIDATION_ERROR"
+
+
+@pytest.mark.asyncio
+async def test_audit_log_returns_only_scoped_events() -> None:
+    """GET /api/v1/audit returns events scoped strictly to the specified project."""
+    async with AsyncClient(transport=ASGITransport(app=app), base_url=BASE) as client:
+        _, auth = await _create_user_and_token(client)
+        _, proj, _ = await _setup_project_and_envs(client, auth)
+
+        # Trigger an action that creates an audit log in this project
+        await client.post(
+            f"/api/v1/projects/{proj['id']}/flags",
+            json={
+                "key": f"audit_flag_{uuid.uuid4().hex[:6]}",
+                "name": "Audit Flag",
+                "type": "BOOLEAN",
+                "toggle_kind": "RELEASE",
+                "variations": [
+                    {"key": "true", "value": True},
+                    {"key": "false", "value": False},
+                ],
+            },
+            headers=auth,
+        )
+
+        res = await client.get(f"/api/v1/audit?project_id={proj['id']}", headers=auth)
+        assert res.status_code == 200
+        logs = res.json()
+        assert isinstance(logs, list)
+        for log in logs:
+            if log["project_id"] is not None:
+                assert log["project_id"] == proj["id"]
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# 14. Fail-Secure Startup Validation
+# ──────────────────────────────────────────────────────────────────────────────
+
+
+def test_fail_secure_startup_rejects_insecure_keys_in_production(monkeypatch: pytest.MonkeyPatch) -> None:
+    """In production/staging or non-debug mode, application refuses to start with default keys."""
+    # Test 1: Insecure CONFIG_MASTER_KEY in production raises RuntimeError
+    monkeypatch.setattr(settings, "DEBUG", False)
+    monkeypatch.setattr(settings, "ENVIRONMENT", "production")
+    monkeypatch.setattr(settings, "CONFIG_MASTER_KEY", "change-me-32-bytes-key-here!!!!")
+    monkeypatch.setattr(settings, "SECRET_KEY", "a" * 32)
+    with pytest.raises(RuntimeError, match="FATAL: Insecure CONFIG_MASTER_KEY"):
+        settings.validate_production_security()
+
+    # Test 2: Insecure SECRET_KEY in production raises RuntimeError
+    monkeypatch.setattr(settings, "CONFIG_MASTER_KEY", "b" * 32)
+    monkeypatch.setattr(settings, "SECRET_KEY", "change-me-to-a-random-string-at-least-32-chars")
+    with pytest.raises(RuntimeError, match="FATAL: Insecure SECRET_KEY"):
+        settings.validate_production_security()
+
+    # Test 3: Short SECRET_KEY in production raises RuntimeError
+    monkeypatch.setattr(settings, "SECRET_KEY", "too-short")
+    with pytest.raises(RuntimeError, match="FATAL: Insecure SECRET_KEY"):
+        settings.validate_production_security()
+
+    # Test 4: Valid secure keys in production pass validation
+    monkeypatch.setattr(settings, "CONFIG_MASTER_KEY", "0123456789abcdef0123456789abcdef")
+    monkeypatch.setattr(settings, "SECRET_KEY", "secure_production_secret_key_at_least_32_chars_long")
+    settings.validate_production_security()  # Should not raise
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# 15. Protected Telemetry Endpoint
+# ──────────────────────────────────────────────────────────────────────────────
+
+
+@pytest.mark.asyncio
+async def test_stream_connections_requires_api_key() -> None:
+    """GET /eval/v1/stream/connections is protected and requires valid X-FlagOps-Key."""
+    async with AsyncClient(transport=ASGITransport(app=app), base_url=BASE) as client:
+        # Without key -> 401 Unauthorized
+        res_no_key = await client.get(f"{EVAL_PREFIX}/stream/connections")
+        assert res_no_key.status_code == 401
+
+        # With key -> 200 OK
+        _, auth_headers = await _create_user_and_token(client)
+        _, _, envs = await _setup_project_and_envs(client, auth_headers)
+        key_data = await _create_api_key(client, auth_headers, envs[0]["id"])
+        res_with_key = await client.get(
+            f"{EVAL_PREFIX}/stream/connections", headers={"X-FlagOps-Key": key_data["key"]}
+        )
+        assert res_with_key.status_code == 200
+        assert "active_connections" in res_with_key.json()
+

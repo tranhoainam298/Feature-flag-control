@@ -1,0 +1,59 @@
+graph TD
+    subgraph RoutingLayer ["Tầng Router (API Handlers)"]
+        ADMIN_R["Admin Routers (/api/v1/*)<br/>auth, flags, config, change_requests, audit"]
+        EVAL_R["Eval Routers (/eval/v1/*)<br/>flags, ruleset, stream, events"]
+    end
+
+    subgraph MiddlewareLayer ["Tầng Bảo vệ & Giám sát (Middleware & Deps)"]
+        AUTH_DEP["Auth & RBAC Guards<br/>(JWT, API Key Scopes, Tenancy)"]
+        RATE_LIMIT["Rate Limiter (Redis)"]
+        AUDIT_MW["Audit Middleware"]
+    end
+
+    subgraph ServiceLayer ["Tầng Dịch vụ Nghiệp vụ (Business Logic)"]
+        AUTH_SVC["AuthService"]
+        FLAG_SVC["FlagService"]
+        CONFIG_SVC["ConfigService"]
+        CR_SVC["ChangeRequestService"]
+        EVAL_SVC["EvaluationService"]
+        DEBT_SVC["FlagDebtService"]
+        CACHE_SVC["RulesetCacheService"]
+    end
+
+    subgraph EngineLayer ["Tầng Evaluation Engine (Pure - Không I/O)"]
+        EVALUATOR["Evaluator (evaluate)"]
+        MATCHER["Matcher (match_conditions)"]
+        BUCKETING["Bucketing (MurmurHash3)"]
+        OPERATORS["Operators (14 so sánh)"]
+    end
+
+    subgraph DataAccessLayer ["Tầng Truy xuất Dữ liệu (ORM & Repositories)"]
+        MODELS["SQLAlchemy 2.0 Models<br/>(User, Flag, Environment, ConfigRelease...)"]
+        DB_SESSION["Async Database Session (asyncpg)"]
+    end
+
+    ADMIN_R --> AUTH_DEP
+    ADMIN_R --> AUDIT_MW
+    EVAL_R --> AUTH_DEP
+    EVAL_R --> RATE_LIMIT
+
+    AUTH_DEP --> AUTH_SVC
+    ADMIN_R --> FLAG_SVC
+    ADMIN_R --> CONFIG_SVC
+    ADMIN_R --> CR_SVC
+    ADMIN_R --> DEBT_SVC
+    EVAL_R --> EVAL_SVC
+
+    EVAL_SVC --> CACHE_SVC
+    EVAL_SVC --> EVALUATOR
+    CR_SVC --> EVAL_SVC
+
+    EVALUATOR --> MATCHER
+    EVALUATOR --> BUCKETING
+    MATCHER --> OPERATORS
+
+    FLAG_SVC --> MODELS
+    CONFIG_SVC --> MODELS
+    CR_SVC --> MODELS
+    AUTH_SVC --> MODELS
+    MODELS --> DB_SESSION

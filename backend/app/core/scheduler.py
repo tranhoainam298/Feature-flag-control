@@ -1,6 +1,7 @@
 """APScheduler configuration for background recurring jobs."""
 
 import logging
+
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from app.core.database import async_session_factory

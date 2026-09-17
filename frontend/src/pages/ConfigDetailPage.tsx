@@ -11,59 +11,59 @@ export const ConfigDetailPage: React.FC = () => {
   if (!namespaceId) return null;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Back link */}
       <div>
         <Link
           to="/config"
-          className="inline-flex items-center gap-1.5 text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors font-medium"
+          className="inline-flex items-center gap-1.5 text-xs text-secondary hover:text-primary transition-colors font-medium"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
-          <span>Quay lại danh sách Namespace</span>
+          <span>Back to Configuration Namespaces</span>
         </Link>
       </div>
 
       {/* Namespace Header */}
-      <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-xs flex flex-wrap items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-500/10 text-indigo-400">
-            <Database className="w-5 h-5" />
+      <div className="rounded-md border border-border-default bg-surface p-3.5 shadow-xs flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-8 w-8 items-center justify-center rounded-xs bg-brand/10 text-brand border border-brand/20">
+            <Database className="w-4 h-4" />
           </div>
           <div>
-            <h2 className="text-lg font-bold text-[var(--text-primary)]">
-              Namespace: <span className="font-mono text-indigo-400">{namespaceId.slice(0, 8)}...</span>
+            <h2 className="text-sm font-semibold text-primary">
+              Namespace: <span className="font-mono text-brand">{namespaceId.slice(0, 8)}...</span>
             </h2>
-            <p className="text-xs text-[var(--text-tertiary)] mt-0.5">
-              Quản lý bản nháp, xuất bản release và rollback phiên bản cấu hình
+            <p className="text-[11px] text-muted mt-0.5">
+              Manage draft parameters, preview diffs, publish releases, and rollback version history.
             </p>
           </div>
         </div>
 
         {/* Tab switchers */}
-        <div className="flex items-center gap-1 bg-[var(--surface-sunken)] p-1 rounded-lg border border-[var(--border)]">
+        <div className="flex items-center gap-1 bg-surface-elevated p-0.5 rounded-xs border border-border-default">
           <button
             type="button"
             onClick={() => setActiveTab('draft')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md transition-all cursor-pointer ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-xs transition-colors cursor-pointer ${
               activeTab === 'draft'
-                ? 'bg-indigo-600 text-white shadow-xs'
-                : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                ? 'bg-brand text-white font-semibold shadow-xs'
+                : 'text-secondary hover:text-primary'
             }`}
           >
             <Sliders className="w-3.5 h-3.5" />
-            <span>Bản nháp hiện tại (Draft)</span>
+            <span>Draft Configuration</span>
           </button>
           <button
             type="button"
             onClick={() => setActiveTab('history')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md transition-all cursor-pointer ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-xs transition-colors cursor-pointer ${
               activeTab === 'history'
-                ? 'bg-indigo-600 text-white shadow-xs'
-                : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                ? 'bg-brand text-white font-semibold shadow-xs'
+                : 'text-secondary hover:text-primary'
             }`}
           >
             <History className="w-3.5 h-3.5" />
-            <span>Lịch sử phát hành (Releases)</span>
+            <span>Release History</span>
           </button>
         </div>
       </div>

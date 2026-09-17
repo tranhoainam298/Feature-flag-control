@@ -1,6 +1,7 @@
 """Integration tests for Flag Health & Lifecycle API (Slice 14)."""
 
 import uuid
+
 import pytest
 from httpx import ASGITransport, AsyncClient
 
@@ -40,7 +41,9 @@ async def create_and_login_user(client: AsyncClient) -> tuple[dict, dict]:
     return user_data, headers
 
 
-async def setup_org_and_project(client: AsyncClient, headers: dict) -> tuple[dict, dict, list[dict]]:
+async def setup_org_and_project(
+    client: AsyncClient, headers: dict
+) -> tuple[dict, dict, list[dict]]:
     org_resp = await client.post(
         ORG_PREFIX,
         json={"name": "Health Org", "slug": _unique_slug("org")},

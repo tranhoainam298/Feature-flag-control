@@ -11,11 +11,12 @@ if "%TARGET%"=="up" (
 ) else if "%TARGET%"=="migrate" (
     docker compose exec api alembic upgrade head
 ) else if "%TARGET%"=="seed" (
+    docker compose exec api alembic upgrade head
     docker compose exec api python -m app.seed
 ) else if "%TARGET%"=="test" (
     docker compose exec -T api pytest
 ) else if "%TARGET%"=="test-engine" (
-    docker compose exec -T api pytest app/engine
+    docker compose exec -T api pytest app/tests/unit/engine --cov=app/engine --cov-fail-under=95
 ) else if "%TARGET%"=="lint" (
     docker compose exec -T api ruff check .
     docker compose exec -T api mypy app

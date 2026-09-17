@@ -171,7 +171,7 @@ async def test_expired_token_401(client: AsyncClient) -> None:
 @pytest.mark.asyncio
 async def test_wrong_signature_token_401(client: AsyncClient) -> None:
     """A token signed with a different key must be rejected."""
-    from jose import jwt
+    import jwt
 
     bad_token = jwt.encode({"sub": "fake-id", "type": "access"}, "wrong-secret", algorithm="HS256")
     resp = await client.get(

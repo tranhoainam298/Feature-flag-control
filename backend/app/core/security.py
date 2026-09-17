@@ -5,7 +5,8 @@ import logging
 import secrets
 from datetime import datetime, timedelta, timezone
 
-from jose import JWTError, jwt
+import jwt
+from jwt.exceptions import PyJWTError as JWTError
 from passlib.context import CryptContext
 
 from app.core.config import settings
@@ -31,6 +32,7 @@ _DEV_SECRET = "change-me-to-a-random-string-at-least-32-chars"
 
 
 def _get_secret_key() -> str:
+    settings.validate_production_security()
     key = settings.SECRET_KEY
     if key == _DEV_SECRET and not settings.DEBUG:
         logger.warning(

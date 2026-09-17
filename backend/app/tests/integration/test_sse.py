@@ -39,14 +39,16 @@ def _unique_slug(prefix: str) -> str:
 
 async def create_and_login_user(client: AsyncClient) -> tuple[dict, dict]:
     email = _unique_email()
-    await client.post(
+    reg_res = await client.post(
         f"{AUTH_PREFIX}/register",
         json={"email": email, "password": STRONG_PASSWORD, "full_name": "SSE Tester"},
     )
+    assert reg_res.status_code == 201, f"Register failed: {reg_res.text}"
     login_res = await client.post(
         f"{AUTH_PREFIX}/login",
         json={"email": email, "password": STRONG_PASSWORD},
     )
+    assert login_res.status_code == 200, f"Login failed: {login_res.text}"
     tokens = login_res.json()
     headers = {"Authorization": f"Bearer {tokens['access_token']}"}
     return tokens, headers
@@ -247,29 +249,59 @@ async def test_sse_client_disconnect_cleanup() -> None:
         _, admin_headers = await create_and_login_user(client)
         _, _, envs, raw_key = await setup_env_with_key(client, admin_headers)
 
-        # Check initial baseline connections
-        metric_res = await client.get(f"{EVAL_PREFIX}/stream/connections")
-        baseline = metric_res.json()["active_connections"]
+        # Ensure previous connections have settled
+        baseline = 0
+        for _ in range(10):
+            metric_res = await client.get(
+                f"{EVAL_PREFIX}/stream/connections",
+                headers={"X-FlagOps-Key": raw_key},
+            )
+            baseline = metric_res.json()["active_connections"]
+            if baseline == 0:
+                break
+            await asyncio.sleep(0.1)
 
         headers = {"X-FlagOps-Key": raw_key}
+        connected = asyncio.Event()
+        stop_stream = asyncio.Event()
 
-        # Open stream, consume heartbeat, then exit context manager (disconnect)
-        async with client.stream("GET", f"{EVAL_PREFIX}/stream", headers=headers) as response:
-            assert response.status_code == 200
-            async for line in response.aiter_lines():
-                if "event: heartbeat" in line:
-                    break
+        async def stream_worker():
+            try:
+                async with AsyncClient(base_url=BASE, timeout=10.0) as stream_client:
+                    async with stream_client.stream("GET", f"{EVAL_PREFIX}/stream", headers=headers) as response:
+                        assert response.status_code == 200
+                        async for line in response.aiter_lines():
+                            if "event: heartbeat" in line:
+                                connected.set()
+                            if stop_stream.is_set():
+                                break
+            except (asyncio.CancelledError, Exception):
+                pass
 
-            # Inside connection: metric should reflect baseline + 1
-            mid_res = await client.get(f"{EVAL_PREFIX}/stream/connections")
+        task = asyncio.create_task(stream_worker())
+        await asyncio.wait_for(connected.wait(), timeout=5.0)
+
+        # Inside connection: metric should reflect baseline + 1
+        async with AsyncClient(base_url=BASE, timeout=5.0) as check_client:
+            mid_res = await check_client.get(
+                f"{EVAL_PREFIX}/stream/connections",
+                headers={"X-FlagOps-Key": raw_key},
+            )
             assert mid_res.json()["active_connections"] == baseline + 1
 
-        # Allow server to detect disconnect and execute generator cleanup
-        await asyncio.sleep(0.3)
+        # Signal stop and disconnect
+        stop_stream.set()
+        task.cancel()
+        await asyncio.gather(task, return_exceptions=True)
+        await asyncio.sleep(0.4)
 
         # After disconnect: metric must return to baseline
-        final_res = await client.get(f"{EVAL_PREFIX}/stream/connections")
-        assert final_res.json()["active_connections"] == baseline
+        async with AsyncClient(base_url=BASE, timeout=5.0) as check_client:
+            final_res = await check_client.get(
+                f"{EVAL_PREFIX}/stream/connections",
+                headers={"X-FlagOps-Key": raw_key},
+            )
+            assert final_res.json()["active_connections"] == baseline
 
 
 # ==============================================================================
@@ -310,7 +342,10 @@ async def test_sse_100_concurrent_connections() -> None:
             _, admin_headers = await create_and_login_user(check_client)
             _, _, envs, raw_key = await setup_env_with_key(check_client, admin_headers)
 
-            metric_res = await check_client.get(f"{EVAL_PREFIX}/stream/connections")
+            metric_res = await check_client.get(
+                f"{EVAL_PREFIX}/stream/connections",
+                headers={"X-FlagOps-Key": raw_key},
+            )
             baseline = metric_res.json()["active_connections"]
 
             num_connections = 100
@@ -341,7 +376,10 @@ async def test_sse_100_concurrent_connections() -> None:
             )
 
             # Check that server is fully responsive and metric reflects 100 connections
-            metric_active = await check_client.get(f"{EVAL_PREFIX}/stream/connections")
+            metric_active = await check_client.get(
+                f"{EVAL_PREFIX}/stream/connections",
+                headers={"X-FlagOps-Key": raw_key},
+            )
             assert metric_active.json()["active_connections"] >= baseline + num_connections
 
             # Test server responsiveness under load
@@ -356,5 +394,8 @@ async def test_sse_100_concurrent_connections() -> None:
             await asyncio.sleep(0.5)
 
             # Verify active connections returned to baseline
-            metric_after = await check_client.get(f"{EVAL_PREFIX}/stream/connections")
+            metric_after = await check_client.get(
+                f"{EVAL_PREFIX}/stream/connections",
+                headers={"X-FlagOps-Key": raw_key},
+            )
             assert metric_after.json()["active_connections"] == baseline

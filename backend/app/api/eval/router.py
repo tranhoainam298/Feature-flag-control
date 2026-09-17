@@ -190,8 +190,10 @@ async def stream_ruleset(
 
 
 @router.get("/stream/connections", summary="Get number of active SSE connections")
-async def stream_connections() -> dict[str, int]:
-    """Metric: Number of currently open SSE connections."""
+async def stream_connections(
+    api_key: ApiKey = Depends(verify_api_key),
+) -> dict[str, int]:
+    """Metric: Number of currently open SSE connections (requires valid API key)."""
     return {"active_connections": _active_sse_connections}
 
 
@@ -298,4 +300,3 @@ async def get_eval_flag_health(
     if not env:
         raise FlagOpsError(code="NOT_FOUND", message="Environment not found", status_code=404)
     return await health_svc.get_flag_health_list(db, env.project_id)
-

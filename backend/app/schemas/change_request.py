@@ -53,7 +53,9 @@ class ChangeRequestImpactResponse(BaseModel):
     """Impact simulation result comparing current vs simulated rulesets."""
 
     total_contexts: int = Field(..., description="Total evaluated historical contexts (up to 1000)")
-    affected_contexts: int = Field(..., description="Number of contexts whose evaluated variation changed")
+    affected_contexts: int = Field(
+        ..., description="Number of contexts whose evaluated variation changed"
+    )
     change_percentage: float = Field(..., description="Percentage of contexts affected (0-100%)")
     transitions: list[ImpactTransition] = Field(
         default_factory=list,

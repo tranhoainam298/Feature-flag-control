@@ -1,0 +1,35 @@
+sequenceDiagram
+    autonumber
+    participant App as Ứng dụng Khách
+    participant SDK as FlagOps SDK (In-process)
+    participant API as FlagOps Eval API (/eval/v1)
+    participant Redis as Redis Cache
+    participant PG as PostgreSQL 16
+    participant Engine as Pure Engine (app/engine)
+
+    Note over App, Engine: Kịch bản 1: In-Process Evaluation (Tối ưu độ trễ microsecond)
+    App->>SDK: is_enabled("checkout-v2", context)
+    SDK->>SDK: Đọc Ruleset trong bộ nhớ RAM
+    SDK->>Engine: evaluate(ruleset, context)
+    Engine->>Engine: Kiểm tra Flag Enabled & Overrides
+    Engine->>Engine: Duyệt Targeting Rules & Segment Matcher
+    Engine->>Engine: MurmurHash3 Sticky Bucketing (nếu có split)
+    Engine-->>SDK: EvaluationResult(value=True, variant="v2", reason="SPLIT")
+    SDK-->>App: True (Hoàn thành trong < 15 microseconds)
+    SDK-)API: Gửi batch evaluation events bất đồng bộ
+
+    Note over App, PG: Kịch bản 2: Remote HTTP Evaluation (/eval/v1/flags)
+    App->>API: POST /eval/v1/flags (headers: X-FlagOps-Key, body: context)
+    API->>API: Xác thực API Key & Kiểm tra Rate Limit
+    API->>Redis: GET ruleset:{env_id}
+    alt Cache Hit
+        Redis-->>API: Ruleset JSON đã biên dịch
+    else Cache Miss / Fail-Open
+        API->>PG: Query FlagSettings & Rules (SQLAlchemy)
+        PG-->>API: Entity Models
+        API->>API: Biên dịch thành Ruleset
+        API->>Redis: SETEX ruleset:{env_id} 300s (async)
+    end
+    API->>Engine: evaluate(ruleset, context)
+    Engine-->>API: EvaluationResult
+    API-->>App: 200 OK (value, variant, reason, flagMetadata)

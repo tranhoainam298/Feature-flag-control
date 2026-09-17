@@ -2,6 +2,7 @@ import React from 'react';
 import { TargetingRuleInput, Variation, ConditionGroupData } from '../../types';
 import { ConditionGroup } from '../../components/conditions/ConditionGroup';
 import { DistributionEditor } from './DistributionEditor';
+import { ChevronUp, ChevronDown, Trash2 } from 'lucide-react';
 
 interface RuleCardProps {
   rule: TargetingRuleInput;
@@ -33,77 +34,71 @@ export const RuleCard: React.FC<RuleCardProps> = ({
       : { operator: 'AND', conditions: [] };
 
   return (
-    <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-sm space-y-4">
-      {/* Header: Priority & Move buttons */}
-      <div className="flex items-center justify-between border-b border-[var(--border)] pb-3">
+    <div className="rounded-md border border-border-default bg-surface p-3.5 shadow-xs space-y-3">
+      {/* Header: Priority & Move controls */}
+      <div className="flex items-center justify-between border-b border-border-subtle pb-2.5">
         <div className="flex items-center gap-2">
-          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-indigo-500/20 text-xs font-bold text-indigo-400">
+          <span className="flex h-5 w-5 items-center justify-center rounded-xs bg-brand/10 text-[11px] font-bold font-mono text-brand border border-brand/20">
             #{rule.priority}
           </span>
-          <span className="text-sm font-semibold text-[var(--text-primary)]">
-            Quy tắc ưu tiên {rule.priority}
+          <span className="text-xs font-semibold text-primary">
+            Rule Priority #{rule.priority}
           </span>
         </div>
 
         <div className="flex items-center gap-1">
           <button
             type="button"
-            title="Tăng độ ưu tiên (lên)"
+            title="Move up (increase priority)"
             disabled={disabled || index === 0}
             onClick={onMoveUp}
-            className="rounded border border-[var(--border)] bg-[var(--surface-sunken)] p-1.5 text-xs text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)] disabled:opacity-40 disabled:pointer-events-none"
-            aria-label="Di chuyển lên"
+            className="flex h-6 w-6 items-center justify-center rounded-xs border border-border-default bg-surface-elevated text-secondary hover:text-primary hover:bg-surface-elevated/80 disabled:opacity-40 disabled:pointer-events-none transition-colors"
+            aria-label="Move rule up"
           >
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 15l7-7 7 7" />
-            </svg>
+            <ChevronUp className="w-3.5 h-3.5" />
           </button>
           <button
             type="button"
-            title="Giảm độ ưu tiên (xuống)"
+            title="Move down (decrease priority)"
             disabled={disabled || index === totalRules - 1}
             onClick={onMoveDown}
-            className="rounded border border-[var(--border)] bg-[var(--surface-sunken)] p-1.5 text-xs text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)] disabled:opacity-40 disabled:pointer-events-none"
-            aria-label="Di chuyển xuống"
+            className="flex h-6 w-6 items-center justify-center rounded-xs border border-border-default bg-surface-elevated text-secondary hover:text-primary hover:bg-surface-elevated/80 disabled:opacity-40 disabled:pointer-events-none transition-colors"
+            aria-label="Move rule down"
           >
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-            </svg>
+            <ChevronDown className="w-3.5 h-3.5" />
           </button>
           <button
             type="button"
-            title="Xóa rule này"
+            title="Delete rule"
             disabled={disabled}
             onClick={onDelete}
-            className="rounded border border-rose-500/30 bg-rose-500/10 p-1.5 text-xs text-rose-400 hover:bg-rose-500/20 disabled:opacity-40"
-            aria-label="Xóa quy tắc"
+            className="flex h-6 w-6 items-center justify-center rounded-xs border border-status-danger/30 bg-status-danger/10 text-status-danger hover:bg-status-danger/20 disabled:opacity-40 transition-colors ml-1"
+            aria-label="Delete rule"
           >
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-            </svg>
+            <Trash2 className="w-3.5 h-3.5" />
           </button>
         </div>
       </div>
 
       {/* Description */}
       <div>
-        <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">
-          Mô tả quy tắc (tùy chọn)
+        <label className="block text-[11px] font-medium text-secondary mb-1">
+          Description (optional)
         </label>
         <input
           type="text"
           value={rule.description || ''}
-          placeholder="Ví dụ: Người dùng VIP tại Việt Nam"
+          placeholder="e.g. VIP customers in APAC region, early access users"
           disabled={disabled}
           onChange={(e) => onUpdate({ ...rule, description: e.target.value })}
-          className="w-full rounded-md border border-[var(--border)] bg-[var(--surface-sunken)] px-3 py-1.5 text-xs text-[var(--text-primary)] placeholder-[var(--text-tertiary)] focus:border-indigo-500 focus:outline-none"
+          className="w-full rounded-xs border border-border-default bg-surface-elevated px-2.5 py-1.5 text-xs text-primary placeholder:text-muted focus:border-brand focus-visible:outline-none"
         />
       </div>
 
       {/* Condition Group */}
       <div>
-        <div className="mb-1 text-xs font-medium text-[var(--text-secondary)]">
-          Điều kiện khớp (Context Match)
+        <div className="mb-1 text-[11px] font-medium text-secondary">
+          Targeting Match Conditions
         </div>
         <ConditionGroup
           group={groupData}

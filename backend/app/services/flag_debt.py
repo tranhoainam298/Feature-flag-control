@@ -195,6 +195,8 @@ def get_recommendations(state: LifecycleState, snap: FlagSnapshot) -> list[str]:
 
     if snap.days_since_last_eval is not None and snap.days_since_last_eval >= _DAYS_NO_EVAL_STALE:
         if "gỡ bỏ" not in " ".join(recs):
-            recs.append("Không có evaluation trong 14+ ngày — kiểm tra xem flag còn được sử dụng không.")
+            recs.append(
+                "Không có evaluation trong 14+ ngày — kiểm tra xem flag còn được sử dụng không."
+            )
 
     return recs

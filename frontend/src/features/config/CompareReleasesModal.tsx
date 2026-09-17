@@ -34,7 +34,7 @@ export const CompareReleasesModal: React.FC<CompareReleasesModalProps> = ({
   if (showDiff && diff) {
     return (
       <ConfigDiffModal
-        title={`So sánh phiên bản v${v1} → v${v2}`}
+        title={`Comparing Releases v${v1} → v${v2}`}
         diff={diff}
         isOpen={showDiff}
         onClose={() => {
@@ -47,18 +47,18 @@ export const CompareReleasesModal: React.FC<CompareReleasesModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
-      <div className="w-full max-w-md rounded-xl border border-[var(--border)] bg-[var(--surface)] p-6 shadow-xl space-y-4">
-        <div className="flex items-center justify-between border-b border-[var(--border)] pb-3">
+      <div className="w-full max-w-md rounded-md border border-border-default bg-surface p-5 shadow-xl space-y-3.5">
+        <div className="flex items-center justify-between border-b border-border-subtle pb-3">
           <div className="flex items-center gap-2">
-            <GitCompare className="w-4 h-4 text-indigo-400" />
-            <h3 className="text-base font-semibold text-[var(--text-primary)]">
-              So sánh 2 phiên bản Release
+            <GitCompare className="w-4 h-4 text-brand" />
+            <h3 className="text-sm font-semibold text-primary">
+              Compare Two Releases
             </h3>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="rounded p-1 text-[var(--text-tertiary)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)]"
+            className="rounded-xs p-1 text-muted hover:bg-surface-elevated hover:text-primary transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
@@ -66,34 +66,34 @@ export const CompareReleasesModal: React.FC<CompareReleasesModalProps> = ({
 
         <div className="space-y-3">
           <div>
-            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">
-              Phiên bản gốc (Base version)
+            <label className="block text-[11px] font-medium text-secondary mb-1">
+              Base Version (Original)
             </label>
             <select
               value={v1}
               onChange={(e) => setV1(Number(e.target.value))}
-              className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface-sunken)] p-2 text-xs text-[var(--text-primary)] focus:outline-none"
+              className="w-full rounded-xs border border-border-default bg-surface-elevated p-2 text-xs text-primary focus:outline-none focus:border-brand"
             >
               {sorted.map((r) => (
                 <option key={`base-${r.version}`} value={r.version}>
-                  v{r.version} — {r.comment || 'Không có ghi chú'} ({new Date(r.released_at).toLocaleDateString()})
+                  v{r.version} — {r.comment || 'No comment'} ({new Date(r.released_at).toLocaleDateString()})
                 </option>
               ))}
             </select>
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">
-              Phiên bản so sánh (Target version)
+            <label className="block text-[11px] font-medium text-secondary mb-1">
+              Target Version (Comparison)
             </label>
             <select
               value={v2}
               onChange={(e) => setV2(Number(e.target.value))}
-              className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface-sunken)] p-2 text-xs text-[var(--text-primary)] focus:outline-none"
+              className="w-full rounded-xs border border-border-default bg-surface-elevated p-2 text-xs text-primary focus:outline-none focus:border-brand"
             >
               {sorted.map((r) => (
                 <option key={`target-${r.version}`} value={r.version}>
-                  v{r.version} — {r.comment || 'Không có ghi chú'} ({new Date(r.released_at).toLocaleDateString()})
+                  v{r.version} — {r.comment || 'No comment'} ({new Date(r.released_at).toLocaleDateString()})
                 </option>
               ))}
             </select>
@@ -101,26 +101,26 @@ export const CompareReleasesModal: React.FC<CompareReleasesModalProps> = ({
         </div>
 
         {isError && (
-          <div className="text-xs text-rose-400">
-            Không thể so sánh 2 phiên bản này.
+          <div className="text-xs text-status-danger">
+            Failed to compute diff between selected versions.
           </div>
         )}
 
-        <div className="flex justify-end gap-2 border-t border-[var(--border)] pt-4">
+        <div className="flex justify-end gap-2 border-t border-border-subtle pt-3">
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-4 py-2 text-xs font-medium text-[var(--text-secondary)] hover:bg-[var(--surface-hover)]"
+            className="rounded-xs border border-border-default bg-surface px-3 py-1.5 text-xs font-medium text-secondary hover:bg-surface-elevated hover:text-primary transition-colors"
           >
-            Hủy
+            Cancel
           </button>
           <button
             type="button"
             disabled={isLoading}
             onClick={() => setShowDiff(true)}
-            className="rounded-lg bg-indigo-600 px-4 py-2 text-xs font-medium text-white hover:bg-indigo-500 shadow-sm disabled:opacity-50"
+            className="rounded-xs bg-brand px-3.5 py-1.5 text-xs font-medium text-white hover:bg-brand-hover shadow-xs disabled:opacity-50 transition-colors"
           >
-            {isLoading ? 'Đang so sánh...' : 'Xem khác biệt (Diff)'}
+            {isLoading ? 'Comparing...' : 'View Diff'}
           </button>
         </div>
       </div>

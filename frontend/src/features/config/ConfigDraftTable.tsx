@@ -4,7 +4,7 @@ import { configApi } from './api';
 import { ConfigItemInput } from '../../types';
 import { ConfigDiffModal } from './ConfigDiffModal';
 import { PublishReleaseModal } from './PublishReleaseModal';
-import { Eye, EyeOff, Plus, Trash2, Save, Send, GitCompare, Lock } from 'lucide-react';
+import { Eye, EyeOff, Plus, Trash2, Save, Send, GitCompare, Lock, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { SkeletonTable } from '../../components/ui/SkeletonTable';
 
 interface ConfigDraftTableProps {
@@ -59,7 +59,7 @@ export const ConfigDraftTable: React.FC<ConfigDraftTableProps> = ({ namespaceId 
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['config-draft-items', namespaceId] });
       queryClient.invalidateQueries({ queryKey: ['config-pending-diff', namespaceId] });
-      setSaveSuccess('Đã lưu bản nháp thành công!');
+      setSaveSuccess('Draft configuration saved successfully');
       setSaveError(null);
       setTimeout(() => setSaveSuccess(null), 4000);
     },
@@ -68,7 +68,7 @@ export const ConfigDraftTable: React.FC<ConfigDraftTableProps> = ({ namespaceId 
         err.response?.data?.message ||
         err.response?.data?.detail ||
         err.message ||
-        'Lỗi lưu bản nháp';
+        'Failed to save draft';
       setSaveError(typeof msg === 'object' ? JSON.stringify(msg) : String(msg));
       setSaveSuccess(null);
     },
@@ -97,10 +97,9 @@ export const ConfigDraftTable: React.FC<ConfigDraftTableProps> = ({ namespaceId 
 
   const handleSave = () => {
     setSaveError(null);
-    // Basic validation: keys must not be empty
     for (let i = 0; i < items.length; i++) {
       if (!items[i].key.trim()) {
-        setSaveError(`Dòng #${i + 1} chưa có Key. Key không được để trống!`);
+        setSaveError(`Row #${i + 1} has an empty key. Key is required.`);
         return;
       }
     }
@@ -115,25 +114,26 @@ export const ConfigDraftTable: React.FC<ConfigDraftTableProps> = ({ namespaceId 
   if (isItemsLoading) return <SkeletonTable rows={5} columns={5} />;
   if (isItemsError) {
     return (
-      <div className="rounded-lg border border-rose-500/30 bg-rose-500/10 p-4 text-xs text-rose-400">
-        Lỗi tải dữ liệu cấu hình nháp.
+      <div className="rounded-md border border-status-danger/30 bg-status-danger/10 p-3 text-xs text-status-danger">
+        Failed to load draft configuration items.
       </div>
     );
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {/* Top Action Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 bg-[var(--surface)] p-4 rounded-xl border border-[var(--border)]">
-        <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-3 bg-surface p-2.5 rounded-md border border-border-default">
+        <div className="flex items-center gap-2.5">
           {pendingCount > 0 ? (
-            <span className="flex items-center gap-1.5 rounded-full bg-amber-500/15 border border-amber-500/30 px-3 py-1 text-xs font-semibold text-amber-300 animate-pulse">
-              <span className="h-2 w-2 rounded-full bg-amber-400"></span>
-              Có {pendingCount} thay đổi chưa phát hành
+            <span className="flex items-center gap-1.5 rounded-xs bg-status-warning/10 border border-status-warning/30 px-2.5 py-1 text-xs font-semibold text-status-warning">
+              <span className="h-1.5 w-1.5 rounded-full bg-status-warning animate-pulse"></span>
+              {pendingCount} unpublished {pendingCount === 1 ? 'change' : 'changes'}
             </span>
           ) : (
-            <span className="rounded-full bg-emerald-500/15 border border-emerald-500/30 px-3 py-1 text-xs font-medium text-emerald-300">
-              Đồng bộ với bản phát hành hiện tại
+            <span className="flex items-center gap-1.5 rounded-xs bg-status-success/10 border border-status-success/30 px-2.5 py-1 text-xs font-medium text-status-success">
+              <CheckCircle2 className="w-3.5 h-3.5" />
+              Synchronized with active release
             </span>
           )}
 
@@ -141,10 +141,10 @@ export const ConfigDraftTable: React.FC<ConfigDraftTableProps> = ({ namespaceId 
             type="button"
             onClick={() => setIsDiffOpen(true)}
             disabled={!pendingDiff}
-            className="flex items-center gap-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface-sunken)] px-3 py-1.5 text-xs font-medium text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)]"
+            className="flex items-center gap-1.5 rounded-xs border border-border-default bg-surface-elevated px-2.5 py-1 text-xs font-medium text-secondary hover:text-primary transition-colors disabled:opacity-50"
           >
-            <GitCompare className="w-3.5 h-3.5 text-indigo-400" />
-            <span>Xem thay đổi (Diff)</span>
+            <GitCompare className="w-3.5 h-3.5 text-brand" />
+            <span>View Diff</span>
           </button>
         </div>
 
@@ -152,17 +152,17 @@ export const ConfigDraftTable: React.FC<ConfigDraftTableProps> = ({ namespaceId 
           <button
             type="button"
             onClick={() => setRevealSecrets(!revealSecrets)}
-            className="flex items-center gap-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface-sunken)] px-3 py-1.5 text-xs font-medium text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)]"
+            className="flex items-center gap-1.5 rounded-xs border border-border-default bg-surface-elevated px-2.5 py-1 text-xs font-medium text-secondary hover:text-primary transition-colors"
           >
             {revealSecrets ? (
               <>
-                <EyeOff className="w-3.5 h-3.5 text-amber-400" />
-                <span>Ẩn secret</span>
+                <EyeOff className="w-3.5 h-3.5 text-status-warning" />
+                <span>Mask Secrets</span>
               </>
             ) : (
               <>
-                <Eye className="w-3.5 h-3.5 text-indigo-400" />
-                <span>Hiện secret</span>
+                <Eye className="w-3.5 h-3.5 text-brand" />
+                <span>Reveal Secrets</span>
               </>
             )}
           </button>
@@ -171,59 +171,61 @@ export const ConfigDraftTable: React.FC<ConfigDraftTableProps> = ({ namespaceId 
             type="button"
             onClick={handleSave}
             disabled={updateMutation.isPending}
-            className="flex items-center gap-1.5 rounded-lg border border-indigo-500/40 bg-indigo-500/10 px-3.5 py-1.5 text-xs font-semibold text-indigo-400 hover:bg-indigo-500/20 disabled:opacity-40 cursor-pointer"
+            className="flex items-center gap-1.5 rounded-xs border border-brand/40 bg-brand/10 px-3 py-1 text-xs font-medium text-brand hover:bg-brand/20 disabled:opacity-40 transition-colors cursor-pointer"
           >
             <Save className="w-3.5 h-3.5" />
-            <span>{updateMutation.isPending ? 'Đang lưu...' : 'Lưu nháp'}</span>
+            <span>{updateMutation.isPending ? 'Saving...' : 'Save Draft'}</span>
           </button>
 
           <button
             type="button"
             onClick={() => setIsPublishOpen(true)}
             disabled={pendingCount === 0}
-            className="flex items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-1.5 text-xs font-semibold text-white hover:bg-indigo-500 shadow-sm disabled:opacity-40 cursor-pointer"
+            className="flex items-center gap-1.5 rounded-xs bg-brand px-3.5 py-1 text-xs font-medium text-white hover:bg-brand-hover shadow-xs disabled:opacity-40 transition-colors cursor-pointer"
           >
             <Send className="w-3.5 h-3.5" />
-            <span>Phát hành (Publish)</span>
+            <span>Publish Release</span>
           </button>
         </div>
       </div>
 
       {saveSuccess && (
-        <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs text-emerald-400">
-          {saveSuccess}
+        <div className="flex items-center gap-2 rounded-xs border border-status-success/30 bg-status-success/10 p-2.5 text-xs text-status-success">
+          <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+          <span>{saveSuccess}</span>
         </div>
       )}
 
       {saveError && (
-        <div className="rounded-lg border border-rose-500/30 bg-rose-500/10 p-3 text-xs text-rose-400 font-mono">
-          {saveError}
+        <div className="flex items-center gap-2 rounded-xs border border-status-danger/30 bg-status-danger/10 p-2.5 text-xs text-status-danger font-mono">
+          <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+          <span>{saveError}</span>
         </div>
       )}
 
       {/* Editable Items Table */}
-      <div className="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-sm">
+      <div className="overflow-hidden rounded-md border border-border-default bg-surface shadow-xs">
         <table className="w-full text-left text-xs">
-          <thead className="border-b border-[var(--border)] bg-[var(--surface-sunken)] text-[var(--text-secondary)]">
+          <thead className="border-b border-border-default bg-surface-elevated/40 text-secondary font-medium uppercase tracking-wider text-[10px]">
             <tr>
-              <th className="py-2.5 px-3 font-semibold w-1/4">Key (Khóa)</th>
-              <th className="py-2.5 px-3 font-semibold w-1/3">Giá trị (Value)</th>
-              <th className="py-2.5 px-3 font-semibold w-24">Kiểu dữ liệu</th>
-              <th className="py-2.5 px-3 font-semibold w-20 text-center">Bảo mật</th>
-              <th className="py-2.5 px-3 font-semibold">Ghi chú</th>
-              <th className="py-2.5 px-3 font-semibold w-12 text-center">Xóa</th>
+              <th className="py-2.5 px-3 font-semibold w-1/4">Key</th>
+              <th className="py-2.5 px-3 font-semibold w-1/3">Value</th>
+              <th className="py-2.5 px-3 font-semibold w-24">Type</th>
+              <th className="py-2.5 px-3 font-semibold w-20 text-center">Secret</th>
+              <th className="py-2.5 px-3 font-semibold">Comment</th>
+              <th className="py-2.5 px-3 font-semibold w-12 text-center">Delete</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-[var(--border)]">
+          <tbody className="divide-y divide-border-subtle">
             {items.map((item, idx) => (
-              <tr key={`item-${idx}`} className="hover:bg-[var(--surface-hover)]">
+              <tr key={`item-${idx}`} className="hover:bg-surface-elevated/50 transition-colors">
                 <td className="py-2 px-3">
                   <input
                     type="text"
                     value={item.key}
                     onChange={(e) => handleRowChange(idx, 'key', e.target.value)}
                     placeholder="database_url"
-                    className="w-full rounded border border-[var(--border)] bg-[var(--surface-sunken)] px-2 py-1 font-mono text-xs text-[var(--text-primary)] focus:border-indigo-500 focus:outline-none"
+                    className="w-full rounded-xs border border-border-default bg-surface-elevated px-2 py-1 font-mono text-xs text-primary focus:border-brand focus-visible:outline-none"
                   />
                 </td>
 
@@ -233,13 +235,13 @@ export const ConfigDraftTable: React.FC<ConfigDraftTableProps> = ({ namespaceId 
                       type={item.is_secret && !revealSecrets ? 'password' : 'text'}
                       value={item.value}
                       onChange={(e) => handleRowChange(idx, 'value', e.target.value)}
-                      placeholder={item.is_secret ? '••••••••' : 'Giá trị cấu hình'}
-                      className={`w-full rounded border border-[var(--border)] bg-[var(--surface-sunken)] px-2 py-1 font-mono text-xs text-[var(--text-primary)] focus:border-indigo-500 focus:outline-none ${
+                      placeholder={item.is_secret ? '••••••••' : 'Configuration value'}
+                      className={`w-full rounded-xs border border-border-default bg-surface-elevated px-2 py-1 font-mono text-xs text-primary focus:border-brand focus-visible:outline-none ${
                         item.is_secret ? 'pr-7' : ''
                       }`}
                     />
                     {item.is_secret && (
-                      <Lock className="absolute right-2 top-2 w-3 h-3 text-amber-400/70 pointer-events-none" />
+                      <Lock className="absolute right-2 top-2 w-3 h-3 text-status-warning/70 pointer-events-none" />
                     )}
                   </div>
                 </td>
@@ -248,7 +250,7 @@ export const ConfigDraftTable: React.FC<ConfigDraftTableProps> = ({ namespaceId 
                   <select
                     value={item.value_type}
                     onChange={(e) => handleRowChange(idx, 'value_type', e.target.value as any)}
-                    className="w-full rounded border border-[var(--border)] bg-[var(--surface-sunken)] px-2 py-1 text-xs text-[var(--text-primary)] focus:outline-none"
+                    className="w-full rounded-xs border border-border-default bg-surface-elevated px-2 py-1 text-xs text-primary focus:outline-none focus:border-brand"
                   >
                     <option value="string">STRING</option>
                     <option value="number">NUMBER</option>
@@ -262,8 +264,8 @@ export const ConfigDraftTable: React.FC<ConfigDraftTableProps> = ({ namespaceId 
                     type="checkbox"
                     checked={item.is_secret}
                     onChange={(e) => handleRowChange(idx, 'is_secret', e.target.checked)}
-                    className="h-4 w-4 rounded border-[var(--border)] text-indigo-600 focus:ring-indigo-500"
-                    title="Đánh dấu là Secret bí mật (mã hóa AES-256-GCM)"
+                    className="h-3.5 w-3.5 rounded-xs border-border-default text-brand focus:ring-brand accent-brand cursor-pointer"
+                    title="Mark as Secret (AES-256-GCM encrypted)"
                   />
                 </td>
 
@@ -272,8 +274,8 @@ export const ConfigDraftTable: React.FC<ConfigDraftTableProps> = ({ namespaceId 
                     type="text"
                     value={item.comment || ''}
                     onChange={(e) => handleRowChange(idx, 'comment', e.target.value)}
-                    placeholder="Mục đích dùng..."
-                    className="w-full rounded border border-[var(--border)] bg-[var(--surface-sunken)] px-2 py-1 text-xs text-[var(--text-secondary)] focus:outline-none"
+                    placeholder="Description or context..."
+                    className="w-full rounded-xs border border-border-default bg-surface-elevated px-2 py-1 text-xs text-secondary focus:outline-none focus:border-brand"
                   />
                 </td>
 
@@ -281,8 +283,8 @@ export const ConfigDraftTable: React.FC<ConfigDraftTableProps> = ({ namespaceId 
                   <button
                     type="button"
                     onClick={() => handleDeleteItem(idx)}
-                    className="rounded p-1 text-[var(--text-tertiary)] hover:bg-rose-500/10 hover:text-rose-400"
-                    title="Xóa khóa này"
+                    className="rounded-xs p-1 text-muted hover:bg-status-danger/10 hover:text-status-danger transition-colors"
+                    title="Delete key"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
@@ -292,17 +294,17 @@ export const ConfigDraftTable: React.FC<ConfigDraftTableProps> = ({ namespaceId 
           </tbody>
         </table>
 
-        <div className="p-3 bg-[var(--surface-sunken)] border-t border-[var(--border)] flex justify-between items-center">
+        <div className="p-2.5 bg-surface-elevated/40 border-t border-border-default flex justify-between items-center">
           <button
             type="button"
             onClick={handleAddItem}
-            className="flex items-center gap-1.5 text-xs font-semibold text-indigo-400 hover:text-indigo-300"
+            className="flex items-center gap-1.5 text-xs font-medium text-brand hover:text-brand-hover transition-colors"
           >
             <Plus className="w-3.5 h-3.5" />
-            <span>Thêm khóa cấu hình (Key)</span>
+            <span>Add Configuration Key</span>
           </button>
-          <span className="text-xs text-[var(--text-tertiary)]">
-            Tổng: {items.length} khóa
+          <span className="text-[11px] font-mono text-muted">
+            Total: {items.length} {items.length === 1 ? 'key' : 'keys'}
           </span>
         </div>
       </div>

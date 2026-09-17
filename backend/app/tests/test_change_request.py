@@ -26,8 +26,6 @@ from app.models.audit import AuditLog
 from app.models.change_request import ChangeRequest
 from app.models.enums import ChangeRequestStatus
 from app.models.evaluation import EvaluationEvent
-from app.models.flag import FlagEnvironmentSetting
-from app.models.project import Environment
 from app.services.change_request import change_request_service
 
 BASE = "http://test"
@@ -44,7 +42,9 @@ def _unique_email() -> str:
     return f"test-cr-{uuid.uuid4().hex[:10]}@example.com"
 
 
-async def create_user_and_headers(client: AsyncClient, name: str = "User") -> tuple[dict[str, Any], dict[str, str]]:
+async def create_user_and_headers(
+    client: AsyncClient, name: str = "User"
+) -> tuple[dict[str, Any], dict[str, str]]:
     email = _unique_email()
     await client.post(
         f"{AUTH_PREFIX}/register",
@@ -59,7 +59,9 @@ async def create_user_and_headers(client: AsyncClient, name: str = "User") -> tu
     return user_res.json(), {"Authorization": f"Bearer {token}"}
 
 
-async def setup_test_hierarchy(client: AsyncClient, owner_headers: dict[str, str]) -> tuple[dict[str, Any], dict[str, Any], list[dict[str, Any]]]:
+async def setup_test_hierarchy(
+    client: AsyncClient, owner_headers: dict[str, str]
+) -> tuple[dict[str, Any], dict[str, Any], list[dict[str, Any]]]:
     org_res = await client.post(
         ORG_PREFIX,
         json={"name": "CR Org", "slug": f"cr-org-{uuid.uuid4().hex[:8]}"},
@@ -95,7 +97,11 @@ async def test_modify_flag_in_production_creates_pending_cr():
         # Create flag
         flag_res = await client.post(
             f"{PROJECT_PREFIX}/{project['id']}/flags",
-            json={"key": f"prod_flag_{uuid.uuid4().hex[:6]}", "name": "Prod Flag", "type": "BOOLEAN"},
+            json={
+                "key": f"prod_flag_{uuid.uuid4().hex[:6]}",
+                "name": "Prod Flag",
+                "type": "BOOLEAN",
+            },
             headers=owner_headers,
         )
         flag = flag_res.json()
@@ -253,7 +259,11 @@ async def test_other_user_approves_applies_and_increments_ruleset_version():
         # Flag created in project
         flag_res = await client.post(
             f"{PROJECT_PREFIX}/{project['id']}/flags",
-            json={"key": f"apply_flag_{uuid.uuid4().hex[:6]}", "name": "Apply Flag", "type": "BOOLEAN"},
+            json={
+                "key": f"apply_flag_{uuid.uuid4().hex[:6]}",
+                "name": "Apply Flag",
+                "type": "BOOLEAN",
+            },
             headers=owner_headers,
         )
         flag = flag_res.json()
@@ -313,7 +323,11 @@ async def test_reject_change_request():
 
         flag_res = await client.post(
             f"{PROJECT_PREFIX}/{project['id']}/flags",
-            json={"key": f"reject_flag_{uuid.uuid4().hex[:6]}", "name": "Reject Flag", "type": "BOOLEAN"},
+            json={
+                "key": f"reject_flag_{uuid.uuid4().hex[:6]}",
+                "name": "Reject Flag",
+                "type": "BOOLEAN",
+            },
             headers=owner_headers,
         )
         flag = flag_res.json()
@@ -444,7 +458,11 @@ async def test_scheduled_change_applied_by_scheduler():
 
         flag_res = await client.post(
             f"{PROJECT_PREFIX}/{project['id']}/flags",
-            json={"key": f"sched_flag_{uuid.uuid4().hex[:6]}", "name": "Sched Flag", "type": "BOOLEAN"},
+            json={
+                "key": f"sched_flag_{uuid.uuid4().hex[:6]}",
+                "name": "Sched Flag",
+                "type": "BOOLEAN",
+            },
             headers=owner_headers,
         )
         flag = flag_res.json()
@@ -477,7 +495,9 @@ async def test_scheduled_change_applied_by_scheduler():
 
         # Now simulate time passing: set scheduled_at to 5 minutes ago in DB
         async with async_session_factory() as db:
-            db_cr = await db.scalar(select(ChangeRequest).where(ChangeRequest.id == uuid.UUID(cr["id"])))
+            db_cr = await db.scalar(
+                select(ChangeRequest).where(ChangeRequest.id == uuid.UUID(cr["id"]))
+            )
             db_cr.scheduled_at = datetime.now(timezone.utc) - timedelta(minutes=5)
             await db.commit()
 
@@ -552,5 +572,7 @@ async def test_payload_execution_failure_rollback():
 
         # Check CR in DB is preserved in APPROVED status (not corrupted or APPLIED)
         async with async_session_factory() as db:
-            db_cr = await db.scalar(select(ChangeRequest).where(ChangeRequest.id == uuid.UUID(cr["id"])))
+            db_cr = await db.scalar(
+                select(ChangeRequest).where(ChangeRequest.id == uuid.UUID(cr["id"]))
+            )
             assert db_cr.status == ChangeRequestStatus.APPROVED

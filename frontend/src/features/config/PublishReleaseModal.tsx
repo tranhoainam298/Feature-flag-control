@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { configApi } from './api';
-import { X, Send } from 'lucide-react';
+import { X, Send, AlertCircle, Info } from 'lucide-react';
 
 interface PublishReleaseModalProps {
   namespaceId: string;
@@ -35,7 +35,7 @@ export const PublishReleaseModal: React.FC<PublishReleaseModalProps> = ({
         err.response?.data?.message ||
         err.response?.data?.detail ||
         err.message ||
-        'Không thể phát hành release';
+        'Failed to publish release';
       setErrorMsg(typeof msg === 'object' ? JSON.stringify(msg) : String(msg));
     },
   });
@@ -49,66 +49,70 @@ export const PublishReleaseModal: React.FC<PublishReleaseModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
-      <div className="w-full max-w-md rounded-xl border border-[var(--border)] bg-[var(--surface)] p-6 shadow-xl space-y-4">
-        <div className="flex items-center justify-between border-b border-[var(--border)] pb-3">
+      <div className="w-full max-w-md rounded-md border border-border-default bg-surface p-5 shadow-xl space-y-3.5">
+        <div className="flex items-center justify-between border-b border-border-subtle pb-3">
           <div className="flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-400">
+            <div className="flex h-7 w-7 items-center justify-center rounded-xs bg-brand/10 text-brand border border-brand/20">
               <Send className="w-3.5 h-3.5" />
             </div>
-            <h3 className="text-base font-semibold text-[var(--text-primary)]">
-              Phát hành cấu hình (Publish)
+            <h3 className="text-sm font-semibold text-primary">
+              Publish Configuration Release
             </h3>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="rounded p-1 text-[var(--text-tertiary)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)]"
+            className="rounded-xs p-1 text-muted hover:bg-surface-elevated hover:text-primary transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
-        <div className="rounded-lg bg-indigo-500/10 border border-indigo-500/20 p-3 text-xs text-indigo-300">
-          Bạn đang phát hành <strong>{pendingChangesCount}</strong> thay đổi từ bản nháp thành phiên bản cấu hình chính thức (Release).
+        <div className="rounded-xs bg-brand/10 border border-brand/20 p-2.5 text-xs text-brand flex items-start gap-2">
+          <Info className="w-4 h-4 shrink-0 mt-0.5" />
+          <div>
+            Publishing <strong>{pendingChangesCount}</strong> draft {pendingChangesCount === 1 ? 'change' : 'changes'} into an immutable, versioned configuration release.
+          </div>
         </div>
 
         {errorMsg && (
           <div
             role="alert"
-            className="rounded-lg border border-rose-500/30 bg-rose-500/10 p-3 text-xs text-rose-400 font-mono"
+            className="flex items-center gap-2 rounded-xs border border-status-danger/30 bg-status-danger/10 p-2.5 text-xs text-status-danger font-mono"
           >
-            {errorMsg}
+            <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+            <span>{errorMsg}</span>
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-3">
           <div>
-            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">
-              Ghi chú phát hành (Release comment)
+            <label className="block text-[11px] font-medium text-secondary mb-1">
+              Release Comment / Changelog
             </label>
             <textarea
               rows={3}
               value={comment}
               onChange={(e) => setComment(e.target.value)}
-              placeholder="VD: Cập nhật timeout kết nối DB và cấu hình payment retry..."
-              className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface-sunken)] p-2.5 text-xs text-[var(--text-primary)] focus:border-indigo-500 focus:outline-none"
+              placeholder="e.g. Update database connection timeouts and enable retry policy"
+              className="w-full rounded-xs border border-border-default bg-surface-elevated p-2.5 text-xs text-primary placeholder:text-muted focus:border-brand focus-visible:outline-none"
             />
           </div>
 
-          <div className="flex justify-end gap-2 border-t border-[var(--border)] pt-4">
+          <div className="flex justify-end gap-2 border-t border-border-subtle pt-3">
             <button
               type="button"
               onClick={onClose}
-              className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-4 py-2 text-xs font-medium text-[var(--text-secondary)] hover:bg-[var(--surface-hover)]"
+              className="rounded-xs border border-border-default bg-surface px-3 py-1.5 text-xs font-medium text-secondary hover:bg-surface-elevated hover:text-primary transition-colors"
             >
-              Hủy
+              Cancel
             </button>
             <button
               type="submit"
               disabled={publishMutation.isPending}
-              className="rounded-lg bg-indigo-600 px-4 py-2 text-xs font-medium text-white hover:bg-indigo-500 shadow-sm disabled:opacity-50"
+              className="rounded-xs bg-brand px-3.5 py-1.5 text-xs font-medium text-white hover:bg-brand-hover shadow-xs disabled:opacity-50 transition-colors"
             >
-              {publishMutation.isPending ? 'Đang phát hành...' : 'Xác nhận Phát hành'}
+              {publishMutation.isPending ? 'Publishing...' : 'Confirm & Publish'}
             </button>
           </div>
         </form>

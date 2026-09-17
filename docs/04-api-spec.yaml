@@ -1,0 +1,4554 @@
+openapi: 3.1.0
+info:
+  title: FlagOps API
+  description: Feature Flag & Application Configuration Service
+  version: 0.1.0
+paths:
+  /api/v1/auth/register:
+    post:
+      tags:
+      - Auth
+      summary: Register a new user
+      operationId: register_api_v1_auth_register_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+        required: true
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/auth/login:
+    post:
+      tags:
+      - Auth
+      summary: Login and get access + refresh tokens
+      operationId: login_api_v1_auth_login_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/auth/refresh:
+    post:
+      tags:
+      - Auth
+      summary: Refresh access token using refresh token
+      operationId: refresh_api_v1_auth_refresh_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/auth/logout:
+    post:
+      tags:
+      - Auth
+      summary: Logout and revoke refresh token
+      operationId: logout_api_v1_auth_logout_post
+      responses:
+        '204':
+          description: Successful Response
+      security:
+      - HTTPBearer: []
+  /api/v1/auth/me:
+    get:
+      tags:
+      - Auth
+      summary: Get current user profile
+      operationId: me_api_v1_auth_me_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+      security:
+      - HTTPBearer: []
+  /api/v1/organizations:
+    get:
+      tags:
+      - Organizations
+      summary: Danh sách organization của user
+      operationId: list_organizations_api_v1_organizations_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/OrgResponse'
+                type: array
+                title: Response List Organizations Api V1 Organizations Get
+      security:
+      - HTTPBearer: []
+    post:
+      tags:
+      - Organizations
+      summary: Tạo organization mới
+      operationId: create_organization_api_v1_organizations_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrgCreate'
+        required: true
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrgResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      security:
+      - HTTPBearer: []
+  /api/v1/organizations/{org_id}:
+    get:
+      tags:
+      - Organizations
+      summary: Lấy chi tiết organization
+      operationId: get_organization_api_v1_organizations__org_id__get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: org_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Org Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrgResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    patch:
+      tags:
+      - Organizations
+      summary: Cập nhật organization
+      operationId: update_organization_api_v1_organizations__org_id__patch
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: org_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Org Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrgUpdate'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrgResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    delete:
+      tags:
+      - Organizations
+      summary: Xóa organization
+      operationId: delete_organization_api_v1_organizations__org_id__delete
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: org_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Org Id
+      responses:
+        '204':
+          description: Successful Response
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/organizations/{org_id}/members:
+    get:
+      tags:
+      - Organizations
+      summary: Danh sách thành viên organization
+      operationId: list_members_api_v1_organizations__org_id__members_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: org_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Org Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MemberResponse'
+                title: Response List Members Api V1 Organizations  Org Id  Members
+                  Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    post:
+      tags:
+      - Organizations
+      summary: Thêm thành viên vào organization
+      operationId: add_member_api_v1_organizations__org_id__members_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: org_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Org Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MemberCreate'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemberResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/organizations/{org_id}/members/{user_id}:
+    patch:
+      tags:
+      - Organizations
+      summary: Cập nhật vai trò thành viên
+      operationId: update_member_role_api_v1_organizations__org_id__members__user_id__patch
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: org_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Org Id
+      - name: user_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: User Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MemberUpdate'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemberResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    delete:
+      tags:
+      - Organizations
+      summary: Xóa thành viên khỏi organization
+      operationId: remove_member_api_v1_organizations__org_id__members__user_id__delete
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: org_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Org Id
+      - name: user_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: User Id
+      responses:
+        '204':
+          description: Successful Response
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/organizations/{org_id}/projects:
+    get:
+      tags:
+      - Organizations
+      summary: Danh sách project trong organization
+      operationId: list_org_projects_api_v1_organizations__org_id__projects_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: org_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Org Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProjectResponse'
+                title: Response List Org Projects Api V1 Organizations  Org Id  Projects
+                  Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    post:
+      tags:
+      - Organizations
+      summary: Tạo project mới trong organization (tự động sinh 3 environments)
+      operationId: create_project_api_v1_organizations__org_id__projects_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: org_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Org Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectCreate'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/projects/{project_id}:
+    get:
+      tags:
+      - Projects
+      summary: Lấy chi tiết project
+      operationId: get_project_api_v1_projects__project_id__get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Project Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    patch:
+      tags:
+      - Projects
+      summary: Cập nhật project
+      operationId: update_project_api_v1_projects__project_id__patch
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Project Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectUpdate'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    delete:
+      tags:
+      - Projects
+      summary: Xóa project
+      operationId: delete_project_api_v1_projects__project_id__delete
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Project Id
+      responses:
+        '204':
+          description: Successful Response
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/projects/{project_id}/environments:
+    get:
+      tags:
+      - Projects
+      summary: Danh sách environment của project
+      operationId: list_environments_api_v1_projects__project_id__environments_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Project Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EnvironmentResponse'
+                title: Response List Environments Api V1 Projects  Project Id  Environments
+                  Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    post:
+      tags:
+      - Projects
+      summary: Tạo environment mới trong project
+      operationId: create_environment_api_v1_projects__project_id__environments_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Project Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EnvironmentCreate'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvironmentResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/environments/{environment_id}:
+    get:
+      tags:
+      - Environments
+      summary: Lấy chi tiết environment
+      operationId: get_environment_api_v1_environments__environment_id__get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: environment_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Environment Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvironmentResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    patch:
+      tags:
+      - Environments
+      summary: Cập nhật environment
+      operationId: update_environment_api_v1_environments__environment_id__patch
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: environment_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Environment Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EnvironmentUpdate'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvironmentResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    delete:
+      tags:
+      - Environments
+      summary: Xóa environment
+      operationId: delete_environment_api_v1_environments__environment_id__delete
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: environment_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Environment Id
+      responses:
+        '204':
+          description: Successful Response
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/environments/{environment_id}/api-keys:
+    get:
+      tags:
+      - Environments
+      summary: Danh sách API key của environment (chỉ hiển thị key_prefix, không có
+        raw key)
+      operationId: list_api_keys_api_v1_environments__environment_id__api_keys_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: environment_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Environment Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ApiKeyResponse'
+                title: Response List Api Keys Api V1 Environments  Environment Id  Api
+                  Keys Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    post:
+      tags:
+      - Environments
+      summary: Tạo API key mới (trả raw key duy nhất 1 lần trong response)
+      operationId: create_api_key_api_v1_environments__environment_id__api_keys_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: environment_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Environment Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApiKeyCreate'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiKeyCreateResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/api-keys/{api_key_id}/revoke:
+    post:
+      tags:
+      - API Keys
+      summary: Thu hồi API key (không xóa cứng, vô hiệu hóa vĩnh viễn)
+      operationId: revoke_api_key_api_v1_api_keys__api_key_id__revoke_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: api_key_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Api Key Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiKeyResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/projects/{project_id}/flags:
+    get:
+      tags:
+      - Flags
+      summary: Danh sách flag trong project (lọc theo tag, type, archived, search)
+      operationId: list_flags_api_v1_projects__project_id__flags_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Project Id
+      - name: tag
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: Lọc theo tag
+          title: Tag
+        description: Lọc theo tag
+      - name: type
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - $ref: '#/components/schemas/FlagType'
+          - type: 'null'
+          description: Lọc theo kiểu flag
+          title: Type
+        description: Lọc theo kiểu flag
+      - name: archived
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          description: Lọc cờ lưu trữ
+          title: Archived
+        description: Lọc cờ lưu trữ
+      - name: search
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: Tìm kiếm theo key hoặc tên
+          title: Search
+        description: Tìm kiếm theo key hoặc tên
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FlagResponse'
+                title: Response List Flags Api V1 Projects  Project Id  Flags Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    post:
+      tags:
+      - Flags
+      summary: Tạo flag mới + variations trong 1 transaction
+      operationId: create_flag_api_v1_projects__project_id__flags_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Project Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FlagCreate'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FlagResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/flags/{flag_id}:
+    get:
+      tags:
+      - Flags
+      summary: Lấy chi tiết flag
+      operationId: get_flag_api_v1_flags__flag_id__get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: flag_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Flag Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FlagResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    patch:
+      tags:
+      - Flags
+      summary: Cập nhật metadata flag (KHÔNG cho sửa key)
+      operationId: update_flag_api_v1_flags__flag_id__patch
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: flag_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Flag Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FlagUpdate'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FlagResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    put:
+      tags:
+      - Flags
+      summary: Cập nhật metadata flag (PUT)
+      operationId: update_flag_api_v1_flags__flag_id__put
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: flag_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Flag Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FlagUpdate'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FlagResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/flags/{flag_id}/archive:
+    post:
+      tags:
+      - Flags
+      summary: Lưu trữ flag (archive)
+      operationId: archive_flag_api_v1_flags__flag_id__archive_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: flag_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Flag Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FlagResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/flags/{flag_id}/restore:
+    post:
+      tags:
+      - Flags
+      summary: Khôi phục flag đã lưu trữ (restore)
+      operationId: restore_flag_api_v1_flags__flag_id__restore_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: flag_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Flag Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FlagResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/flags/{flag_id}/environments/{env_id}:
+    get:
+      tags:
+      - Flags
+      summary: Lấy cấu hình flag trên một environment cụ thể
+      operationId: get_flag_setting_api_v1_flags__flag_id__environments__env_id__get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: env_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Env Id
+      - name: flag_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Flag Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FlagSettingResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    put:
+      tags:
+      - Flags
+      summary: Cập nhật cấu hình flag trên environment (bật/tắt, variation, bucketing)
+      operationId: update_flag_setting_api_v1_flags__flag_id__environments__env_id__put
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: env_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Env Id
+      - name: flag_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Flag Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FlagSettingUpdate'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FlagSettingResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/projects/{project_id}/flag-health:
+    get:
+      tags:
+      - Flag Health
+      summary: Danh sách sức khỏe flag trong project
+      operationId: list_flag_health_api_v1_projects__project_id__flag_health_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Project Id
+      - name: state
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - $ref: '#/components/schemas/LifecycleState'
+          - type: 'null'
+          description: Lọc theo trạng thái
+          title: State
+        description: Lọc theo trạng thái
+      - name: min_score
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+            maximum: 100
+            minimum: 0
+          - type: 'null'
+          description: Điểm nợ tối thiểu
+          title: Min Score
+        description: Điểm nợ tối thiểu
+      - name: sort
+        in: query
+        required: false
+        schema:
+          type: string
+          description: 'Sắp xếp: score | name | state'
+          default: score
+          title: Sort
+        description: 'Sắp xếp: score | name | state'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FlagHealthListResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/projects/{project_id}/flags/{flag_id}/health:
+    get:
+      tags:
+      - Flag Health
+      summary: Chi tiết sức khỏe của một flag
+      operationId: get_flag_health_api_v1_projects__project_id__flags__flag_id__health_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: flag_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Flag Id
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Project Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FlagHealthResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/projects/{project_id}/flags/{flag_id}/archive:
+    post:
+      tags:
+      - Flag Health
+      summary: Archive một flag
+      operationId: archive_flag_api_v1_projects__project_id__flags__flag_id__archive_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: flag_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Flag Id
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Project Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FlagHealthResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/projects/{project_id}/segments:
+    get:
+      tags:
+      - segments
+      summary: List Segments
+      description: List all segments in a project.
+      operationId: list_segments_api_v1_projects__project_id__segments_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Project Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SegmentResponse'
+                title: Response List Segments Api V1 Projects  Project Id  Segments
+                  Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    post:
+      tags:
+      - segments
+      summary: Create Segment
+      description: Create a new segment in a project.
+      operationId: create_segment_api_v1_projects__project_id__segments_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Project Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SegmentCreate'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SegmentResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/projects/{project_id}/segments/{segment_id}:
+    get:
+      tags:
+      - segments
+      summary: Get Segment
+      description: Get segment by ID.
+      operationId: get_segment_api_v1_projects__project_id__segments__segment_id__get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: segment_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Segment Id
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Project Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SegmentResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    patch:
+      tags:
+      - segments
+      summary: Update Segment
+      description: Update a segment.
+      operationId: update_segment_api_v1_projects__project_id__segments__segment_id__patch
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: segment_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Segment Id
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Project Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SegmentUpdate'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SegmentResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    delete:
+      tags:
+      - segments
+      summary: Delete Segment
+      description: Delete a segment.
+      operationId: delete_segment_api_v1_projects__project_id__segments__segment_id__delete
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: segment_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Segment Id
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Project Id
+      responses:
+        '204':
+          description: Successful Response
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/flags/{flag_id}/environments/{env_id}/rules:
+    get:
+      tags:
+      - targeting
+      summary: List Targeting Rules
+      description: List all targeting rules for a flag in an environment.
+      operationId: list_targeting_rules_api_v1_flags__flag_id__environments__env_id__rules_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: env_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Env Id
+      - name: flag_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Flag Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TargetingRuleResponse'
+                title: Response List Targeting Rules Api V1 Flags  Flag Id  Environments  Env
+                  Id  Rules Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    put:
+      tags:
+      - targeting
+      summary: Put Targeting Rules Atomic
+      description: Atomically replace all targeting rules for a flag in an environment.
+      operationId: put_targeting_rules_atomic_api_v1_flags__flag_id__environments__env_id__rules_put
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: env_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Env Id
+      - name: flag_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Flag Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TargetingRulesUpdate'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TargetingRuleResponse'
+                title: Response Put Targeting Rules Atomic Api V1 Flags  Flag Id  Environments  Env
+                  Id  Rules Put
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/flags/{flag_id}/environments/{env_id}/overrides:
+    post:
+      tags:
+      - targeting
+      summary: Create Override
+      description: Create or update an individual override.
+      operationId: create_override_api_v1_flags__flag_id__environments__env_id__overrides_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: env_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Env Id
+      - name: flag_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Flag Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IndividualOverrideCreate'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IndividualOverrideResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/flags/{flag_id}/environments/{env_id}/overrides/{override_id}:
+    delete:
+      tags:
+      - targeting
+      summary: Delete Override
+      description: Delete an individual override.
+      operationId: delete_override_api_v1_flags__flag_id__environments__env_id__overrides__override_id__delete
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: env_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Env Id
+      - name: override_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Override Id
+      - name: flag_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Flag Id
+      responses:
+        '204':
+          description: Successful Response
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/flags/{flag_id}/environments/{env_id}/simulate:
+    post:
+      tags:
+      - targeting
+      summary: Simulate Evaluation
+      description: Simulate evaluation of a feature flag with trace.
+      operationId: simulate_evaluation_api_v1_flags__flag_id__environments__env_id__simulate_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: env_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Env Id
+      - name: flag_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Flag Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SimulateRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SimulateResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/environments/{environment_id}/change-requests:
+    post:
+      tags:
+      - Change Requests
+      summary: Tạo change request mới cho một environment
+      operationId: create_change_request_api_v1_environments__environment_id__change_requests_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: environment_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Environment Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangeRequestCreate'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChangeRequestResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    get:
+      tags:
+      - Change Requests
+      summary: Danh sách change request trong environment (lọc theo status)
+      operationId: list_change_requests_api_v1_environments__environment_id__change_requests_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: environment_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Environment Id
+      - name: status
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - $ref: '#/components/schemas/ChangeRequestStatus'
+          - type: 'null'
+          description: Lọc theo trạng thái change request
+          title: Status
+        description: Lọc theo trạng thái change request
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ChangeRequestResponse'
+                title: Response List Change Requests Api V1 Environments  Environment
+                  Id  Change Requests Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/change-requests/{change_request_id}:
+    get:
+      tags:
+      - Change Requests
+      summary: Chi tiết change request
+      operationId: get_change_request_api_v1_change_requests__change_request_id__get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: change_request_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Change Request Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChangeRequestResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/change-requests/{change_request_id}/impact:
+    get:
+      tags:
+      - Change Requests
+      summary: Mô phỏng tác động của change request trên 1000 context gần nhất
+      operationId: get_change_request_impact_api_v1_change_requests__change_request_id__impact_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: change_request_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Change Request Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChangeRequestImpactResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/change-requests/{change_request_id}/approve:
+    post:
+      tags:
+      - Change Requests
+      summary: Duyệt change request (nguyên tắc bốn mắt, chỉ ADMIN/OWNER)
+      operationId: approve_change_request_api_v1_change_requests__change_request_id__approve_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: change_request_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Change Request Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChangeRequestResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/change-requests/{change_request_id}/reject:
+    post:
+      tags:
+      - Change Requests
+      summary: Từ chối change request (chỉ ADMIN/OWNER)
+      operationId: reject_change_request_api_v1_change_requests__change_request_id__reject_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: change_request_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Change Request Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChangeRequestResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/change-requests/{change_request_id}/cancel:
+    post:
+      tags:
+      - Change Requests
+      summary: Hủy change request (người tạo hoặc ADMIN/OWNER)
+      operationId: cancel_change_request_api_v1_change_requests__change_request_id__cancel_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: change_request_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Change Request Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChangeRequestResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/environments/{environment_id}/namespaces:
+    get:
+      tags:
+      - Config Center
+      summary: Danh sách namespace trong environment
+      operationId: list_namespaces_api_v1_environments__environment_id__namespaces_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: environment_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Environment Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ConfigNamespaceResponse'
+                title: Response List Namespaces Api V1 Environments  Environment Id  Namespaces
+                  Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    post:
+      tags:
+      - Config Center
+      summary: Tạo namespace mới trong environment
+      operationId: create_namespace_api_v1_environments__environment_id__namespaces_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: environment_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Environment Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfigNamespaceCreate'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConfigNamespaceResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/namespaces/{namespace_id}/items:
+    get:
+      tags:
+      - Config Center
+      summary: Lấy danh sách config item trong bản nháp
+      operationId: list_draft_items_api_v1_namespaces__namespace_id__items_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: namespace_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Namespace Id
+      - name: reveal
+        in: query
+        required: false
+        schema:
+          type: boolean
+          description: Reveal plaintext secrets (requires ADMIN role)
+          default: false
+          title: Reveal
+        description: Reveal plaintext secrets (requires ADMIN role)
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ConfigItemResponse'
+                title: Response List Draft Items Api V1 Namespaces  Namespace Id  Items
+                  Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    put:
+      tags:
+      - Config Center
+      summary: Cập nhật bản nháp cấu hình
+      operationId: update_draft_items_api_v1_namespaces__namespace_id__items_put
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: namespace_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Namespace Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              anyOf:
+              - $ref: '#/components/schemas/ConfigItemsUpdateRequest'
+              - type: array
+                items:
+                  $ref: '#/components/schemas/ConfigItemInput'
+              title: Payload
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ConfigItemResponse'
+                title: Response Update Draft Items Api V1 Namespaces  Namespace Id  Items
+                  Put
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/namespaces/{namespace_id}/pending-diff:
+    get:
+      tags:
+      - Config Center
+      summary: Xem diff giữa bản nháp và release hiện tại
+      operationId: get_pending_diff_api_v1_namespaces__namespace_id__pending_diff_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: namespace_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Namespace Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConfigDiffResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/namespaces/{namespace_id}/releases:
+    post:
+      tags:
+      - Config Center
+      summary: Phát hành (publish) bản nháp thành release mới
+      operationId: publish_release_api_v1_namespaces__namespace_id__releases_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: namespace_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Namespace Id
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfigReleaseCreate'
+              default: {}
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConfigReleaseResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    get:
+      tags:
+      - Config Center
+      summary: Lịch sử các release của namespace
+      operationId: list_releases_api_v1_namespaces__namespace_id__releases_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: namespace_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Namespace Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ConfigReleaseResponse'
+                title: Response List Releases Api V1 Namespaces  Namespace Id  Releases
+                  Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/namespaces/{namespace_id}/releases/{v1}/diff/{v2}:
+    get:
+      tags:
+      - Config Center
+      summary: So sánh diff giữa hai phiên bản release
+      operationId: get_releases_diff_api_v1_namespaces__namespace_id__releases__v1__diff__v2__get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: namespace_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Namespace Id
+      - name: v1
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: V1
+      - name: v2
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: V2
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConfigDiffResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/namespaces/{namespace_id}/releases/{v}/rollback:
+    post:
+      tags:
+      - Config Center
+      summary: Rollback cấu hình về phiên bản chỉ định
+      operationId: rollback_release_api_v1_namespaces__namespace_id__releases__v__rollback_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: namespace_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Namespace Id
+      - name: v
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: V
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConfigReleaseResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/audit:
+    get:
+      tags:
+      - Audit
+      summary: List audit logs with filters
+      description: Retrieve audit logs with optional filters and cursor pagination.
+      operationId: list_audit_logs_api_v1_audit_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: project_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Project Id
+      - name: environment_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Environment Id
+      - name: actor_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Actor Id
+      - name: action
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Action
+      - name: entity_type
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Entity Type
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 100
+          minimum: 1
+          default: 50
+          title: Limit
+      - name: cursor
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          description: Cursor pagination (id < cursor)
+          title: Cursor
+        description: Cursor pagination (id < cursor)
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AuditLogResponse'
+                title: Response List Audit Logs Api V1 Audit Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /eval/v1/ruleset:
+    get:
+      tags:
+      - Evaluation
+      summary: Get Ruleset
+      description: Download environment ruleset for SDK evaluation with ETag / 304
+        Not Modified.
+      operationId: get_ruleset_eval_v1_ruleset_get
+      parameters:
+      - name: environment_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Environment Id
+      - name: key
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Key
+      - name: If-None-Match
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: If-None-Match
+      - name: X-FlagOps-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Flagops-Key
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /eval/v1/stream:
+    get:
+      tags:
+      - Evaluation
+      summary: Stream ruleset updates via SSE
+      description: Server-Sent Events stream notifying SDKs when the ruleset version
+        changes.
+      operationId: stream_ruleset_eval_v1_stream_get
+      parameters:
+      - name: key
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Key
+      - name: X-FlagOps-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Flagops-Key
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /eval/v1/stream/connections:
+    get:
+      tags:
+      - Evaluation
+      summary: Get number of active SSE connections
+      description: 'Metric: Number of currently open SSE connections.'
+      operationId: stream_connections_eval_v1_stream_connections_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  type: integer
+                type: object
+                title: Response Stream Connections Eval V1 Stream Connections Get
+  /eval/v1/flags/{flag_key}/evaluate:
+    post:
+      tags:
+      - Evaluation
+      summary: Evaluate Single Flag
+      description: Evaluate a single feature flag.
+      operationId: evaluate_single_flag_eval_v1_flags__flag_key__evaluate_post
+      parameters:
+      - name: flag_key
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Flag Key
+      - name: key
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Key
+      - name: X-FlagOps-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Flagops-Key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EvaluationRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EvaluationResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /eval/v1/flags/evaluate-all:
+    post:
+      tags:
+      - Evaluation
+      summary: Evaluate All
+      description: Evaluate all feature flags in the environment.
+      operationId: evaluate_all_eval_v1_flags_evaluate_all_post
+      parameters:
+      - name: key
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Key
+      - name: X-FlagOps-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Flagops-Key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EvaluationRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EvaluateAllResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /eval/v1/events:
+    post:
+      tags:
+      - Evaluation
+      summary: Ingest Events
+      description: Ingest evaluation events batch with hashed context keys.
+      operationId: ingest_events_eval_v1_events_post
+      parameters:
+      - name: key
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Key
+      - name: X-FlagOps-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Flagops-Key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventBatchRequest'
+      responses:
+        '202':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventBatchResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /eval/v1/config/{namespace}:
+    get:
+      tags:
+      - Evaluation
+      summary: Fetch published configurations for namespace
+      description: Fetch published configurations for SDK/Client with ETag / 304 Not
+        Modified.
+      operationId: get_config_eval_v1_config__namespace__get
+      parameters:
+      - name: namespace
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Namespace
+      - name: environment_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Environment Id
+      - name: key
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Key
+      - name: If-None-Match
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: If-None-Match
+      - name: X-FlagOps-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Flagops-Key
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /eval/v1/flag-health:
+    get:
+      tags:
+      - Evaluation
+      summary: Get flag health data for project associated with API key (used by flag-scanner)
+      description: Fetch all flag health items in the project for flag-scanner CLI.
+      operationId: get_eval_flag_health_eval_v1_flag_health_get
+      parameters:
+      - name: key
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Key
+      - name: X-FlagOps-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Flagops-Key
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FlagHealthListResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /health:
+    get:
+      tags:
+      - Health
+      summary: Basic health check
+      operationId: health_check_health_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  type: string
+                type: object
+                title: Response Health Check Health Get
+  /health/db:
+    get:
+      tags:
+      - Health
+      summary: Database health check
+      operationId: health_db_check_health_db_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  /health/redis:
+    get:
+      tags:
+      - Health
+      summary: Redis health check
+      operationId: health_redis_check_health_redis_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+components:
+  schemas:
+    ApiKeyCreate:
+      properties:
+        name:
+          type: string
+          maxLength: 120
+          minLength: 1
+          title: Name
+        scope:
+          $ref: '#/components/schemas/ApiKeyScope'
+          default: SERVER
+        expires_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Expires At
+      type: object
+      required:
+      - name
+      title: ApiKeyCreate
+    ApiKeyCreateResponse:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        environment_id:
+          type: string
+          format: uuid
+          title: Environment Id
+        name:
+          type: string
+          title: Name
+        key_prefix:
+          type: string
+          title: Key Prefix
+        key:
+          type: string
+          title: Key
+        scope:
+          $ref: '#/components/schemas/ApiKeyScope'
+        expires_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Expires At
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+      type: object
+      required:
+      - id
+      - environment_id
+      - name
+      - key_prefix
+      - key
+      - scope
+      - expires_at
+      - created_at
+      title: ApiKeyCreateResponse
+    ApiKeyResponse:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        environment_id:
+          type: string
+          format: uuid
+          title: Environment Id
+        name:
+          type: string
+          title: Name
+        key_prefix:
+          type: string
+          title: Key Prefix
+        scope:
+          $ref: '#/components/schemas/ApiKeyScope'
+        expires_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Expires At
+        revoked_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Revoked At
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+      type: object
+      required:
+      - id
+      - environment_id
+      - name
+      - key_prefix
+      - scope
+      - expires_at
+      - revoked_at
+      - created_at
+      title: ApiKeyResponse
+    ApiKeyScope:
+      type: string
+      enum:
+      - SERVER
+      - CLIENT
+      title: ApiKeyScope
+    AuditLogResponse:
+      properties:
+        id:
+          type: integer
+          title: Id
+        organization_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Organization Id
+        project_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Project Id
+        environment_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Environment Id
+        actor_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Actor Id
+        action:
+          type: string
+          title: Action
+        entity_type:
+          type: string
+          title: Entity Type
+        entity_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Entity Id
+        before:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Before
+        after:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: After
+        ip_address:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Ip Address
+        user_agent:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: User Agent
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+      type: object
+      required:
+      - id
+      - action
+      - entity_type
+      - created_at
+      title: AuditLogResponse
+    ChangeRequestCreate:
+      properties:
+        title:
+          type: string
+          maxLength: 200
+          title: Title
+          description: Brief summary of proposed change
+        description:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Description
+          description: Detailed explanation or rationale
+        payload:
+          additionalProperties: true
+          type: object
+          title: Payload
+          description: JSON representation of target changes
+        scheduled_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Scheduled At
+          description: Optional scheduled execution time
+        status:
+          $ref: '#/components/schemas/ChangeRequestStatus'
+          description: Initial status (defaults to PENDING)
+          default: PENDING
+      type: object
+      required:
+      - title
+      - payload
+      title: ChangeRequestCreate
+      description: Payload to create a new change request.
+    ChangeRequestImpactResponse:
+      properties:
+        total_contexts:
+          type: integer
+          title: Total Contexts
+          description: Total evaluated historical contexts (up to 1000)
+        affected_contexts:
+          type: integer
+          title: Affected Contexts
+          description: Number of contexts whose evaluated variation changed
+        change_percentage:
+          type: number
+          title: Change Percentage
+          description: Percentage of contexts affected (0-100%)
+        transitions:
+          items:
+            $ref: '#/components/schemas/ImpactTransition'
+          type: array
+          title: Transitions
+          description: Breakdown of variation transitions
+        summary:
+          type: string
+          title: Summary
+          description: Human-readable impact explanation
+        flag_key:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Flag Key
+          description: Key of the primary flag simulated
+      type: object
+      required:
+      - total_contexts
+      - affected_contexts
+      - change_percentage
+      - summary
+      title: ChangeRequestImpactResponse
+      description: Impact simulation result comparing current vs simulated rulesets.
+    ChangeRequestResponse:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        environment_id:
+          type: string
+          format: uuid
+          title: Environment Id
+        title:
+          type: string
+          title: Title
+        description:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Description
+        payload:
+          additionalProperties: true
+          type: object
+          title: Payload
+        status:
+          $ref: '#/components/schemas/ChangeRequestStatus'
+        requested_by:
+          type: string
+          format: uuid
+          title: Requested By
+        reviewed_by:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Reviewed By
+        scheduled_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Scheduled At
+        applied_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Applied At
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+      type: object
+      required:
+      - id
+      - environment_id
+      - title
+      - payload
+      - status
+      - requested_by
+      - created_at
+      - updated_at
+      title: ChangeRequestResponse
+      description: Change request details response.
+    ChangeRequestStatus:
+      type: string
+      enum:
+      - DRAFT
+      - PENDING
+      - APPROVED
+      - REJECTED
+      - APPLIED
+      - CANCELLED
+      title: ChangeRequestStatus
+    ConfigDiffResponse:
+      properties:
+        added:
+          additionalProperties: true
+          type: object
+          title: Added
+        removed:
+          additionalProperties: true
+          type: object
+          title: Removed
+        changed:
+          additionalProperties: true
+          type: object
+          title: Changed
+        unchanged:
+          additionalProperties: true
+          type: object
+          title: Unchanged
+      type: object
+      title: ConfigDiffResponse
+    ConfigFormat:
+      type: string
+      enum:
+      - PROPERTIES
+      - JSON
+      - YAML
+      title: ConfigFormat
+    ConfigItemInput:
+      properties:
+        key:
+          type: string
+          maxLength: 200
+          minLength: 1
+          pattern: ^[a-zA-Z0-9._-]+$
+          title: Key
+        value:
+          type: string
+          title: Value
+        value_type:
+          $ref: '#/components/schemas/ConfigValueType'
+          default: STRING
+        is_secret:
+          type: boolean
+          title: Is Secret
+          default: false
+        json_schema:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Json Schema
+        comment:
+          anyOf:
+          - type: string
+            maxLength: 500
+          - type: 'null'
+          title: Comment
+      type: object
+      required:
+      - key
+      - value
+      title: ConfigItemInput
+    ConfigItemResponse:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        namespace_id:
+          type: string
+          format: uuid
+          title: Namespace Id
+        key:
+          type: string
+          title: Key
+        value:
+          type: string
+          title: Value
+        value_type:
+          $ref: '#/components/schemas/ConfigValueType'
+        is_secret:
+          type: boolean
+          title: Is Secret
+        json_schema:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Json Schema
+        comment:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Comment
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+      type: object
+      required:
+      - id
+      - namespace_id
+      - key
+      - value
+      - value_type
+      - is_secret
+      - created_at
+      - updated_at
+      title: ConfigItemResponse
+    ConfigItemsUpdateRequest:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/ConfigItemInput'
+          type: array
+          title: Items
+      type: object
+      title: ConfigItemsUpdateRequest
+    ConfigNamespaceCreate:
+      properties:
+        name:
+          type: string
+          maxLength: 120
+          minLength: 1
+          title: Name
+        format:
+          $ref: '#/components/schemas/ConfigFormat'
+          default: JSON
+      type: object
+      required:
+      - name
+      title: ConfigNamespaceCreate
+    ConfigNamespaceResponse:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        environment_id:
+          type: string
+          format: uuid
+          title: Environment Id
+        name:
+          type: string
+          title: Name
+        format:
+          $ref: '#/components/schemas/ConfigFormat'
+        current_release_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Current Release Id
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+      type: object
+      required:
+      - id
+      - environment_id
+      - name
+      - format
+      - created_at
+      - updated_at
+      title: ConfigNamespaceResponse
+    ConfigReleaseCreate:
+      properties:
+        comment:
+          anyOf:
+          - type: string
+            maxLength: 500
+          - type: 'null'
+          title: Comment
+      type: object
+      title: ConfigReleaseCreate
+    ConfigReleaseResponse:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        namespace_id:
+          type: string
+          format: uuid
+          title: Namespace Id
+        version:
+          type: integer
+          title: Version
+        snapshot:
+          additionalProperties: true
+          type: object
+          title: Snapshot
+        comment:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Comment
+        released_by:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Released By
+        released_at:
+          type: string
+          format: date-time
+          title: Released At
+        is_rollback_of:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Is Rollback Of
+      type: object
+      required:
+      - id
+      - namespace_id
+      - version
+      - snapshot
+      - released_at
+      title: ConfigReleaseResponse
+    ConfigValueType:
+      type: string
+      enum:
+      - STRING
+      - INT
+      - FLOAT
+      - BOOL
+      - JSON
+      title: ConfigValueType
+    DistributionItem:
+      properties:
+        variation_id:
+          type: string
+          format: uuid
+          title: Variation Id
+        weight:
+          type: number
+          maximum: 100.0
+          minimum: 0.0
+          title: Weight
+      type: object
+      required:
+      - variation_id
+      - weight
+      title: DistributionItem
+    EnvironmentCreate:
+      properties:
+        name:
+          type: string
+          maxLength: 60
+          minLength: 1
+          title: Name
+        key:
+          type: string
+          maxLength: 60
+          minLength: 1
+          pattern: ^[a-z0-9-]+$
+          title: Key
+        is_production:
+          type: boolean
+          title: Is Production
+          default: false
+      type: object
+      required:
+      - name
+      - key
+      title: EnvironmentCreate
+    EnvironmentResponse:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        project_id:
+          type: string
+          format: uuid
+          title: Project Id
+        name:
+          type: string
+          title: Name
+        key:
+          type: string
+          title: Key
+        is_production:
+          type: boolean
+          title: Is Production
+        ruleset_version:
+          type: integer
+          title: Ruleset Version
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+      type: object
+      required:
+      - id
+      - project_id
+      - name
+      - key
+      - is_production
+      - ruleset_version
+      - created_at
+      - updated_at
+      title: EnvironmentResponse
+    EnvironmentUpdate:
+      properties:
+        name:
+          anyOf:
+          - type: string
+            maxLength: 60
+            minLength: 1
+          - type: 'null'
+          title: Name
+      type: object
+      title: EnvironmentUpdate
+    EvaluateAllResponse:
+      properties:
+        flags:
+          additionalProperties:
+            $ref: '#/components/schemas/EvaluationResponse'
+          type: object
+          title: Flags
+      type: object
+      required:
+      - flags
+      title: EvaluateAllResponse
+      description: Result of evaluating all feature flags in an environment.
+    EvaluationRequest:
+      properties:
+        context:
+          additionalProperties: true
+          type: object
+          title: Context
+          description: Evaluation context containing targetingKey/userId and user
+            attributes
+      type: object
+      title: EvaluationRequest
+      description: Payload for evaluating flags.
+    EvaluationResponse:
+      properties:
+        flagKey:
+          type: string
+          title: Flagkey
+        value:
+          title: Value
+        variant:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Variant
+        reason:
+          type: string
+          title: Reason
+        errorCode:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Errorcode
+        flagMetadata:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Flagmetadata
+      type: object
+      required:
+      - flagKey
+      - value
+      - reason
+      title: EvaluationResponse
+      description: Result of evaluating a single feature flag.
+    EventBatchRequest:
+      properties:
+        events:
+          items:
+            $ref: '#/components/schemas/EventItem'
+          type: array
+          minItems: 1
+          title: Events
+      type: object
+      required:
+      - events
+      title: EventBatchRequest
+      description: Batch of evaluation events to be ingested.
+    EventBatchResponse:
+      properties:
+        status:
+          type: string
+          title: Status
+          default: accepted
+        count:
+          type: integer
+          title: Count
+      type: object
+      required:
+      - count
+      title: EventBatchResponse
+      description: Response after ingesting event batch.
+    EventItem:
+      properties:
+        flag_id:
+          type: string
+          format: uuid
+          title: Flag Id
+        variation_id:
+          type: string
+          format: uuid
+          title: Variation Id
+        reason:
+          type: string
+          maxLength: 30
+          title: Reason
+        context_key:
+          type: string
+          maxLength: 200
+          minLength: 1
+          title: Context Key
+        context:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Context
+        created_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Created At
+      type: object
+      required:
+      - flag_id
+      - variation_id
+      - reason
+      - context_key
+      title: EventItem
+      description: Single evaluation event payload.
+    FlagCreate:
+      properties:
+        key:
+          type: string
+          maxLength: 160
+          minLength: 1
+          pattern: ^[a-zA-Z0-9._-]+$
+          title: Key
+        name:
+          type: string
+          maxLength: 120
+          minLength: 1
+          title: Name
+        description:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Description
+        type:
+          $ref: '#/components/schemas/FlagType'
+        toggle_kind:
+          $ref: '#/components/schemas/ToggleKind'
+          default: RELEASE
+        is_temporary:
+          type: boolean
+          title: Is Temporary
+          default: true
+        is_client_visible:
+          type: boolean
+          title: Is Client Visible
+          default: false
+        tags:
+          items:
+            type: string
+          type: array
+          title: Tags
+        variations:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/VariationCreate'
+            type: array
+          - type: 'null'
+          title: Variations
+      type: object
+      required:
+      - key
+      - name
+      - type
+      title: FlagCreate
+    FlagHealthListResponse:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/FlagHealthResponse'
+          type: array
+          title: Items
+        summary:
+          $ref: '#/components/schemas/FlagHealthSummary'
+      type: object
+      required:
+      - items
+      - summary
+      title: FlagHealthListResponse
+      description: List of flag health items with summary.
+    FlagHealthResponse:
+      properties:
+        flag_id:
+          type: string
+          format: uuid
+          title: Flag Id
+        flag_key:
+          type: string
+          title: Flag Key
+        flag_name:
+          type: string
+          title: Flag Name
+        state:
+          $ref: '#/components/schemas/LifecycleState'
+        score:
+          type: integer
+          maximum: 100.0
+          minimum: 0.0
+          title: Score
+        age_score:
+          type: number
+          title: Age Score
+        rollout_score:
+          type: number
+          title: Rollout Score
+        staleness_score:
+          type: number
+          title: Staleness Score
+        temporary_score:
+          type: number
+          title: Temporary Score
+        recommendations:
+          items:
+            type: string
+          type: array
+          title: Recommendations
+        is_temporary:
+          type: boolean
+          title: Is Temporary
+        tags:
+          items:
+            type: string
+          type: array
+          title: Tags
+      type: object
+      required:
+      - flag_id
+      - flag_key
+      - flag_name
+      - state
+      - score
+      - age_score
+      - rollout_score
+      - staleness_score
+      - temporary_score
+      - is_temporary
+      title: FlagHealthResponse
+      description: Health data for a single flag.
+    FlagHealthSummary:
+      properties:
+        total:
+          type: integer
+          title: Total
+        draft_count:
+          type: integer
+          title: Draft Count
+        active_count:
+          type: integer
+          title: Active Count
+        rolled_out_count:
+          type: integer
+          title: Rolled Out Count
+        stale_count:
+          type: integer
+          title: Stale Count
+        archived_count:
+          type: integer
+          title: Archived Count
+        avg_score:
+          type: number
+          title: Avg Score
+      type: object
+      required:
+      - total
+      - draft_count
+      - active_count
+      - rolled_out_count
+      - stale_count
+      - archived_count
+      - avg_score
+      title: FlagHealthSummary
+      description: Summary statistics across all flags.
+    FlagResponse:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        project_id:
+          type: string
+          format: uuid
+          title: Project Id
+        key:
+          type: string
+          title: Key
+        name:
+          type: string
+          title: Name
+        description:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Description
+        type:
+          $ref: '#/components/schemas/FlagType'
+        toggle_kind:
+          $ref: '#/components/schemas/ToggleKind'
+        is_temporary:
+          type: boolean
+          title: Is Temporary
+        is_client_visible:
+          type: boolean
+          title: Is Client Visible
+        tags:
+          items:
+            type: string
+          type: array
+          title: Tags
+        archived_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Archived At
+        created_by:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Created By
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+        variations:
+          items:
+            $ref: '#/components/schemas/VariationResponse'
+          type: array
+          title: Variations
+      type: object
+      required:
+      - id
+      - project_id
+      - key
+      - name
+      - type
+      - toggle_kind
+      - is_temporary
+      - is_client_visible
+      - created_at
+      - updated_at
+      title: FlagResponse
+    FlagSettingResponse:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        flag_id:
+          type: string
+          format: uuid
+          title: Flag Id
+        environment_id:
+          type: string
+          format: uuid
+          title: Environment Id
+        enabled:
+          type: boolean
+          title: Enabled
+        default_variation_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Default Variation Id
+        off_variation_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Off Variation Id
+        bucketing_key:
+          type: string
+          title: Bucketing Key
+        last_evaluated_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Last Evaluated At
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+      type: object
+      required:
+      - id
+      - flag_id
+      - environment_id
+      - enabled
+      - bucketing_key
+      - created_at
+      - updated_at
+      title: FlagSettingResponse
+    FlagSettingUpdate:
+      properties:
+        enabled:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Enabled
+        default_variation_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Default Variation Id
+        off_variation_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Off Variation Id
+        bucketing_key:
+          anyOf:
+          - type: string
+            maxLength: 60
+            minLength: 1
+          - type: 'null'
+          title: Bucketing Key
+      type: object
+      title: FlagSettingUpdate
+    FlagType:
+      type: string
+      enum:
+      - BOOLEAN
+      - STRING
+      - NUMBER
+      - JSON
+      title: FlagType
+    FlagUpdate:
+      properties:
+        name:
+          anyOf:
+          - type: string
+            maxLength: 120
+            minLength: 1
+          - type: 'null'
+          title: Name
+        description:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Description
+        toggle_kind:
+          anyOf:
+          - $ref: '#/components/schemas/ToggleKind'
+          - type: 'null'
+        is_temporary:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Is Temporary
+        is_client_visible:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Is Client Visible
+        tags:
+          anyOf:
+          - items:
+              type: string
+            type: array
+          - type: 'null'
+          title: Tags
+      type: object
+      title: FlagUpdate
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          type: array
+          title: Detail
+      type: object
+      title: HTTPValidationError
+    ImpactTransition:
+      properties:
+        from_variation:
+          type: string
+          title: From Variation
+          description: Previous variation name or key
+        to_variation:
+          type: string
+          title: To Variation
+          description: Simulated variation name or key
+        count:
+          type: integer
+          title: Count
+          description: Number of evaluated contexts undergoing this transition
+      type: object
+      required:
+      - from_variation
+      - to_variation
+      - count
+      title: ImpactTransition
+      description: Single variation transition record in impact simulation.
+    IndividualOverrideCreate:
+      properties:
+        context_key:
+          type: string
+          maxLength: 200
+          minLength: 1
+          title: Context Key
+        variation_id:
+          type: string
+          format: uuid
+          title: Variation Id
+      type: object
+      required:
+      - context_key
+      - variation_id
+      title: IndividualOverrideCreate
+    IndividualOverrideResponse:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        flag_environment_setting_id:
+          type: string
+          format: uuid
+          title: Flag Environment Setting Id
+        context_key:
+          type: string
+          title: Context Key
+        variation_id:
+          type: string
+          format: uuid
+          title: Variation Id
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+      type: object
+      required:
+      - id
+      - flag_environment_setting_id
+      - context_key
+      - variation_id
+      - created_at
+      - updated_at
+      title: IndividualOverrideResponse
+    LifecycleState:
+      type: string
+      enum:
+      - DRAFT
+      - ACTIVE
+      - ROLLED_OUT
+      - STALE
+      - ARCHIVED
+      title: LifecycleState
+    LoginRequest:
+      properties:
+        email:
+          type: string
+          title: Email
+        password:
+          type: string
+          title: Password
+      type: object
+      required:
+      - email
+      - password
+      title: LoginRequest
+    MemberCreate:
+      properties:
+        user_id:
+          type: string
+          format: uuid
+          title: User Id
+        role:
+          $ref: '#/components/schemas/MemberRole'
+          default: DEVELOPER
+      type: object
+      required:
+      - user_id
+      title: MemberCreate
+    MemberResponse:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        user_id:
+          type: string
+          format: uuid
+          title: User Id
+        organization_id:
+          type: string
+          format: uuid
+          title: Organization Id
+        role:
+          $ref: '#/components/schemas/MemberRole'
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+      type: object
+      required:
+      - id
+      - user_id
+      - organization_id
+      - role
+      - created_at
+      title: MemberResponse
+    MemberRole:
+      type: string
+      enum:
+      - OWNER
+      - ADMIN
+      - DEVELOPER
+      - VIEWER
+      title: MemberRole
+    MemberUpdate:
+      properties:
+        role:
+          $ref: '#/components/schemas/MemberRole'
+      type: object
+      required:
+      - role
+      title: MemberUpdate
+    OrgCreate:
+      properties:
+        name:
+          type: string
+          maxLength: 120
+          minLength: 1
+          title: Name
+        slug:
+          type: string
+          maxLength: 60
+          minLength: 1
+          pattern: ^[a-z0-9-]+$
+          title: Slug
+      type: object
+      required:
+      - name
+      - slug
+      title: OrgCreate
+    OrgResponse:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        name:
+          type: string
+          title: Name
+        slug:
+          type: string
+          title: Slug
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+      type: object
+      required:
+      - id
+      - name
+      - slug
+      - created_at
+      - updated_at
+      title: OrgResponse
+    OrgUpdate:
+      properties:
+        name:
+          anyOf:
+          - type: string
+            maxLength: 120
+            minLength: 1
+          - type: 'null'
+          title: Name
+      type: object
+      title: OrgUpdate
+    ProjectCreate:
+      properties:
+        name:
+          type: string
+          maxLength: 120
+          minLength: 1
+          title: Name
+        slug:
+          type: string
+          maxLength: 60
+          minLength: 1
+          pattern: ^[a-z0-9-]+$
+          title: Slug
+        default_stale_days:
+          type: integer
+          maximum: 365.0
+          minimum: 1.0
+          title: Default Stale Days
+          default: 30
+      type: object
+      required:
+      - name
+      - slug
+      title: ProjectCreate
+    ProjectResponse:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        organization_id:
+          type: string
+          format: uuid
+          title: Organization Id
+        name:
+          type: string
+          title: Name
+        slug:
+          type: string
+          title: Slug
+        default_stale_days:
+          type: integer
+          title: Default Stale Days
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+      type: object
+      required:
+      - id
+      - organization_id
+      - name
+      - slug
+      - default_stale_days
+      - created_at
+      - updated_at
+      title: ProjectResponse
+    ProjectUpdate:
+      properties:
+        name:
+          anyOf:
+          - type: string
+            maxLength: 120
+            minLength: 1
+          - type: 'null'
+          title: Name
+        default_stale_days:
+          anyOf:
+          - type: integer
+            maximum: 365.0
+            minimum: 1.0
+          - type: 'null'
+          title: Default Stale Days
+      type: object
+      title: ProjectUpdate
+    RefreshRequest:
+      properties:
+        refresh_token:
+          type: string
+          title: Refresh Token
+      type: object
+      required:
+      - refresh_token
+      title: RefreshRequest
+    RegisterRequest:
+      properties:
+        email:
+          type: string
+          format: email
+          title: Email
+        password:
+          type: string
+          title: Password
+        full_name:
+          type: string
+          title: Full Name
+      type: object
+      required:
+      - email
+      - password
+      - full_name
+      title: RegisterRequest
+    RuleTraceItem:
+      properties:
+        rule_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Rule Id
+        priority:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Priority
+        description:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Description
+        matched:
+          type: boolean
+          title: Matched
+        reason:
+          type: string
+          title: Reason
+      type: object
+      required:
+      - matched
+      - reason
+      title: RuleTraceItem
+    SegmentCreate:
+      properties:
+        name:
+          type: string
+          maxLength: 120
+          minLength: 1
+          title: Name
+        description:
+          anyOf:
+          - type: string
+            maxLength: 500
+          - type: 'null'
+          title: Description
+        conditions:
+          additionalProperties: true
+          type: object
+          title: Conditions
+        key:
+          type: string
+          maxLength: 160
+          minLength: 1
+          pattern: ^[a-z0-9_-]+$
+          title: Key
+      type: object
+      required:
+      - name
+      - key
+      title: SegmentCreate
+    SegmentResponse:
+      properties:
+        name:
+          type: string
+          maxLength: 120
+          minLength: 1
+          title: Name
+        description:
+          anyOf:
+          - type: string
+            maxLength: 500
+          - type: 'null'
+          title: Description
+        conditions:
+          additionalProperties: true
+          type: object
+          title: Conditions
+        id:
+          type: string
+          format: uuid
+          title: Id
+        project_id:
+          type: string
+          format: uuid
+          title: Project Id
+        key:
+          type: string
+          title: Key
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+      type: object
+      required:
+      - name
+      - id
+      - project_id
+      - key
+      - created_at
+      - updated_at
+      title: SegmentResponse
+    SegmentUpdate:
+      properties:
+        name:
+          anyOf:
+          - type: string
+            maxLength: 120
+            minLength: 1
+          - type: 'null'
+          title: Name
+        description:
+          anyOf:
+          - type: string
+            maxLength: 500
+          - type: 'null'
+          title: Description
+        conditions:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Conditions
+      type: object
+      title: SegmentUpdate
+    SimulateRequest:
+      properties:
+        context:
+          additionalProperties: true
+          type: object
+          title: Context
+      type: object
+      title: SimulateRequest
+    SimulateResponse:
+      properties:
+        flag_key:
+          type: string
+          title: Flag Key
+        value:
+          title: Value
+        variant:
+          type: string
+          title: Variant
+        reason:
+          type: string
+          title: Reason
+        matched_rule_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Matched Rule Id
+        matched_rule_description:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Matched Rule Description
+        trace:
+          items:
+            $ref: '#/components/schemas/RuleTraceItem'
+          type: array
+          title: Trace
+      type: object
+      required:
+      - flag_key
+      - value
+      - variant
+      - reason
+      title: SimulateResponse
+    TargetingRuleCreate:
+      properties:
+        priority:
+          type: integer
+          minimum: 1.0
+          title: Priority
+        description:
+          anyOf:
+          - type: string
+            maxLength: 255
+          - type: 'null'
+          title: Description
+        segment_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Segment Id
+        conditions:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - items:
+              additionalProperties: true
+              type: object
+            type: array
+          - type: 'null'
+          title: Conditions
+        distribution:
+          items:
+            $ref: '#/components/schemas/DistributionItem'
+          type: array
+          minItems: 1
+          title: Distribution
+      type: object
+      required:
+      - priority
+      - distribution
+      title: TargetingRuleCreate
+    TargetingRuleResponse:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        flag_environment_setting_id:
+          type: string
+          format: uuid
+          title: Flag Environment Setting Id
+        priority:
+          type: integer
+          title: Priority
+        description:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Description
+        segment_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Segment Id
+        conditions:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - items:
+              additionalProperties: true
+              type: object
+            type: array
+          - type: 'null'
+          title: Conditions
+        distribution:
+          items:
+            additionalProperties: true
+            type: object
+          type: array
+          title: Distribution
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+      type: object
+      required:
+      - id
+      - flag_environment_setting_id
+      - priority
+      - distribution
+      - created_at
+      - updated_at
+      title: TargetingRuleResponse
+    TargetingRulesUpdate:
+      properties:
+        rules:
+          items:
+            $ref: '#/components/schemas/TargetingRuleCreate'
+          type: array
+          title: Rules
+      type: object
+      required:
+      - rules
+      title: TargetingRulesUpdate
+    ToggleKind:
+      type: string
+      enum:
+      - RELEASE
+      - EXPERIMENT
+      - OPS
+      - PERMISSION
+      title: ToggleKind
+    TokenResponse:
+      properties:
+        access_token:
+          type: string
+          title: Access Token
+        refresh_token:
+          type: string
+          title: Refresh Token
+        token_type:
+          type: string
+          title: Token Type
+          default: bearer
+      type: object
+      required:
+      - access_token
+      - refresh_token
+      title: TokenResponse
+    UserResponse:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        email:
+          type: string
+          title: Email
+        full_name:
+          type: string
+          title: Full Name
+        is_active:
+          type: boolean
+          title: Is Active
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        last_login_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Last Login At
+      type: object
+      required:
+      - id
+      - email
+      - full_name
+      - is_active
+      - created_at
+      title: UserResponse
+    ValidationError:
+      properties:
+        loc:
+          items:
+            anyOf:
+            - type: string
+            - type: integer
+          type: array
+          title: Location
+        msg:
+          type: string
+          title: Message
+        type:
+          type: string
+          title: Error Type
+        input:
+          title: Input
+        ctx:
+          type: object
+          title: Context
+      type: object
+      required:
+      - loc
+      - msg
+      - type
+      title: ValidationError
+    VariationCreate:
+      properties:
+        key:
+          type: string
+          maxLength: 80
+          minLength: 1
+          title: Key
+        value:
+          title: Value
+        name:
+          anyOf:
+          - type: string
+            maxLength: 120
+          - type: 'null'
+          title: Name
+        description:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Description
+      type: object
+      required:
+      - key
+      - value
+      title: VariationCreate
+    VariationResponse:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        flag_id:
+          type: string
+          format: uuid
+          title: Flag Id
+        key:
+          type: string
+          title: Key
+        value:
+          title: Value
+        name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Name
+        description:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Description
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+      type: object
+      required:
+      - id
+      - flag_id
+      - key
+      - value
+      - created_at
+      title: VariationResponse
+  securitySchemes:
+    HTTPBearer:
+      type: http
+      scheme: bearer
+

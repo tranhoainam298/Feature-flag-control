@@ -4,6 +4,8 @@ import { TargetingRuleInput, Variation } from '../../types';
 import { targetingApi } from './api';
 import { RuleCard } from './RuleCard';
 import { JsonRuleEditor } from './JsonRuleEditor';
+import { Plus, Save, Loader2 } from 'lucide-react';
+import { Button } from '../../components/ui/Button';
 
 interface RuleBuilderProps {
   flagId: string;
@@ -35,7 +37,6 @@ export const RuleBuilder: React.FC<RuleBuilderProps> = ({
 
   useEffect(() => {
     if (remoteRules) {
-      // Map to TargetingRuleInput with sorted priority
       const mapped = [...remoteRules]
         .sort((a, b) => a.priority - b.priority)
         .map((r) => ({
@@ -54,7 +55,7 @@ export const RuleBuilder: React.FC<RuleBuilderProps> = ({
       targetingApi.updateTargetingRules(flagId, envId, newRules),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['targeting-rules', flagId, envId] });
-      setSuccessMessage('Đã lưu thành công các quy tắc phân phối!');
+      setSuccessMessage('Targeting rules saved successfully.');
       setErrorMessage(null);
       setTimeout(() => setSuccessMessage(null), 4000);
     },
@@ -63,7 +64,7 @@ export const RuleBuilder: React.FC<RuleBuilderProps> = ({
         err.response?.data?.message ||
         err.response?.data?.detail ||
         err.message ||
-        'Không thể lưu quy tắc. Vui lòng kiểm tra lại điều kiện và tỉ lệ phân phối.';
+        'Failed to save rules. Check conditions and distribution weights.';
       setErrorMessage(typeof msg === 'object' ? JSON.stringify(msg) : String(msg));
       setSuccessMessage(null);
     },
@@ -104,7 +105,6 @@ export const RuleBuilder: React.FC<RuleBuilderProps> = ({
     next[index] = next[targetIdx];
     next[targetIdx] = temp;
 
-    // Recalculate sequential priorities 1..N
     const reordered = next.map((r, i) => ({ ...r, priority: i + 1 }));
     setRules(reordered);
   };
@@ -118,14 +118,13 @@ export const RuleBuilder: React.FC<RuleBuilderProps> = ({
   const handleSave = () => {
     setErrorMessage(null);
 
-    // Frontend pre-check: Each rule distribution must sum to 100
     for (let i = 0; i < rules.length; i++) {
       const sum = Math.round(
         rules[i].distribution.reduce((acc, d) => acc + (d.weight || 0), 0) * 10
       ) / 10;
       if (Math.abs(sum - 100) > 0.1) {
         setErrorMessage(
-          `Quy tắc #${rules[i].priority} có tổng phân phối là ${sum}%. Phải bằng đúng 100% trước khi lưu!`
+          `Rule #${rules[i].priority} distribution sums to ${sum}%. Must equal exactly 100%.`
         );
         return;
       }
@@ -136,71 +135,71 @@ export const RuleBuilder: React.FC<RuleBuilderProps> = ({
 
   if (isLoading) {
     return (
-      <div className="flex h-40 items-center justify-center text-sm text-[var(--text-tertiary)]">
-        Đang tải quy tắc targeting...
+      <div className="flex h-32 items-center justify-center text-xs text-muted gap-2">
+        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+        Loading targeting rules…
       </div>
     );
   }
 
   if (isError) {
     return (
-      <div className="rounded-lg border border-rose-500/30 bg-rose-500/10 p-4 text-xs text-rose-400">
-        Lỗi tải quy tắc: {error instanceof Error ? error.message : 'Không xác định'}
+      <div className="rounded-sm border border-status-danger-border bg-status-danger-bg px-3 py-2.5 text-xs text-status-danger">
+        Error loading rules: {error instanceof Error ? error.message : 'Unknown error'}
       </div>
     );
   }
 
   return (
-    <div className="space-y-4">
-      {/* Top action bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
+    <div className="space-y-3">
+      {/* Mode Switch & Actions */}
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-0.5 bg-surface-active/40 p-0.5 rounded-sm border border-border-subtle">
           <button
             type="button"
             onClick={() => setMode('visual')}
-            className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
+            className={`px-2.5 py-1 rounded-xs text-[11px] font-medium transition-colors ${
               mode === 'visual'
-                ? 'bg-indigo-600 text-white shadow-sm'
-                : 'border border-[var(--border)] bg-[var(--surface)] text-[var(--text-secondary)] hover:bg-[var(--surface-hover)]'
+                ? 'bg-surface-elevated text-primary shadow-sm border border-border-default'
+                : 'text-muted hover:text-secondary'
             }`}
           >
-            Trình dựng quy tắc
+            Visual Builder
           </button>
           <button
             type="button"
             onClick={() => setMode('json')}
-            className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
+            className={`px-2.5 py-1 rounded-xs text-[11px] font-medium transition-colors ${
               mode === 'json'
-                ? 'bg-indigo-600 text-white shadow-sm'
-                : 'border border-[var(--border)] bg-[var(--surface)] text-[var(--text-secondary)] hover:bg-[var(--surface-hover)]'
+                ? 'bg-surface-elevated text-primary shadow-sm border border-border-default'
+                : 'text-muted hover:text-secondary'
             }`}
           >
-            JSON nâng cao
+            JSON Editor
           </button>
         </div>
 
         <div className="flex items-center gap-2">
           {mode === 'visual' && (
-            <button
-              type="button"
+            <Button
+              variant="outline"
+              size="sm"
               onClick={handleAddRule}
-              className="flex items-center gap-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 text-xs font-medium text-[var(--text-primary)] hover:bg-[var(--surface-hover)] shadow-sm"
+              leftIcon={<Plus className="w-3 h-3" />}
             >
-              <svg className="w-3.5 h-3.5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
-              </svg>
-              <span>Thêm quy tắc</span>
-            </button>
+              Add Rule
+            </Button>
           )}
 
-          <button
-            type="button"
+          <Button
+            variant="primary"
+            size="sm"
             onClick={handleSave}
-            disabled={saveMutation.isPending}
-            className="flex items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-1.5 text-xs font-medium text-white hover:bg-indigo-500 shadow-sm disabled:opacity-50"
+            isLoading={saveMutation.isPending}
+            leftIcon={<Save className="w-3 h-3" />}
           >
-            {saveMutation.isPending ? 'Đang lưu...' : 'Lưu tất cả quy tắc'}
-          </button>
+            Save Rules
+          </Button>
         </div>
       </div>
 
@@ -208,7 +207,7 @@ export const RuleBuilder: React.FC<RuleBuilderProps> = ({
       {successMessage && (
         <div
           role="status"
-          className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs text-emerald-400"
+          className="rounded-sm border border-status-success-border bg-status-success-bg px-3 py-2 text-xs text-status-success"
         >
           {successMessage}
         </div>
@@ -217,7 +216,7 @@ export const RuleBuilder: React.FC<RuleBuilderProps> = ({
       {errorMessage && (
         <div
           role="alert"
-          className="rounded-lg border border-rose-500/30 bg-rose-500/10 p-3 text-xs text-rose-400"
+          className="rounded-sm border border-status-danger-border bg-status-danger-bg px-3 py-2 text-xs text-status-danger"
         >
           {errorMessage}
         </div>
@@ -225,25 +224,21 @@ export const RuleBuilder: React.FC<RuleBuilderProps> = ({
 
       {/* Visual or JSON Mode */}
       {mode === 'visual' ? (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {rules.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-[var(--border)] p-8 text-center">
-              <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-indigo-500/10 text-indigo-400 mb-2">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                </svg>
-              </div>
-              <p className="text-sm font-medium text-[var(--text-primary)]">Chưa có quy tắc targeting nào</p>
-              <p className="mt-1 text-xs text-[var(--text-tertiary)]">
-                Tất cả đánh giá sẽ rơi về variation mặc định của flag này.
+            <div className="border border-border-subtle border-dashed rounded-md px-8 py-10 text-center">
+              <p className="text-xs font-medium text-primary mb-1">No targeting rules</p>
+              <p className="text-[11px] text-muted mb-4">
+                All evaluations will fall through to the default variation.
               </p>
-              <button
-                type="button"
+              <Button
+                variant="primary"
+                size="sm"
                 onClick={handleAddRule}
-                className="mt-4 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-500"
+                leftIcon={<Plus className="w-3 h-3" />}
               >
-                Tạo quy tắc đầu tiên
-              </button>
+                Create First Rule
+              </Button>
             </div>
           ) : (
             rules.map((rule, idx) => (

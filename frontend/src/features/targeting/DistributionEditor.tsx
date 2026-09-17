@@ -1,5 +1,6 @@
 import React from 'react';
 import { DistributionItem, Variation } from '../../types';
+import { AlertTriangle } from 'lucide-react';
 
 interface DistributionEditorProps {
   variations: Variation[];
@@ -55,28 +56,28 @@ export const DistributionEditor: React.FC<DistributionEditorProps> = ({
   const isInvalidTotal = Math.abs(totalWeight - 100) > 0.01;
 
   return (
-    <div className="space-y-3 rounded-lg border border-[var(--border)] bg-[var(--surface-sunken)] p-3 text-sm">
+    <div className="space-y-2.5 rounded-sm border border-border-default bg-surface-elevated/40 p-2.5 text-xs">
       <div className="flex items-center justify-between">
-        <span className="font-medium text-[var(--text-primary)]">
-          Phân phối Variation (Rollout)
+        <span className="font-medium text-secondary text-[11px] uppercase tracking-wider">
+          Rollout Distribution
         </span>
         <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={handleEvenSplit}
             disabled={disabled}
-            className="rounded border border-[var(--border)] bg-[var(--surface)] px-2 py-0.5 text-xs text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] disabled:opacity-50"
+            className="rounded-xs border border-border-default bg-surface px-2 py-0.5 text-[11px] text-secondary hover:text-primary hover:bg-surface-elevated disabled:opacity-50 transition-colors"
           >
-            Chia đều
+            Equal Split
           </button>
           <span
-            className={`rounded px-2 py-0.5 text-xs font-semibold ${
+            className={`rounded-xs px-2 py-0.5 text-[11px] font-mono font-semibold ${
               isInvalidTotal
-                ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
-                : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                ? 'bg-status-danger/10 text-status-danger border border-status-danger/30'
+                : 'bg-status-success/10 text-status-success border border-status-success/30'
             }`}
           >
-            Tổng: {totalWeight}%
+            Total: {totalWeight}%
           </span>
         </div>
       </div>
@@ -84,43 +85,37 @@ export const DistributionEditor: React.FC<DistributionEditorProps> = ({
       {isInvalidTotal && (
         <div
           role="alert"
-          className="flex items-center gap-2 rounded border border-rose-500/40 bg-rose-500/10 px-3 py-1.5 text-xs text-rose-300 font-medium"
+          className="flex items-center gap-2 rounded-xs border border-status-danger/30 bg-status-danger/10 px-2.5 py-1.5 text-xs text-status-danger font-medium"
         >
-          <svg className="w-4 h-4 shrink-0 text-rose-400" viewBox="0 0 20 20" fill="currentColor">
-            <path
-              fillRule="evenodd"
-              d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-              clipRule="evenodd"
-            />
-          </svg>
-          <span>Cảnh báo: Tổng tỉ lệ phân phối là {totalWeight}%. Phải bằng đúng 100%!</span>
+          <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+          <span>Total weight must sum to 100% (currently {totalWeight}%).</span>
         </div>
       )}
 
-      <div className="space-y-2">
+      <div className="space-y-1.5">
         {variations.map((v) => {
           const w = getWeight(v.id);
           return (
             <div
               key={v.id}
-              className="flex items-center gap-3 rounded bg-[var(--surface)] px-3 py-2 border border-[var(--border)]"
+              className="flex items-center gap-3 rounded-xs bg-surface px-2.5 py-1.5 border border-border-subtle"
             >
               <div className="min-w-28 flex-1">
                 <div className="flex items-center gap-1.5">
-                  <span className="font-medium text-xs text-[var(--text-primary)]">
+                  <span className="font-semibold text-xs text-primary font-mono">
                     {v.key}
                   </span>
                   <button
                     type="button"
-                    title={`Gán 100% cho ${v.key}`}
+                    title={`Set 100% to ${v.key}`}
                     onClick={() => handleSetAllTo(v.id)}
                     disabled={disabled}
-                    className="text-[10px] text-[var(--text-tertiary)] hover:text-indigo-400 underline"
+                    className="text-[10px] text-brand hover:underline font-mono"
                   >
                     100%
                   </button>
                 </div>
-                <div className="text-[11px] font-mono text-[var(--text-tertiary)] truncate">
+                <div className="text-[11px] font-mono text-muted truncate max-w-[200px]">
                   {typeof v.value === 'object' ? JSON.stringify(v.value) : String(v.value)}
                 </div>
               </div>
@@ -133,7 +128,7 @@ export const DistributionEditor: React.FC<DistributionEditorProps> = ({
                 value={w}
                 disabled={disabled}
                 onChange={(e) => handleWeightChange(v.id, parseFloat(e.target.value))}
-                className="flex-1 accent-indigo-500 h-1.5 bg-[var(--surface-sunken)] rounded cursor-pointer disabled:cursor-not-allowed"
+                className="flex-1 accent-brand h-1.5 bg-surface-elevated rounded cursor-pointer disabled:cursor-not-allowed"
               />
 
               <div className="flex items-center gap-1">
@@ -145,9 +140,9 @@ export const DistributionEditor: React.FC<DistributionEditorProps> = ({
                   value={w}
                   disabled={disabled}
                   onChange={(e) => handleWeightChange(v.id, parseFloat(e.target.value))}
-                  className="w-16 rounded border border-[var(--border)] bg-[var(--surface-sunken)] px-2 py-1 text-right text-xs font-mono text-[var(--text-primary)] focus:border-indigo-500 focus:outline-none"
+                  className="w-14 rounded-xs border border-border-default bg-surface-elevated px-2 py-1 text-right text-xs font-mono text-primary focus:border-brand focus-visible:outline-none"
                 />
-                <span className="text-xs text-[var(--text-tertiary)]">%</span>
+                <span className="text-[11px] text-muted font-mono">%</span>
               </div>
             </div>
           );

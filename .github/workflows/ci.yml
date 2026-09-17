@@ -1,0 +1,149 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  backend:
+    name: Backend Lint, Types, Migration & Coverage
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: flagops
+          POSTGRES_PASSWORD: test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install backend dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]" pyyaml
+
+      - name: Code Linting (Ruff)
+        run: ruff check .
+
+      - name: Type Checking (Mypy)
+        run: mypy app
+
+      - name: Database Migrations (Alembic)
+        env:
+          DATABASE_URL: postgresql+asyncpg://postgres:test@localhost:5432/flagops
+          REDIS_URL: redis://localhost:6379/0
+          SECRET_KEY: ci-secret-key-at-least-32-chars-long!
+          CONFIG_MASTER_KEY: ci-master-key-32-bytes-change!!
+        run: alembic upgrade head
+
+      - name: Engine Coverage Gate (>= 95%)
+        env:
+          DATABASE_URL: postgresql+asyncpg://postgres:test@localhost:5432/flagops
+          REDIS_URL: redis://localhost:6379/0
+          SECRET_KEY: ci-secret-key-at-least-32-chars-long!
+          CONFIG_MASTER_KEY: ci-master-key-32-bytes-change!!
+        run: |
+          pytest app/tests/unit/engine --cov=app/engine --cov-fail-under=95
+
+      - name: Overall Backend Pytest Coverage (>= 75%)
+        env:
+          DATABASE_URL: postgresql+asyncpg://postgres:test@localhost:5432/flagops
+          REDIS_URL: redis://localhost:6379/0
+          SECRET_KEY: ci-secret-key-at-least-32-chars-long!
+          CONFIG_MASTER_KEY: ci-master-key-32-bytes-change!!
+        run: |
+          pytest --cov=app --cov-report=term-missing --cov-report=xml --cov-fail-under=75
+
+  frontend:
+    name: Frontend Lint, Typecheck, Test & Build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Test
+        run: npm run test
+
+      - name: Build production bundle
+        run: npm run build
+
+  security:
+    name: Security Vulnerability Auditing
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Audit Backend Dependencies (pip-audit)
+        run: |
+          python -m pip install --upgrade pip
+          pip install pip-audit
+          pip install -e "backend[dev]"
+          pip-audit
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Audit Frontend Dependencies (npm audit)
+        run: |
+          npm audit --prefix frontend --audit-level=high

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { flagApi } from './api';
 import { SimulateResponse } from '../../types';
-import { Play, Plus, Trash2, CheckCircle, XCircle, Sparkles } from 'lucide-react';
+import { Play, Plus, Trash2, CheckCircle, XCircle, Terminal } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
 
@@ -36,16 +36,6 @@ export const FlagSimulator: React.FC<Props> = ({ flagId, envId, envName }) => {
     setEntries((prev) => prev.map((e) => (e.id === id ? { ...e, [field]: val } : e)));
   };
 
-  const setPreset = (preset: Record<string, string>) => {
-    setEntries(
-      Object.entries(preset).map(([k, v]) => ({
-        id: Math.random().toString(),
-        key: k,
-        value: v,
-      }))
-    );
-  };
-
   const simulateMutation = useMutation<SimulateResponse>({
     mutationFn: () => {
       const context: Record<string, unknown> = {};
@@ -71,153 +61,126 @@ export const FlagSimulator: React.FC<Props> = ({ flagId, envId, envName }) => {
   const result = simulateMutation.data;
 
   return (
-    <div className="border border-border-default rounded-lg overflow-hidden bg-surface mb-8">
-      <div className="p-4 border-b border-border-subtle bg-surface-elevated flex items-center justify-between">
-        <div>
-          <h3 className="text-sm font-semibold text-primary flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-brand" />
-            Evaluation Simulator
-          </h3>
-          <p className="text-xs text-muted">
-            Simulate runtime flag evaluation for environment: <span className="text-primary font-medium">{envName}</span>
-          </p>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => setPreset({ country: 'VN', plan: 'premium' })}
-            className="text-[11px] h-7"
-          >
-            Preset: VN Premium
+    <div className="space-y-4">
+      {/* Context Input */}
+      <div className="border border-border-subtle rounded-md overflow-hidden">
+        <div className="px-4 py-2 border-b border-border-subtle bg-surface-elevated flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Terminal className="w-3.5 h-3.5 text-muted" />
+            <span className="text-[11px] font-semibold text-primary">Evaluation Context</span>
+            <span className="text-[10px] text-muted">— {envName}</span>
+          </div>
+          <Button size="sm" variant="ghost" onClick={addEntry} leftIcon={<Plus className="w-3 h-3" />} className="h-6 text-[11px]">
+            Add
           </Button>
+        </div>
+
+        <div className="p-3 space-y-1.5 bg-surface">
+          {entries.map((entry) => (
+            <div key={entry.id} className="flex items-center gap-1.5">
+              <input
+                type="text"
+                placeholder="key"
+                value={entry.key}
+                onChange={(e) => updateEntry(entry.id, 'key', e.target.value)}
+                className="flex-1 bg-surface-elevated text-primary text-xs px-2.5 py-1.5 rounded-sm border border-border-subtle font-mono focus:border-brand focus-visible:outline-none"
+                aria-label="Attribute name"
+              />
+              <input
+                type="text"
+                placeholder="value"
+                value={entry.value}
+                onChange={(e) => updateEntry(entry.id, 'value', e.target.value)}
+                className="flex-1 bg-surface-elevated text-primary text-xs px-2.5 py-1.5 rounded-sm border border-border-subtle font-mono focus:border-brand focus-visible:outline-none"
+                aria-label="Attribute value"
+              />
+              <button
+                type="button"
+                onClick={() => removeEntry(entry.id)}
+                aria-label="Remove attribute"
+                className="p-1 text-muted hover:text-status-danger rounded-xs transition-colors shrink-0"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          ))}
+        </div>
+
+        <div className="px-3 py-2.5 border-t border-border-subtle bg-surface">
           <Button
+            variant="primary"
             size="sm"
-            variant="outline"
-            onClick={() => setPreset({ country: 'US', plan: 'free' })}
-            className="text-[11px] h-7"
+            onClick={() => simulateMutation.mutate()}
+            isLoading={simulateMutation.isPending}
+            leftIcon={<Play className="w-3.5 h-3.5" />}
           >
-            Preset: US Free
+            Run Evaluation Trace
           </Button>
         </div>
       </div>
 
-      <div className="p-5 space-y-6">
-        {/* Context Input Grid */}
-        <div>
-          <div className="flex items-center justify-between mb-2">
-            <label className="text-xs font-semibold uppercase tracking-wider text-secondary">
-              Evaluation Context (Key-Value)
-            </label>
-            <Button size="sm" variant="ghost" onClick={addEntry} leftIcon={<Plus className="w-3.5 h-3.5" />} className="h-7 text-xs">
-              Add Attribute
-            </Button>
+      {/* Results */}
+      {result && (
+        <div className="border border-border-subtle rounded-md overflow-hidden animate-in fade-in duration-200">
+          <div className="px-4 py-2 border-b border-border-subtle bg-surface-elevated">
+            <span className="text-[10px] font-mono text-muted uppercase tracking-wider">Evaluation Result</span>
           </div>
 
-          <div className="space-y-2">
-            {entries.map((entry) => (
-              <div key={entry.id} className="flex items-center gap-2">
-                <input
-                  type="text"
-                  placeholder="Attribute (e.g. country)"
-                  value={entry.key}
-                  onChange={(e) => updateEntry(entry.id, 'key', e.target.value)}
-                  className="flex-1 bg-surface-elevated text-primary text-xs px-3 py-1.5 rounded-md border border-border-default font-mono focus:border-brand focus-visible:outline-none"
-                  aria-label="Context attribute name"
-                />
-                <input
-                  type="text"
-                  placeholder="Value (e.g. VN)"
-                  value={entry.value}
-                  onChange={(e) => updateEntry(entry.id, 'value', e.target.value)}
-                  className="flex-1 bg-surface-elevated text-primary text-xs px-3 py-1.5 rounded-md border border-border-default font-mono focus:border-brand focus-visible:outline-none"
-                  aria-label="Context attribute value"
-                />
-                <button
-                  type="button"
-                  onClick={() => removeEntry(entry.id)}
-                  aria-label="Remove attribute"
-                  className="p-1.5 text-muted hover:text-status-danger rounded-sm transition-colors"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-4">
-            <Button
-              variant="primary"
-              onClick={() => simulateMutation.mutate()}
-              isLoading={simulateMutation.isPending}
-              leftIcon={<Play className="w-4 h-4" />}
-            >
-              Run Simulation
-            </Button>
-          </div>
-        </div>
-
-        {/* Results Section */}
-        {result && (
-          <div className="pt-5 border-t border-border-subtle animate-in fade-in duration-200">
-            <h4 className="text-xs font-semibold uppercase tracking-wider text-secondary mb-3">
-              Simulation Result
-            </h4>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
-              <div className="bg-surface-elevated p-3 rounded-md border border-border-subtle">
-                <span className="text-[10px] text-muted uppercase font-mono">Resolved Value</span>
-                <div className="text-sm font-bold font-mono text-primary mt-1">
+          <div className="p-3 bg-surface">
+            <div className="grid grid-cols-3 gap-3 mb-4">
+              <div className="bg-surface-elevated px-3 py-2.5 rounded-sm border border-border-subtle">
+                <span className="text-[10px] text-muted font-mono block mb-1">RESOLVED VALUE</span>
+                <div className="text-sm font-bold font-mono text-primary">
                   {typeof result.value === 'object' ? JSON.stringify(result.value) : String(result.value)}
                 </div>
               </div>
-              <div className="bg-surface-elevated p-3 rounded-md border border-border-subtle">
-                <span className="text-[10px] text-muted uppercase font-mono">Variant</span>
-                <div className="text-sm font-semibold font-mono text-brand mt-1">{result.variant}</div>
+              <div className="bg-surface-elevated px-3 py-2.5 rounded-sm border border-border-subtle">
+                <span className="text-[10px] text-muted font-mono block mb-1">VARIANT</span>
+                <div className="text-sm font-semibold font-mono text-brand">{result.variant}</div>
               </div>
-              <div className="bg-surface-elevated p-3 rounded-md border border-border-subtle">
-                <span className="text-[10px] text-muted uppercase font-mono">Reason</span>
-                <div className="mt-1">
-                  <Badge variant={getReasonBadgeVariant(result.reason)} size="md">
+              <div className="bg-surface-elevated px-3 py-2.5 rounded-sm border border-border-subtle">
+                <span className="text-[10px] text-muted font-mono block mb-1">REASON</span>
+                <div className="mt-0.5">
+                  <Badge variant={getReasonBadgeVariant(result.reason)} size="sm">
                     {result.reason}
                   </Badge>
                 </div>
               </div>
             </div>
 
-            {/* Trace Table */}
+            {/* Engine Trace */}
             {result.trace && result.trace.length > 0 && (
               <div>
-                <h5 className="text-[11px] font-semibold text-secondary uppercase mb-2">
-                  Rules Evaluation Trace ({result.trace.length} evaluated)
-                </h5>
-                <div className="border border-border-subtle rounded-md overflow-hidden bg-surface-elevated">
+                <div className="text-[10px] font-mono text-muted uppercase tracking-wider mb-2">
+                  Engine Trace — {result.trace.length} rule{result.trace.length !== 1 ? 's' : ''} evaluated
+                </div>
+                <div className="border border-border-subtle rounded-sm overflow-hidden">
                   <table className="w-full text-left text-xs">
-                    <thead className="bg-surface-active/50 border-b border-border-subtle text-[10px] uppercase font-mono text-muted">
-                      <tr>
-                        <th className="p-2.5">Priority</th>
-                        <th className="p-2.5">Rule Description</th>
-                        <th className="p-2.5">Status</th>
-                        <th className="p-2.5">Outcome Reason</th>
+                    <thead className="bg-surface-active/40 border-b border-border-subtle">
+                      <tr className="text-[9px] font-mono text-muted uppercase tracking-wider">
+                        <th className="px-3 py-1.5 w-12">#</th>
+                        <th className="px-3 py-1.5">Rule</th>
+                        <th className="px-3 py-1.5 w-24">Status</th>
+                        <th className="px-3 py-1.5">Reason</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-border-subtle text-secondary font-mono text-[11px]">
+                    <tbody className="divide-y divide-border-subtle font-mono text-[11px]">
                       {result.trace.map((tr, idx) => (
-                        <tr key={idx} className={tr.matched ? 'bg-flag-on-bg/20' : ''}>
-                          <td className="p-2.5 text-muted">#{tr.priority ?? idx + 1}</td>
-                          <td className="p-2.5 text-primary">{tr.description || 'Targeting condition'}</td>
-                          <td className="p-2.5">
+                        <tr key={idx} className={tr.matched ? 'bg-status-success-bg' : ''}>
+                          <td className="px-3 py-1.5 text-muted">{tr.priority ?? idx + 1}</td>
+                          <td className="px-3 py-1.5 text-primary">{tr.description || 'Targeting rule'}</td>
+                          <td className="px-3 py-1.5">
                             {tr.matched ? (
-                              <span className="inline-flex items-center gap-1 text-flag-on font-semibold">
-                                <CheckCircle className="w-3.5 h-3.5" /> MATCHED
+                              <span className="inline-flex items-center gap-1 text-brand font-semibold">
+                                <CheckCircle className="w-3 h-3" /> MATCH
                               </span>
                             ) : (
                               <span className="inline-flex items-center gap-1 text-muted">
-                                <XCircle className="w-3.5 h-3.5" /> SKIPPED
+                                <XCircle className="w-3 h-3" /> SKIP
                               </span>
                             )}
                           </td>
-                          <td className="p-2.5 text-muted">{tr.reason}</td>
+                          <td className="px-3 py-1.5 text-muted">{tr.reason}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -226,8 +189,8 @@ export const FlagSimulator: React.FC<Props> = ({ flagId, envId, envName }) => {
               </div>
             )}
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };

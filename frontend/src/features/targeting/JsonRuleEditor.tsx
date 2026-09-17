@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { TargetingRuleInput } from '../../types';
+import { AlertCircle } from 'lucide-react';
 
 interface JsonRuleEditorProps {
   rules: TargetingRuleInput[];
@@ -19,13 +20,13 @@ export const JsonRuleEditor: React.FC<JsonRuleEditorProps> = ({
     try {
       const parsed = JSON.parse(jsonText);
       if (!Array.isArray(parsed)) {
-        setError('JSON phải là một mảng danh sách rule: [ { priority: 1, ... } ]');
+        setError('JSON payload must be an array of rule specifications: [ { priority: 1, ... } ]');
         return;
       }
       setError(null);
       onChange(parsed);
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Cú pháp JSON không hợp lệ');
+      setError(e instanceof Error ? e.message : 'Invalid JSON syntax');
     }
   };
 
@@ -35,37 +36,37 @@ export const JsonRuleEditor: React.FC<JsonRuleEditorProps> = ({
       setJsonText(JSON.stringify(parsed, null, 2));
       setError(null);
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Cú pháp JSON không hợp lệ');
+      setError(e instanceof Error ? e.message : 'Invalid JSON syntax');
     }
   };
 
   return (
-    <div className="space-y-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-sm">
+    <div className="space-y-3 rounded-md border border-border-default bg-surface p-3.5 shadow-xs">
       <div className="flex items-center justify-between">
         <div>
-          <h4 className="text-sm font-semibold text-[var(--text-primary)]">
-            Chế độ JSON nâng cao
+          <h4 className="text-xs font-semibold text-primary">
+            Advanced Rule Specification (JSON)
           </h4>
-          <p className="text-xs text-[var(--text-tertiary)]">
-            Dán hoặc chỉnh sửa trực tiếp mảng JSON rules (chế độ dự phòng kỹ thuật)
+          <p className="text-[11px] text-muted">
+            Directly inspect or edit the underlying rule definitions array in raw JSON.
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={handleFormat}
             disabled={disabled}
-            className="rounded border border-[var(--border)] bg-[var(--surface-sunken)] px-3 py-1 text-xs text-[var(--text-secondary)] hover:bg-[var(--surface-hover)]"
+            className="rounded-xs border border-border-default bg-surface-elevated px-2.5 py-1 text-xs text-secondary hover:text-primary hover:bg-surface-elevated/80 transition-colors"
           >
-            Định dạng JSON
+            Format JSON
           </button>
           <button
             type="button"
             onClick={handleApply}
             disabled={disabled}
-            className="rounded bg-indigo-600 px-3 py-1 text-xs font-medium text-white hover:bg-indigo-500 shadow-sm"
+            className="rounded-xs bg-brand px-3 py-1 text-xs font-medium text-white hover:bg-brand-hover shadow-xs transition-colors"
           >
-            Áp dụng thay đổi
+            Apply Changes
           </button>
         </div>
       </div>
@@ -73,9 +74,10 @@ export const JsonRuleEditor: React.FC<JsonRuleEditorProps> = ({
       {error && (
         <div
           role="alert"
-          className="rounded border border-rose-500/40 bg-rose-500/10 p-2.5 text-xs text-rose-300 font-mono"
+          className="flex items-center gap-2 rounded-xs border border-status-danger/30 bg-status-danger/10 p-2 text-xs text-status-danger font-mono"
         >
-          {error}
+          <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+          <span>{error}</span>
         </div>
       )}
 
@@ -87,7 +89,7 @@ export const JsonRuleEditor: React.FC<JsonRuleEditorProps> = ({
           if (error) setError(null);
         }}
         rows={14}
-        className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface-sunken)] p-3 font-mono text-xs text-[var(--text-primary)] focus:border-indigo-500 focus:outline-none"
+        className="w-full rounded-xs border border-border-default bg-surface-elevated p-3 font-mono text-xs text-primary focus:border-brand focus-visible:outline-none"
         spellCheck={false}
       />
     </div>

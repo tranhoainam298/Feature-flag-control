@@ -45,38 +45,38 @@ export const SegmentsPage: React.FC = () => {
   });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-4">
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border-default pb-3">
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-[var(--text-primary)]">
-            Phân khúc Người dùng (Segments)
+          <h1 className="text-base font-semibold tracking-tight text-primary">
+            Audience Segments
           </h1>
-          <p className="mt-1 text-xs text-[var(--text-secondary)]">
-            Tập hợp các nhóm người dùng theo điều kiện thuộc tính (VD: VIP, Quốc gia, Phiên bản app) để tái sử dụng trong các Rule.
+          <p className="mt-0.5 text-xs text-secondary">
+            Reusable targeting groups evaluated by user context attributes to power targeting rules across feature flags.
           </p>
         </div>
 
         <button
           type="button"
           onClick={() => setIsCreateOpen(true)}
-          className="flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3.5 py-2 text-xs font-semibold text-white shadow-sm hover:bg-indigo-500 transition-all cursor-pointer"
+          className="inline-flex items-center gap-1.5 rounded-xs bg-brand px-3 py-1.5 text-xs font-medium text-white shadow-xs hover:bg-brand-hover transition-colors cursor-pointer"
         >
-          <Plus className="w-4 h-4" />
-          <span>Tạo Segment mới</span>
+          <Plus className="w-3.5 h-3.5" />
+          <span>Create Segment</span>
         </button>
       </div>
 
       {/* Filter bar */}
       <div className="flex items-center gap-3">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-[var(--text-tertiary)]" />
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-2.5 top-2 h-3.5 w-3.5 text-muted" />
           <input
             type="text"
-            placeholder="Tìm kiếm theo tên, mã key hoặc mô tả..."
+            placeholder="Search by name, key, or description..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] pl-9 pr-3 py-1.5 text-xs text-[var(--text-primary)] placeholder-[var(--text-tertiary)] focus:border-indigo-500 focus:outline-none"
+            className="w-full rounded-xs border border-border-default bg-surface pl-8 pr-3 py-1.5 text-xs text-primary placeholder:text-muted focus:border-brand focus-visible:outline-none"
           />
         </div>
       </div>
@@ -85,31 +85,31 @@ export const SegmentsPage: React.FC = () => {
       {isLoading ? (
         <SkeletonTable rows={4} columns={3} />
       ) : isError ? (
-        <ErrorAlert error={error || 'Lỗi tải danh sách segment'} onRetry={() => refetch()} />
+        <ErrorAlert error={error || 'Failed to load segments'} onRetry={() => refetch()} />
       ) : filteredSegments.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-[var(--border)] p-12 text-center">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-indigo-500/10 text-indigo-400 mb-3">
-            <Users className="w-6 h-6" />
+        <div className="rounded-md border border-dashed border-border-default p-10 text-center bg-surface/50">
+          <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-xs bg-brand/10 text-brand border border-brand/20 mb-2.5">
+            <Users className="w-5 h-5" />
           </div>
-          <h3 className="text-sm font-semibold text-[var(--text-primary)]">
-            {searchTerm ? 'Không tìm thấy segment phù hợp' : 'Chưa có segment nào trong dự án'}
+          <h3 className="text-xs font-semibold text-primary">
+            {searchTerm ? 'No matching segments found' : 'No audience segments created yet'}
           </h3>
-          <p className="mt-1 text-xs text-[var(--text-tertiary)] max-w-sm mx-auto">
-            Tạo segment để định nghĩa các nhóm người dùng phức tạp và tái sử dụng dễ dàng qua nhiều Feature Flag.
+          <p className="mt-1 text-xs text-muted max-w-sm mx-auto">
+            Create reusable user groups with specific attribute rules to target users consistently across flags.
           </p>
           {!searchTerm && (
             <button
               type="button"
               onClick={() => setIsCreateOpen(true)}
-              className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-indigo-500"
+              className="mt-3.5 inline-flex items-center gap-1.5 rounded-xs bg-brand px-3 py-1.5 text-xs font-medium text-white hover:bg-brand-hover transition-colors"
             >
               <Plus className="w-3.5 h-3.5" />
-              <span>Tạo Segment đầu tiên</span>
+              <span>Create First Segment</span>
             </button>
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {filteredSegments.map((segment) => (
             <SegmentCard
               key={segment.id}

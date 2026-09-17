@@ -1,0 +1,37 @@
+stateDiagram-v2
+    [*] --> DRAFT: Khai báo Flag mới (is_temporary=True)
+    
+    DRAFT --> CANARY_TESTING: Bật tại Dev / Staging (Targeting Rule / Overrides)
+    
+    CANARY_TESTING --> PROGRESSIVE_ROLLOUT: Triển khai lên Production (Change Request 4 mắt)
+    
+    state PROGRESSIVE_ROLLOUT {
+        [*] --> Rollout_10_Percent: Bật 10% người dùng (MurmurHash3)
+        Rollout_10_Percent --> Rollout_25_Percent: Tăng lên 25% (Monotonic)
+        Rollout_25_Percent --> Rollout_50_Percent: Mở rộng 50%
+        Rollout_50_Percent --> Rollout_100_Percent: Hoàn tất rollout 100%
+    }
+    
+    PROGRESSIVE_ROLLOUT --> ACTIVE_PRODUCTION: Giữ ở mức 100% (Hoạt động ổn định)
+    
+    ACTIVE_PRODUCTION --> STALE_FLAG: > 30 ngày ở 100% (Debt Score tăng > 50)
+    note right of STALE_FLAG
+        Hệ thống đánh dấu cờ chết (Technical Debt).
+        Dashboard Flag Health phát tín hiệu cảnh báo dọn dẹp.
+    end note
+
+    STALE_FLAG --> CODE_SCAN_SWEEP: Chạy CLI flag-scanner trên CI/CD
+    note right of CODE_SCAN_SWEEP
+        flag-scanner dùng Python AST
+        tìm và phát hiện cờ trong code
+    end note
+
+    CODE_SCAN_SWEEP --> CODE_CLEANED: Lập trình viên xóa if/else trong code
+    
+    CODE_CLEANED --> ARCHIVED: Chuyển cờ sang trạng thái Lưu trữ (Soft delete)
+    
+    ARCHIVED --> RESTORED: Khôi phục cờ nếu cần
+    RESTORED --> ACTIVE_PRODUCTION
+    
+    ARCHIVED --> PERMANENTLY_DELETED: Xóa vĩnh viễn (Sau 90 ngày)
+    PERMANENTLY_DELETED --> [*]

@@ -1,4 +1,7 @@
-"""Change Request Service — State Machine, Four-Eyes Approval, Impact Simulation, and Scheduled Changes."""
+"""Change Request Service.
+
+State Machine, Four-Eyes Approval, Impact Simulation, and Scheduled Changes.
+"""
 
 import logging
 from collections import Counter
@@ -10,15 +13,21 @@ from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import FlagOpsError
-from app.services import ruleset_cache
 from app.engine.evaluator import evaluate
 from app.engine.types import (
     DistributionEntry as EngineDistributionEntry,
+)
+from app.engine.types import (
     EvaluationContext,
+)
+from app.engine.types import (
     FlagRuleset as EngineFlagRuleset,
+)
+from app.engine.types import (
     Ruleset as EngineRuleset,
+)
+from app.engine.types import (
     TargetingRule as EngineTargetingRule,
-    Variation as EngineVariation,
 )
 from app.models.change_request import ChangeRequest
 from app.models.enums import ApiKeyScope, ChangeRequestStatus
@@ -27,7 +36,6 @@ from app.models.flag import (
     Flag,
     FlagEnvironmentSetting,
     TargetingRule,
-    Variation,
 )
 from app.models.project import Environment, Project
 from app.models.user import User
@@ -35,6 +43,7 @@ from app.schemas.change_request import (
     ChangeRequestImpactResponse,
     ImpactTransition,
 )
+from app.services import ruleset_cache
 from app.services.eval import load_ruleset_bundle
 from app.services.flag import bump_ruleset_version, create_audit_log
 
@@ -370,9 +379,7 @@ class ChangeRequestService:
 
             # Delete old rules
             await db.execute(
-                delete(TargetingRule).where(
-                    TargetingRule.flag_environment_setting_id == setting.id
-                )
+                delete(TargetingRule).where(TargetingRule.flag_environment_setting_id == setting.id)
             )
 
             # Insert new rules
@@ -410,9 +417,7 @@ class ChangeRequestService:
             )
 
         # 1. Load current ruleset
-        current_ruleset, _, flags_map = await load_ruleset_bundle(
-            db, env, scope=ApiKeyScope.SERVER
-        )
+        current_ruleset, _, flags_map = await load_ruleset_bundle(db, env, scope=ApiKeyScope.SERVER)
 
         # 2. Identify the target flag
         target_flag_key: str | None = cr.payload.get("flag_key")
@@ -468,7 +473,9 @@ class ChangeRequestService:
                 affected_contexts=0,
                 change_percentage=0.0,
                 transitions=[],
-                summary="Chưa có dữ liệu evaluation event của environment này để mô phỏng tác động.",
+                summary=(
+                    "Chưa có dữ liệu evaluation event của environment này để mô phỏng tác động."
+                ),
                 flag_key=target_flag_key,
             )
 
@@ -514,7 +521,10 @@ class ChangeRequestService:
         ]
 
         if affected_count == 0:
-            summary = f"Thay đổi này không làm thay đổi kết quả đánh giá cho {total_contexts} context được khảo sát."
+            summary = (
+                f"Thay đổi này không làm thay đổi kết quả đánh giá cho {total_contexts} "
+                "context được khảo sát."
+            )
         else:
             summary = (
                 f"Thay đổi này ảnh hưởng {change_pct}% người dùng: "

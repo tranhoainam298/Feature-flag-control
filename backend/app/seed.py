@@ -1,8 +1,8 @@
 """FlagOps Database Seed Script.
 
-Idempotent seed script to initialize demo organization, users, projects,
-environments, API keys, segments, flags, variations, targeting rules,
-config namespaces, config items, releases, and audit logs.
+Idempotent seed script to initialize production-ready enterprise organization,
+users, projects, environments, API keys, segments, flags, variations, targeting
+rules, config namespaces, config items, releases, and audit logs.
 
 Usage:
     python -m app.seed [--reset]
@@ -55,38 +55,63 @@ DEMO_API_KEYS = {
     },
 }
 
-DEMO_USERS = [
-    {"email": "owner@demo.local", "full_name": "Demo Owner", "role": MemberRole.OWNER},
-    {"email": "dev@demo.local", "full_name": "Demo Developer", "role": MemberRole.DEVELOPER},
-    {"email": "viewer@demo.local", "full_name": "Demo Viewer", "role": MemberRole.VIEWER},
+SEED_PASSWORD = "FlagOps@Secure2026!"
+
+SEED_USERS = [
+    {
+        "email": "security.admin@flagops.internal",
+        "full_name": "Security Administrator",
+        "role": MemberRole.OWNER,
+    },
+    {
+        "email": "lead.engineer@flagops.internal",
+        "full_name": "Lead Infrastructure Engineer",
+        "role": MemberRole.ADMIN,
+    },
+    {
+        "email": "platform.dev@flagops.internal",
+        "full_name": "Platform Core Developer",
+        "role": MemberRole.DEVELOPER,
+    },
+    {
+        "email": "compliance.auditor@flagops.internal",
+        "full_name": "Compliance & Security Auditor",
+        "role": MemberRole.VIEWER,
+    },
 ]
+
+DEMO_USERS = SEED_USERS
 
 
 async def clean_seed_data(session: AsyncSession) -> None:
-    """Clean all demo data from the database."""
-    logger.info("Cleaning existing demo data (--reset requested)...")
+    """Clean existing seed data from the database."""
+    logger.info("Cleaning existing seed data (--reset requested)...")
 
-    # 1. Find demo org
-    org = await session.scalar(select(Organization).where(Organization.slug == "demo-org"))
-    if org:
-        # Delete audit logs related to demo org
-        await session.execute(delete(AuditLog).where(AuditLog.organization_id == org.id))
-        # Delete org (cascades to project, environments, flags, variations, namespaces, etc.)
-        await session.delete(org)
-        await session.flush()
+    # 1. Find organizations to clean
+    org_slugs = ["global-core-infrastructure", "demo-org"]
+    for slug in org_slugs:
+        org = await session.scalar(select(Organization).where(Organization.slug == slug))
+        if org:
+            await session.execute(delete(AuditLog).where(AuditLog.organization_id == org.id))
+            await session.delete(org)
+            await session.flush()
 
-    # 2. Delete demo users
-    user_emails = [u["email"] for u in DEMO_USERS]
-    demo_users = (await session.scalars(select(User).where(User.email.in_(user_emails)))).all()
-    user_ids = [u.id for u in demo_users]
+    # 2. Delete users
+    user_emails = [u["email"] for u in SEED_USERS] + [
+        "owner@demo.local",
+        "dev@demo.local",
+        "viewer@demo.local",
+    ]
+    users_to_clean = (await session.scalars(select(User).where(User.email.in_(user_emails)))).all()
+    user_ids = [u.id for u in users_to_clean]
     if user_ids:
         await session.execute(delete(AuditLog).where(AuditLog.actor_id.in_(user_ids)))
-        for u in demo_users:
+        for u in users_to_clean:
             await session.delete(u)
         await session.flush()
 
     await session.commit()
-    logger.info("Demo data cleaned successfully.")
+    logger.info("Seed data cleaned successfully.")
 
 
 async def run_seed(reset: bool = False) -> dict[str, Any]:
@@ -96,23 +121,25 @@ async def run_seed(reset: bool = False) -> dict[str, Any]:
             await clean_seed_data(session)
 
         # 1. Organization
-        org = await session.scalar(select(Organization).where(Organization.slug == "demo-org"))
+        org = await session.scalar(
+            select(Organization).where(Organization.slug == "global-core-infrastructure")
+        )
         if not org:
-            org = Organization(name="Demo Organization", slug="demo-org")
+            org = Organization(name="Global Core Infrastructure", slug="global-core-infrastructure")
             session.add(org)
             await session.flush()
-            logger.info("Created organization: Demo Organization (demo-org)")
+            logger.info("Created organization: Global Core Infrastructure (global-core-infrastructure)")
         else:
-            logger.info("Organization demo-org already exists, keeping existing.")
+            logger.info("Organization global-core-infrastructure already exists, keeping existing.")
 
         # 2. Users & Memberships
         users: dict[str, User] = {}
-        for u_data in DEMO_USERS:
+        for u_data in SEED_USERS:
             user = await session.scalar(select(User).where(User.email == u_data["email"]))
             if not user:
                 user = User(
                     email=u_data["email"],
-                    password_hash=hash_password("demo1234"),
+                    password_hash=hash_password(SEED_PASSWORD),
                     full_name=u_data["full_name"],
                     is_active=True,
                 )
@@ -136,20 +163,24 @@ async def run_seed(reset: bool = False) -> dict[str, Any]:
                 session.add(membership)
                 await session.flush()
 
+        admin_user = users["security.admin@flagops.internal"]
+
         # 3. Project
         project = await session.scalar(
-            select(Project).where(Project.organization_id == org.id, Project.slug == "demo-project")
+            select(Project).where(
+                Project.organization_id == org.id, Project.slug == "production-platform-gateway"
+            )
         )
         if not project:
             project = Project(
                 organization_id=org.id,
-                name="Demo Project",
-                slug="demo-project",
+                name="Production Platform Gateway",
+                slug="production-platform-gateway",
                 default_stale_days=30,
             )
             session.add(project)
             await session.flush()
-            logger.info("Created project: Demo Project (demo-project)")
+            logger.info("Created project: Production Platform Gateway (production-platform-gateway)")
 
         # 4. Environments (dev, staging, prod)
         envs: dict[str, Environment] = {}
@@ -278,7 +309,7 @@ async def run_seed(reset: bool = False) -> dict[str, Any]:
                     toggle_kind=toggle_kind,
                     is_temporary=True,
                     is_client_visible=is_client_visible,
-                    created_by=users["owner@demo.local"].id,
+                    created_by=admin_user.id,
                 )
                 session.add(f)
                 await session.flush()
@@ -302,7 +333,80 @@ async def run_seed(reset: bool = False) -> dict[str, Any]:
                 var_map[vd["key"]] = v
             return f, var_map
 
-        # Flag 1: checkout-v2 (boolean, country IN [VN] AND plan == premium -> on)
+        # Flag 1: checkout-instant-pay (Boolean, Release)
+        flag_instant, vars_instant = await get_or_create_flag(
+            key="checkout-instant-pay",
+            name="Checkout Instant Pay Flow",
+            flag_type=FlagType.BOOLEAN,
+            toggle_kind=ToggleKind.RELEASE,
+            variations_data=[
+                {"key": "true", "value": True, "name": "Instant Pay Enabled"},
+                {"key": "false", "value": False, "name": "Standard Pay Disabled"},
+            ],
+            description="Next-gen zero-friction instant payment checkout",
+            is_client_visible=True,
+        )
+
+        # Flag 2: v3-pricing-engine (JSON, Experiment)
+        flag_pricing, vars_pricing = await get_or_create_flag(
+            key="v3-pricing-engine",
+            name="V3 Dynamic Pricing Engine",
+            flag_type=FlagType.JSON,
+            toggle_kind=ToggleKind.EXPERIMENT,
+            variations_data=[
+                {
+                    "key": "model_v3_balanced",
+                    "value": {
+                        "model": "xgboost_v3",
+                        "margin": 0.15,
+                        "surge": True,
+                    },
+                    "name": "Model V3 Balanced",
+                },
+                {
+                    "key": "model_v2_legacy",
+                    "value": {
+                        "model": "rule_based",
+                        "margin": 0.10,
+                        "surge": False,
+                    },
+                    "name": "Model V2 Legacy",
+                },
+            ],
+            description="Machine learning dynamic pricing optimization model",
+            is_client_visible=False,
+        )
+
+        # Flag 3: dark-mode-theme (String, Release)
+        flag_darkmode, vars_darkmode = await get_or_create_flag(
+            key="dark-mode-theme",
+            name="Dark Mode Theme Palette",
+            flag_type=FlagType.STRING,
+            toggle_kind=ToggleKind.RELEASE,
+            variations_data=[
+                {"key": "slate_dark", "value": "slate_dark", "name": "Slate Dark Theme"},
+                {"key": "zinc_dark", "value": "zinc_dark", "name": "Zinc Dark Theme"},
+                {"key": "light", "value": "light", "name": "Light Theme"},
+            ],
+            description="Enterprise UI high-contrast dark theme styling",
+            is_client_visible=True,
+        )
+
+        # Flag 4: distributed-tracing-v2 (Boolean, Ops)
+        flag_tracing, vars_tracing = await get_or_create_flag(
+            key="distributed-tracing-v2",
+            name="Distributed Tracing V2 (OpenTelemetry)",
+            flag_type=FlagType.BOOLEAN,
+            toggle_kind=ToggleKind.OPS,
+            variations_data=[
+                {"key": "true", "value": True, "name": "Tracing Enabled"},
+                {"key": "false", "value": False, "name": "Tracing Disabled"},
+            ],
+            description="Distributed tracing sampling rate and APM spans",
+            is_client_visible=False,
+        )
+
+        # Flag 5: checkout-v2 (Boolean, Release) — backward compatibility
         flag_checkout, vars_checkout = await get_or_create_flag(
             key="checkout-v2",
             name="Checkout V2 Flow",
@@ -316,83 +420,42 @@ async def run_seed(reset: bool = False) -> dict[str, Any]:
             is_client_visible=True,
         )
 
-        # Flag 2: new-homepage (boolean, 20/80 rollout)
-        flag_homepage, vars_homepage = await get_or_create_flag(
-            key="new-homepage",
-            name="New Homepage Redesign",
-            flag_type=FlagType.BOOLEAN,
-            toggle_kind=ToggleKind.EXPERIMENT,
-            variations_data=[
-                {"key": "true", "value": True, "name": "New Modern Layout"},
-                {"key": "false", "value": False, "name": "Classic Layout"},
-            ],
-            description="Redesigned high-converting homepage",
-            is_client_visible=True,
-        )
-
-        # Flag 3: dark-mode (boolean, 100% in dev, off in prod)
-        flag_darkmode, vars_darkmode = await get_or_create_flag(
-            key="dark-mode",
-            name="Dark Mode Theme",
-            flag_type=FlagType.BOOLEAN,
-            toggle_kind=ToggleKind.RELEASE,
-            variations_data=[
-                {"key": "true", "value": True, "name": "Dark Theme Enabled"},
-                {"key": "false", "value": False, "name": "Light Theme Default"},
-            ],
-            description="System-wide dark mode theme support",
-            is_client_visible=True,
-        )
-
-        # Flag 4: payment-v2 (multivariate 34/33/33)
-        flag_payment, vars_payment = await get_or_create_flag(
-            key="payment-v2",
-            name="Payment Gateway V2",
-            flag_type=FlagType.STRING,
-            toggle_kind=ToggleKind.EXPERIMENT,
-            variations_data=[
-                {"key": "control", "value": "control", "name": "Control (Legacy Stripe)"},
-                {"key": "variant_a", "value": "variant_a", "name": "Variant A (Stripe Elements)"},
-                {"key": "variant_b", "value": "variant_b", "name": "Variant B (Adyen Drop-in)"},
-            ],
-            description="A/B/n test for multiple payment gateways",
-            is_client_visible=False,
-        )
-
-        # Flag 5: recommendation-engine (JSON config flag)
-        flag_recs, vars_recs = await get_or_create_flag(
-            key="recommendation-engine",
-            name="Recommendation Engine Config",
-            flag_type=FlagType.JSON,
-            toggle_kind=ToggleKind.OPS,
-            variations_data=[
-                {
-                    "key": "v1_collaborative",
-                    "value": {
-                        "algorithm": "collaborative",
-                        "max_items": 10,
-                        "cache_ttl_sec": 300,
-                        "fallback": "trending",
-                    },
-                    "name": "Collaborative Filtering v1",
-                },
-                {
-                    "key": "v2_deep_rank",
-                    "value": {
-                        "algorithm": "deep_rank",
-                        "max_items": 20,
-                        "cache_ttl_sec": 60,
-                        "fallback": "trending",
-                    },
-                    "name": "Deep Ranking Neural Model v2",
-                },
-            ],
-            description="Runtime configuration object for machine-learning recommendations",
-            is_client_visible=False,
-        )
-
         # 8. Flag Environment Settings & Targeting Rules
         for env_key, env in envs.items():
+            # Setting for checkout-instant-pay
+            fes_instant = await session.scalar(
+                select(FlagEnvironmentSetting).where(
+                    FlagEnvironmentSetting.flag_id == flag_instant.id,
+                    FlagEnvironmentSetting.environment_id == env.id,
+                )
+            )
+            if not fes_instant:
+                fes_instant = FlagEnvironmentSetting(
+                    flag_id=flag_instant.id,
+                    environment_id=env.id,
+                    enabled=True,
+                    default_variation_id=vars_instant["false"].id,
+                    off_variation_id=vars_instant["false"].id,
+                    bucketing_key="userId",
+                )
+                session.add(fes_instant)
+                await session.flush()
+
+                rule_instant = TargetingRule(
+                    flag_environment_setting_id=fes_instant.id,
+                    priority=1,
+                    description="Country IN [VN] AND plan == premium -> ON",
+                    conditions={
+                        "operator": "AND",
+                        "conditions": [
+                            {"attribute": "country", "operator": "IN", "value": ["VN"]},
+                            {"attribute": "plan", "operator": "EQ", "value": "premium"},
+                        ],
+                    },
+                    distribution=[{"variation_id": str(vars_instant["true"].id), "weight": 100.0}],
+                )
+                session.add(rule_instant)
+
             # Setting for checkout-v2
             fes_checkout = await session.scalar(
                 select(FlagEnvironmentSetting).where(
@@ -427,38 +490,25 @@ async def run_seed(reset: bool = False) -> dict[str, Any]:
                 )
                 session.add(rule_checkout)
 
-            # Setting for new-homepage (rollout 20/80)
-            fes_homepage = await session.scalar(
+            # Setting for v3-pricing-engine
+            fes_pricing = await session.scalar(
                 select(FlagEnvironmentSetting).where(
-                    FlagEnvironmentSetting.flag_id == flag_homepage.id,
+                    FlagEnvironmentSetting.flag_id == flag_pricing.id,
                     FlagEnvironmentSetting.environment_id == env.id,
                 )
             )
-            if not fes_homepage:
-                fes_homepage = FlagEnvironmentSetting(
-                    flag_id=flag_homepage.id,
+            if not fes_pricing:
+                fes_pricing = FlagEnvironmentSetting(
+                    flag_id=flag_pricing.id,
                     environment_id=env.id,
                     enabled=True,
-                    default_variation_id=vars_homepage["false"].id,
-                    off_variation_id=vars_homepage["false"].id,
+                    default_variation_id=vars_pricing["model_v3_balanced"].id,
+                    off_variation_id=vars_pricing["model_v2_legacy"].id,
                     bucketing_key="userId",
                 )
-                session.add(fes_homepage)
-                await session.flush()
+                session.add(fes_pricing)
 
-                rule_homepage = TargetingRule(
-                    flag_environment_setting_id=fes_homepage.id,
-                    priority=1,
-                    description="20/80 Percentage Rollout",
-                    conditions=None,
-                    distribution=[
-                        {"variation_id": str(vars_homepage["true"].id), "weight": 20.0},
-                        {"variation_id": str(vars_homepage["false"].id), "weight": 80.0},
-                    ],
-                )
-                session.add(rule_homepage)
-
-            # Setting for dark-mode: 100% on in dev, off in prod
+            # Setting for dark-mode-theme
             fes_dark = await session.scalar(
                 select(FlagEnvironmentSetting).where(
                     FlagEnvironmentSetting.flag_id == flag_darkmode.id,
@@ -471,61 +521,30 @@ async def run_seed(reset: bool = False) -> dict[str, Any]:
                     flag_id=flag_darkmode.id,
                     environment_id=env.id,
                     enabled=is_on,
-                    default_variation_id=vars_darkmode["true" if is_on else "false"].id,
-                    off_variation_id=vars_darkmode["false"].id,
+                    default_variation_id=vars_darkmode["slate_dark" if is_on else "light"].id,
+                    off_variation_id=vars_darkmode["light"].id,
                     bucketing_key="userId",
                 )
                 session.add(fes_dark)
 
-            # Setting for payment-v2: 34/33/33 split
-            fes_pay = await session.scalar(
+            # Setting for distributed-tracing-v2
+            fes_trace = await session.scalar(
                 select(FlagEnvironmentSetting).where(
-                    FlagEnvironmentSetting.flag_id == flag_payment.id,
+                    FlagEnvironmentSetting.flag_id == flag_tracing.id,
                     FlagEnvironmentSetting.environment_id == env.id,
                 )
             )
-            if not fes_pay:
-                fes_pay = FlagEnvironmentSetting(
-                    flag_id=flag_payment.id,
+            if not fes_trace:
+                is_trace = env_key in ("staging", "prod")
+                fes_trace = FlagEnvironmentSetting(
+                    flag_id=flag_tracing.id,
                     environment_id=env.id,
-                    enabled=True,
-                    default_variation_id=vars_payment["control"].id,
-                    off_variation_id=vars_payment["control"].id,
+                    enabled=is_trace,
+                    default_variation_id=vars_tracing["true" if is_trace else "false"].id,
+                    off_variation_id=vars_tracing["false"].id,
                     bucketing_key="userId",
                 )
-                session.add(fes_pay)
-                await session.flush()
-
-                rule_pay = TargetingRule(
-                    flag_environment_setting_id=fes_pay.id,
-                    priority=1,
-                    description="Multivariate 34/33/33 Split",
-                    conditions=None,
-                    distribution=[
-                        {"variation_id": str(vars_payment["control"].id), "weight": 34.0},
-                        {"variation_id": str(vars_payment["variant_a"].id), "weight": 33.0},
-                        {"variation_id": str(vars_payment["variant_b"].id), "weight": 33.0},
-                    ],
-                )
-                session.add(rule_pay)
-
-            # Setting for recommendation-engine
-            fes_recs = await session.scalar(
-                select(FlagEnvironmentSetting).where(
-                    FlagEnvironmentSetting.flag_id == flag_recs.id,
-                    FlagEnvironmentSetting.environment_id == env.id,
-                )
-            )
-            if not fes_recs:
-                fes_recs = FlagEnvironmentSetting(
-                    flag_id=flag_recs.id,
-                    environment_id=env.id,
-                    enabled=True,
-                    default_variation_id=vars_recs["v1_collaborative"].id,
-                    off_variation_id=vars_recs["v1_collaborative"].id,
-                    bucketing_key="userId",
-                )
-                session.add(fes_recs)
+                session.add(fes_trace)
 
         await session.flush()
         logger.info("Created / verified flag environment settings & targeting rules.")
@@ -566,84 +585,41 @@ async def run_seed(reset: bool = False) -> dict[str, Any]:
             await session.flush()
 
         # 6 Config items:
-        # In payment-service:
-        # 1. payment.timeout_ms = 3000 (INT)
-        # 2. payment.stripe_secret_key (STRING, is_secret=True)
-        # 3. payment.gateway = "stripe" (STRING)
-        # In application:
-        # 4. app.maintenance_mode = "false" (BOOL)
-        # 5. app.max_upload_mb = "50" (INT)
-        # 6. app.rate_limit_per_min = "100" (INT)
-        config_items_spec = [
+        config_items_data = [
+            (ns_payment, "payment.timeout_ms", "3000", ConfigValueType.INT, False, None),
+            (ns_payment, "payment.gateway", "stripe", ConfigValueType.STRING, False, None),
             (
-                ns_payment.id,
-                "payment.timeout_ms",
-                "3000",
-                ConfigValueType.INT,
-                False,
-                "Payment gateway request timeout in milliseconds",
-            ),
-            (
-                ns_payment.id,
+                ns_payment,
                 "payment.stripe_secret_key",
                 encrypt_secret("sk_test_51MzDemoSecretKey987654321"),
                 ConfigValueType.STRING,
                 True,
-                "Live Stripe API secret key (AES-256 encrypted)",
+                None,
             ),
-            (
-                ns_payment.id,
-                "payment.gateway",
-                "stripe",
-                ConfigValueType.STRING,
-                False,
-                "Default active payment gateway provider",
-            ),
-            (
-                ns_app.id,
-                "app.maintenance_mode",
-                "false",
-                ConfigValueType.BOOL,
-                False,
-                "Toggle global maintenance mode status",
-            ),
-            (
-                ns_app.id,
-                "app.max_upload_mb",
-                "50",
-                ConfigValueType.INT,
-                False,
-                "Maximum file upload size allowed in megabytes",
-            ),
-            (
-                ns_app.id,
-                "app.rate_limit_per_min",
-                "100",
-                ConfigValueType.INT,
-                False,
-                "API rate limit request threshold per minute",
-            ),
+            (ns_app, "app.maintenance_mode", "false", ConfigValueType.BOOL, False, None),
+            (ns_app, "app.max_upload_mb", "50", ConfigValueType.INT, False, None),
+            (ns_app, "app.rate_limit_per_min", "100", ConfigValueType.INT, False, None),
         ]
-
-        for ns_id, key, val, val_type, is_sec, cmt in config_items_spec:
-            ci = await session.scalar(
-                select(ConfigItem).where(ConfigItem.namespace_id == ns_id, ConfigItem.key == key)
+        for ns, key, val, vtype, is_sec, schema in config_items_data:
+            item = await session.scalar(
+                select(ConfigItem).where(ConfigItem.namespace_id == ns.id, ConfigItem.key == key)
             )
-            if not ci:
-                ci = ConfigItem(
-                    namespace_id=ns_id,
+            if not item:
+                item = ConfigItem(
+                    namespace_id=ns.id,
                     key=key,
                     value=val,
-                    value_type=val_type,
+                    value_type=vtype,
                     is_secret=is_sec,
-                    comment=cmt,
+                    json_schema=schema,
                 )
-                session.add(ci)
-
+                session.add(item)
         await session.flush()
-        logger.info("Created / verified 6 config items across namespaces.")
+        logger.info("Created / verified 6 config items.")
 
-        # 10. Config Releases (3 releases in payment-service with rollback history)
+        # 10. Config Releases in payment-service
+        dev_user = users["platform.dev@flagops.internal"]
+
         rel1 = await session.scalar(
             select(ConfigRelease).where(
                 ConfigRelease.namespace_id == ns_payment.id, ConfigRelease.version == 1
@@ -655,7 +631,7 @@ async def run_seed(reset: bool = False) -> dict[str, Any]:
                 version=1,
                 snapshot={"payment.timeout_ms": 1000, "payment.gateway": "legacy"},
                 comment="v1.0 Initial payment configuration",
-                released_by=users["owner@demo.local"].id,
+                released_by=admin_user.id,
             )
             session.add(rel1)
             await session.flush()
@@ -675,7 +651,7 @@ async def run_seed(reset: bool = False) -> dict[str, Any]:
                     "payment.stripe_secret_key": encrypt_secret("sk_test_old_key_555"),
                 },
                 comment="v1.1 Increased timeout to 5000ms and added Stripe",
-                released_by=users["dev@demo.local"].id,
+                released_by=dev_user.id,
             )
             session.add(rel2)
             await session.flush()
@@ -697,7 +673,7 @@ async def run_seed(reset: bool = False) -> dict[str, Any]:
                     ),
                 },
                 comment="v1.2 Rollback timeout to 3000ms and rotate secret",
-                released_by=users["owner@demo.local"].id,
+                released_by=admin_user.id,
                 is_rollback_of=rel1.id,
             )
             session.add(rel3)
@@ -721,7 +697,7 @@ async def run_seed(reset: bool = False) -> dict[str, Any]:
                     "app.rate_limit_per_min": 100,
                 },
                 comment="v1.0 Production application baseline",
-                released_by=users["owner@demo.local"].id,
+                released_by=admin_user.id,
             )
             session.add(app_rel1)
             await session.flush()
@@ -743,29 +719,35 @@ async def run_seed(reset: bool = False) -> dict[str, Any]:
                 (
                     "USER_REGISTER",
                     "user",
-                    users["owner@demo.local"].email,
+                    admin_user.email,
                     None,
-                    {"email": users["owner@demo.local"].email},
+                    {"email": admin_user.email},
                 ),
                 (
                     "ORGANIZATION_CREATE",
                     "organization",
-                    "demo-org",
+                    "global-core-infrastructure",
                     None,
-                    {"name": "Demo Organization", "slug": "demo-org"},
+                    {"name": "Global Core Infrastructure", "slug": "global-core-infrastructure"},
                 ),
-                ("PROJECT_CREATE", "project", "demo-project", None, {"name": "Demo Project"}),
+                (
+                    "PROJECT_CREATE",
+                    "project",
+                    "production-platform-gateway",
+                    None,
+                    {"name": "Production Platform Gateway"},
+                ),
                 (
                     "USER_INVITE",
                     "membership",
-                    users["dev@demo.local"].email,
+                    dev_user.email,
                     None,
                     {"role": "DEVELOPER"},
                 ),
                 (
                     "USER_INVITE",
                     "membership",
-                    users["viewer@demo.local"].email,
+                    users["compliance.auditor@flagops.internal"].email,
                     None,
                     {"role": "VIEWER"},
                 ),
@@ -803,31 +785,31 @@ async def run_seed(reset: bool = False) -> dict[str, Any]:
                 (
                     "FLAG_CREATE",
                     "flag",
-                    "checkout-v2",
+                    "checkout-instant-pay",
                     None,
-                    {"key": "checkout-v2", "type": "BOOLEAN"},
+                    {"key": "checkout-instant-pay", "type": "BOOLEAN"},
                 ),
                 (
                     "TARGETING_RULE_CREATE",
                     "targeting_rule",
-                    "checkout-v2",
+                    "checkout-instant-pay",
                     None,
                     {"rule": "Country IN [VN]"},
                 ),
                 (
                     "FLAG_CREATE",
                     "flag",
-                    "new-homepage",
+                    "v3-pricing-engine",
                     None,
-                    {"key": "new-homepage", "rollout": "20/80"},
+                    {"key": "v3-pricing-engine", "type": "JSON"},
                 ),
-                ("FLAG_CREATE", "flag", "dark-mode", None, {"key": "dark-mode", "dev_on": True}),
+                ("FLAG_CREATE", "flag", "dark-mode-theme", None, {"key": "dark-mode-theme", "type": "STRING"}),
                 (
                     "FLAG_CREATE",
                     "flag",
-                    "payment-v2",
+                    "distributed-tracing-v2",
                     None,
-                    {"key": "payment-v2", "type": "STRING"},
+                    {"key": "distributed-tracing-v2", "type": "BOOLEAN"},
                 ),
                 (
                     "CONFIG_NAMESPACE_CREATE",
@@ -860,9 +842,7 @@ async def run_seed(reset: bool = False) -> dict[str, Any]:
                     organization_id=org.id,
                     project_id=project.id,
                     environment_id=dev_env.id,
-                    actor_id=users["owner@demo.local"].id
-                    if i % 2 == 0
-                    else users["dev@demo.local"].id,
+                    actor_id=admin_user.id if i % 2 == 0 else dev_user.id,
                     action=action,
                     entity_type=entity_type,
                     entity_id=entity_id,
@@ -885,11 +865,11 @@ async def run_seed(reset: bool = False) -> dict[str, Any]:
             "project": project.slug,
             "environments": list(envs.keys()),
             "flags": [
+                "checkout-instant-pay",
+                "v3-pricing-engine",
+                "dark-mode-theme",
+                "distributed-tracing-v2",
                 "checkout-v2",
-                "new-homepage",
-                "dark-mode",
-                "payment-v2",
-                "recommendation-engine",
             ],
             "segments": ["vn-premium", "early-adopters"],
             "namespaces": ["payment-service", "application"],
@@ -901,7 +881,7 @@ def main() -> None:
     """CLI entry point for seed execution."""
     parser = argparse.ArgumentParser(description="FlagOps Seed Data Tool")
     parser.add_argument(
-        "--reset", action="store_true", help="Clean existing demo data before seeding"
+        "--reset", action="store_true", help="Clean existing seed data before seeding"
     )
     args = parser.parse_args()
 

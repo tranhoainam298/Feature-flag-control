@@ -12,7 +12,7 @@ from app.core.exceptions import FlagOpsError
 from app.models.audit import AuditLog
 from app.models.enums import LifecycleState
 from app.models.evaluation import EvaluationEvent
-from app.models.flag import Flag, FlagEnvironmentSetting, TargetingRule
+from app.models.flag import Flag, FlagEnvironmentSetting
 from app.models.project import Environment
 from app.schemas.flag_health import FlagHealthListResponse, FlagHealthResponse, FlagHealthSummary
 from app.services.flag_debt import DebtWeights, FlagSnapshot, calculate_debt_score
@@ -91,9 +91,7 @@ async def _get_days_since_last_eval(db: AsyncSession, flag_id: UUID) -> int | No
     """Get days since last evaluation event for a flag."""
     try:
         last_eval = await db.scalar(
-            select(func.max(EvaluationEvent.created_at)).where(
-                EvaluationEvent.flag_id == flag_id
-            )
+            select(func.max(EvaluationEvent.created_at)).where(EvaluationEvent.flag_id == flag_id)
         )
     except Exception:
         # Table might not exist or be partitioned differently
@@ -103,21 +101,20 @@ async def _get_days_since_last_eval(db: AsyncSession, flag_id: UUID) -> int | No
     return (datetime.now(timezone.utc) - last_eval).days
 
 
-async def _build_snapshot(
-    db: AsyncSession, flag: Flag, project_id: UUID
-) -> FlagSnapshot:
+async def _build_snapshot(db: AsyncSession, flag: Flag, project_id: UUID) -> FlagSnapshot:
     """Build a FlagSnapshot from DB data."""
     # Count enabled environments
-    enabled_count = await db.scalar(
-        select(func.count()).where(
-            FlagEnvironmentSetting.flag_id == flag.id,
-            FlagEnvironmentSetting.enabled.is_(True),
+    enabled_count = (
+        await db.scalar(
+            select(func.count()).where(
+                FlagEnvironmentSetting.flag_id == flag.id,
+                FlagEnvironmentSetting.enabled.is_(True),
+            )
         )
-    ) or 0
-
-    rollout_pct, days_at_full_rollout = await _get_production_rollout_pct(
-        db, flag.id, project_id
+        or 0
     )
+
+    rollout_pct, days_at_full_rollout = await _get_production_rollout_pct(db, flag.id, project_id)
     days_since_last_eval = await _get_days_since_last_eval(db, flag.id)
 
     # Get project's stale_days
@@ -215,9 +212,7 @@ async def get_single_flag_health(
     db: AsyncSession, flag_id: UUID, project_id: UUID
 ) -> FlagHealthResponse:
     """Get health data for a single flag."""
-    flag = await db.scalar(
-        select(Flag).where(Flag.id == flag_id, Flag.project_id == project_id)
-    )
+    flag = await db.scalar(select(Flag).where(Flag.id == flag_id, Flag.project_id == project_id))
     if not flag:
         raise FlagOpsError(code="NOT_FOUND", message="Flag not found", status_code=404)
 
@@ -245,9 +240,7 @@ async def archive_flag(
     db: AsyncSession, flag_id: UUID, project_id: UUID, actor_id: UUID
 ) -> FlagHealthResponse:
     """Archive a flag and return updated health data."""
-    flag = await db.scalar(
-        select(Flag).where(Flag.id == flag_id, Flag.project_id == project_id)
-    )
+    flag = await db.scalar(select(Flag).where(Flag.id == flag_id, Flag.project_id == project_id))
     if not flag:
         raise FlagOpsError(code="NOT_FOUND", message="Flag not found", status_code=404)
     if flag.archived_at is not None:

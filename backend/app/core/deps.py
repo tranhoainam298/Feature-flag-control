@@ -56,9 +56,7 @@ async def verify_api_key(
     """
     raw_key = x_flagops_key or key
     if not raw_key:
-        raise FlagOpsError(
-            code="UNAUTHORIZED", message="Missing API key", status_code=401
-        )
+        raise FlagOpsError(code="UNAUTHORIZED", message="Missing API key", status_code=401)
 
     key_hash = hashlib.sha256(raw_key.strip().encode("utf-8")).hexdigest()
     now = datetime.now(timezone.utc)

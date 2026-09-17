@@ -17,8 +17,8 @@ from app.seed import DEMO_USERS, run_seed
 async def test_seed_execution_and_verification():
     """Test run_seed(reset=True) populates all required entities correctly."""
     result = await run_seed(reset=True)
-    assert result["organization"] == "demo-org"
-    assert len(result["users"]) == 3
+    assert result["organization"] == "global-core-infrastructure"
+    assert len(result["users"]) == 4
     assert len(result["environments"]) == 3
     assert len(result["flags"]) == 5
     assert len(result["segments"]) == 2
@@ -26,9 +26,11 @@ async def test_seed_execution_and_verification():
 
     async with async_session_factory() as session:
         # 1. Organization
-        org = await session.scalar(select(Organization).where(Organization.slug == "demo-org"))
+        org = await session.scalar(
+            select(Organization).where(Organization.slug == "global-core-infrastructure")
+        )
         assert org is not None
-        assert org.name == "Demo Organization"
+        assert org.name == "Global Core Infrastructure"
 
         # 2. Users & Memberships
         for u in DEMO_USERS:
@@ -44,7 +46,9 @@ async def test_seed_execution_and_verification():
 
         # 3. Project & Environments
         proj = await session.scalar(
-            select(Project).where(Project.organization_id == org.id, Project.slug == "demo-project")
+            select(Project).where(
+                Project.organization_id == org.id, Project.slug == "production-platform-gateway"
+            )
         )
         assert proj is not None
 
@@ -81,11 +85,11 @@ async def test_seed_execution_and_verification():
         flags = (await session.scalars(select(Flag).where(Flag.project_id == proj.id))).all()
         assert len(flags) == 5
         flag_map = {f.key: f for f in flags}
+        assert "checkout-instant-pay" in flag_map
+        assert "v3-pricing-engine" in flag_map
+        assert "dark-mode-theme" in flag_map
+        assert "distributed-tracing-v2" in flag_map
         assert "checkout-v2" in flag_map
-        assert "new-homepage" in flag_map
-        assert "dark-mode" in flag_map
-        assert "payment-v2" in flag_map
-        assert "recommendation-engine" in flag_map
 
         # Check flag variations
         f_checkout = flag_map["checkout-v2"]
@@ -94,11 +98,11 @@ async def test_seed_execution_and_verification():
         ).all()
         assert len(vars_checkout) == 2
 
-        f_payment = flag_map["payment-v2"]
-        vars_payment = (
-            await session.scalars(select(Variation).where(Variation.flag_id == f_payment.id))
+        f_dark = flag_map["dark-mode-theme"]
+        vars_dark = (
+            await session.scalars(select(Variation).where(Variation.flag_id == f_dark.id))
         ).all()
-        assert len(vars_payment) == 3
+        assert len(vars_dark) == 3
 
         # Check rules for checkout-v2
         dev_env = env_map["dev"]
@@ -163,7 +167,7 @@ async def test_seed_idempotence():
 
     async with async_session_factory() as session:
         org_count = await session.scalar(
-            select(func.count()).select_from(Organization).where(Organization.slug == "demo-org")
+            select(func.count()).select_from(Organization).where(Organization.slug == "global-core-infrastructure")
         )
         user_count = await session.scalar(
             select(func.count())
@@ -182,7 +186,7 @@ async def test_seed_idempotence():
             await session.scalar(
                 select(func.count())
                 .select_from(Organization)
-                .where(Organization.slug == "demo-org")
+                .where(Organization.slug == "global-core-infrastructure")
             )
             == org_count
         )

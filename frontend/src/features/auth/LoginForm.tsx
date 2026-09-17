@@ -6,7 +6,7 @@ import { authApi } from './api';
 import { useApp } from '../../context/AppContext';
 import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
-import { LogIn, Sparkles } from 'lucide-react';
+import { LogIn, Shield } from 'lucide-react';
 
 const loginSchema = z.object({
   email: z.string().min(1, 'Email is required').email('Invalid email address'),
@@ -23,7 +23,6 @@ export const LoginForm: React.FC = () => {
   const {
     register,
     handleSubmit,
-    setValue,
     formState: { errors },
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -40,44 +39,45 @@ export const LoginForm: React.FC = () => {
       await authApi.login(data.email, data.password);
       await refetchUserAndOrgs();
     } catch (err: unknown) {
-      const msg = (err as { message?: string })?.message || 'Login failed. Please verify credentials.';
+      const msg = (err as { message?: string })?.message || 'Authentication failed. Verify credentials and try again.';
       setServerError(msg);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleFillDemo = (email: string, pass: string) => {
-    setValue('email', email, { shouldValidate: true });
-    setValue('password', pass, { shouldValidate: true });
-    setServerError(null);
-  };
-
   return (
-    <div className="w-full max-w-md p-8 bg-surface border border-border-default rounded-xl shadow-2xl">
+    <div className="w-full max-w-sm">
+      {/* Brand Mark */}
       <div className="flex flex-col items-center text-center mb-8">
-        <div className="w-10 h-10 rounded-lg bg-brand flex items-center justify-center text-white mb-3 shadow-md shadow-brand/30">
-          <Sparkles className="w-5 h-5" />
+        <div className="w-9 h-9 rounded-md bg-brand/10 border border-brand/20 flex items-center justify-center mb-4">
+          <Shield className="w-4.5 h-4.5 text-brand" />
         </div>
-        <h1 className="text-2xl font-bold text-primary tracking-tight">Sign in to FlagOps</h1>
-        <p className="text-xs text-secondary mt-1">Feature Flag & Config Management Platform</p>
+        <h1 className="text-lg font-semibold text-primary tracking-tight">
+          FlagOps Management Console
+        </h1>
+        <p className="text-xs text-muted mt-1">
+          Feature Flag & Configuration Control Plane
+        </p>
       </div>
 
+      {/* Error Alert */}
       {serverError && (
         <div
           role="alert"
-          className="mb-6 p-3 rounded-md bg-status-danger/10 border border-status-danger/30 text-xs text-status-danger font-medium"
+          className="mb-5 px-3 py-2.5 rounded-sm bg-status-danger-bg border border-status-danger-border text-xs text-status-danger font-medium"
         >
           {serverError}
         </div>
       )}
 
+      {/* Login Form */}
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
         <Input
-          label="Email Address"
+          label="Work Email"
           type="email"
           autoComplete="email"
-          placeholder="engineer@demo.local"
+          placeholder="you@company.com"
           error={errors.email?.message}
           {...register('email')}
           required
@@ -93,42 +93,24 @@ export const LoginForm: React.FC = () => {
           required
         />
 
-        <div className="pt-2">
+        <div className="pt-1">
           <Button
             type="submit"
             variant="primary"
-            className="w-full h-10"
+            className="w-full h-9"
             isLoading={isLoading}
-            leftIcon={<LogIn className="w-4 h-4" />}
+            leftIcon={<LogIn className="w-3.5 h-3.5" />}
           >
-            Sign In
+            Sign In to Organization
           </Button>
         </div>
       </form>
 
-      {/* Demo Credentials Helper */}
-      <div className="mt-8 pt-6 border-t border-border-subtle">
-        <p className="text-[11px] font-medium text-muted uppercase tracking-wider mb-2 text-center">
-          Quick Demo Login
+      {/* Security Footer */}
+      <div className="mt-8 pt-5 border-t border-border-subtle text-center">
+        <p className="text-[10px] text-muted font-mono uppercase tracking-wider">
+          Multi-Tenant · TLS End-to-End Encrypted
         </p>
-        <div className="flex flex-col gap-1.5">
-          <button
-            type="button"
-            onClick={() => handleFillDemo('owner@demo.local', 'demo1234')}
-            className="text-xs text-left px-3 py-2 rounded-md bg-surface-elevated hover:bg-surface-hover border border-border-subtle text-secondary hover:text-primary transition-colors flex items-center justify-between"
-          >
-            <span className="font-mono text-primary">owner@demo.local</span>
-            <span className="text-[10px] text-brand uppercase font-mono">Owner</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => handleFillDemo('dev@demo.local', 'demo1234')}
-            className="text-xs text-left px-3 py-2 rounded-md bg-surface-elevated hover:bg-surface-hover border border-border-subtle text-secondary hover:text-primary transition-colors flex items-center justify-between"
-          >
-            <span className="font-mono text-primary">dev@demo.local</span>
-            <span className="text-[10px] text-amber-400 uppercase font-mono">Developer</span>
-          </button>
-        </div>
       </div>
     </div>
   );

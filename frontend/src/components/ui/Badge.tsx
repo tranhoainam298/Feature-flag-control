@@ -2,7 +2,7 @@ import React from 'react';
 import { cn } from '../../lib/utils';
 
 export interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
-  variant?: 'default' | 'success' | 'danger' | 'warning' | 'info' | 'outline';
+  variant?: 'default' | 'success' | 'danger' | 'warning' | 'info' | 'outline' | 'archived';
   size?: 'sm' | 'md';
 }
 
@@ -15,22 +15,23 @@ export const Badge: React.FC<BadgeProps> = ({
 }) => {
   const variantStyles = {
     default: 'bg-surface-active text-secondary border-border-subtle',
-    success: 'bg-flag-on-bg text-flag-on border-flag-on-border',
-    danger: 'bg-flag-off-bg text-status-danger border-border-subtle',
-    warning: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
-    info: 'bg-sky-500/10 text-sky-400 border-sky-500/20',
+    success: 'bg-status-success-bg text-status-success border-status-success-border',
+    danger: 'bg-status-danger-bg text-status-danger border-status-danger-border',
+    warning: 'bg-status-warning-bg text-status-warning border-status-warning-border',
+    info: 'bg-status-info-bg text-status-info border-status-info-border',
     outline: 'bg-transparent text-secondary border-border-default',
+    archived: 'bg-status-archived-bg text-status-archived border-status-archived-border',
   };
 
   const sizeStyles = {
-    sm: 'text-[11px] px-1.5 py-0.5 rounded-xs font-mono',
-    md: 'text-xs px-2 py-0.5 rounded-sm font-medium',
+    sm: 'text-[10px] px-1.5 py-px rounded-xs font-mono leading-4',
+    md: 'text-[11px] px-2 py-0.5 rounded-sm font-medium leading-4',
   };
 
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1 border font-sans tracking-tight select-none',
+        'inline-flex items-center gap-1 border select-none whitespace-nowrap',
         variantStyles[variant],
         sizeStyles[size],
         className

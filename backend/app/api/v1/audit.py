@@ -10,7 +10,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.core.deps import get_current_user
+from app.core.permissions import require_project_access
 from app.models.audit import AuditLog
 from app.models.user import User
 
@@ -42,7 +42,7 @@ class AuditLogResponse(BaseModel):
 
 @router.get("", response_model=list[AuditLogResponse], summary="List audit logs with filters")
 async def list_audit_logs(
-    project_id: UUID | None = Query(default=None),
+    project_id: UUID = Query(..., description="Project ID is required"),
     environment_id: UUID | None = Query(default=None),
     actor_id: UUID | None = Query(default=None),
     action: str | None = Query(default=None),
@@ -50,13 +50,15 @@ async def list_audit_logs(
     limit: int = Query(default=50, ge=1, le=100),
     cursor: int | None = Query(default=None, description="Cursor pagination (id < cursor)"),
     db: AsyncSession = Depends(get_db),
-    _current_user: User = Depends(get_current_user),
+    _user: User = Depends(require_project_access),
 ) -> list[AuditLog]:
-    """Retrieve audit logs with optional filters and cursor pagination."""
-    stmt = select(AuditLog).order_by(AuditLog.id.desc())
+    """Retrieve audit logs scoped strictly to the specified project."""
+    stmt = (
+        select(AuditLog)
+        .where(AuditLog.project_id == project_id)
+        .order_by(AuditLog.id.desc())
+    )
 
-    if project_id:
-        stmt = stmt.where(AuditLog.project_id == project_id)
     if environment_id:
         stmt = stmt.where(AuditLog.environment_id == environment_id)
     if actor_id:
@@ -71,3 +73,4 @@ async def list_audit_logs(
     stmt = stmt.limit(limit)
     result = await db.scalars(stmt)
     return list(result.all())
+

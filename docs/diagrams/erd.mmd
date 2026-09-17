@@ -1,0 +1,26 @@
+erDiagram
+    ORGANIZATION ||--o{ MEMBERSHIP : "has members"
+    USER ||--o{ MEMBERSHIP : "belongs to"
+    ORGANIZATION ||--o{ PROJECT : "owns"
+    PROJECT ||--o{ ENVIRONMENT : "contains"
+    PROJECT ||--o{ FLAG : "defines"
+    PROJECT ||--o{ SEGMENT : "defines"
+    ENVIRONMENT ||--o{ API_KEY : "issues"
+    ENVIRONMENT ||--o{ CONFIG_NAMESPACE : "configures"
+    ENVIRONMENT ||--o{ CHANGE_REQUEST : "governs"
+    ENVIRONMENT ||--o{ EVALUATION_EVENT : "logs"
+
+    FLAG ||--|{ VARIATION : "has variations"
+    FLAG ||--o{ FLAG_ENVIRONMENT_SETTING : "configured per env"
+    ENVIRONMENT ||--o{ FLAG_ENVIRONMENT_SETTING : "hosts"
+
+    FLAG_ENVIRONMENT_SETTING ||--o{ TARGETING_RULE : "applies"
+    FLAG_ENVIRONMENT_SETTING ||--o{ INDIVIDUAL_OVERRIDE : "overrides"
+    SEGMENT ||--o{ TARGETING_RULE : "referenced by"
+
+    CONFIG_NAMESPACE ||--o{ CONFIG_ITEM : "contains drafts"
+    CONFIG_NAMESPACE ||--o{ CONFIG_RELEASE : "releases"
+
+    USER ||--o{ AUDIT_LOG : "triggers"
+    ORGANIZATION ||--o{ AUDIT_LOG : "audits"
+    USER ||--o{ CHANGE_REQUEST : "requests / reviews"

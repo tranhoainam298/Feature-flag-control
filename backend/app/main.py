@@ -28,6 +28,7 @@ from app.core.scheduler import shutdown_scheduler, start_scheduler
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    settings.validate_production_security()
     start_scheduler()
     yield
     shutdown_scheduler()

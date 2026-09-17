@@ -36,45 +36,45 @@ export const ConfigPage: React.FC = () => {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-4">
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border-default pb-3">
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-[var(--text-primary)]">
-            Trung tâm Cấu hình (Config Center)
+          <h1 className="text-base font-semibold tracking-tight text-primary">
+            Configuration Center
           </h1>
-          <p className="mt-1 text-xs text-[var(--text-secondary)]">
-            Quản lý cấu hình runtime, biến môi trường có versioning, diff, rollback và mã hóa bí mật theo từng Namespace.
+          <p className="mt-0.5 text-xs text-secondary">
+            Centralized runtime configurations, environment variables, secret encryption, and versioned releases per namespace.
           </p>
         </div>
 
         <button
           type="button"
           onClick={() => setIsCreateOpen(true)}
-          className="flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3.5 py-2 text-xs font-semibold text-white shadow-sm hover:bg-indigo-500 transition-all cursor-pointer"
+          className="inline-flex items-center gap-1.5 rounded-xs bg-brand px-3 py-1.5 text-xs font-medium text-white shadow-xs hover:bg-brand-hover transition-colors cursor-pointer"
         >
-          <Plus className="w-4 h-4" />
-          <span>Tạo Namespace mới</span>
+          <Plus className="w-3.5 h-3.5" />
+          <span>Create Namespace</span>
         </button>
       </div>
 
       {/* Environment selector bar */}
-      <div className="flex flex-wrap items-center justify-between gap-4 bg-[var(--surface)] p-3 rounded-xl border border-[var(--border)]">
+      <div className="flex flex-wrap items-center justify-between gap-3 bg-surface p-2.5 rounded-md border border-border-default">
         <div className="flex items-center gap-2">
-          <Layers className="w-4 h-4 text-indigo-400" />
-          <span className="text-xs font-semibold text-[var(--text-primary)]">
-            Môi trường:
+          <Layers className="w-3.5 h-3.5 text-secondary" />
+          <span className="text-xs font-medium text-secondary">
+            Environment:
           </span>
-          <div className="flex items-center gap-1 bg-[var(--surface-sunken)] p-1 rounded-lg border border-[var(--border)]">
+          <div className="flex items-center gap-1 bg-surface-elevated p-0.5 rounded-xs border border-border-default">
             {environments.map((env) => (
               <button
                 key={env.id}
                 type="button"
                 onClick={() => setSelectedEnvId(env.id)}
-                className={`px-3 py-1 text-xs font-medium rounded-md transition-all cursor-pointer ${
+                className={`px-2.5 py-1 text-xs font-medium rounded-xs transition-colors cursor-pointer ${
                   activeEnvId === env.id
-                    ? 'bg-indigo-600 text-white shadow-xs font-semibold'
-                    : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                    ? 'bg-brand text-white font-semibold shadow-xs'
+                    : 'text-secondary hover:text-primary'
                 }`}
               >
                 {env.name}
@@ -84,13 +84,13 @@ export const ConfigPage: React.FC = () => {
         </div>
 
         <div className="relative flex-1 max-w-xs">
-          <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-[var(--text-tertiary)]" />
+          <Search className="absolute left-2.5 top-2 h-3.5 w-3.5 text-muted" />
           <input
             type="text"
-            placeholder="Tìm kiếm namespace..."
+            placeholder="Search namespaces..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface-sunken)] pl-9 pr-3 py-1.5 text-xs text-[var(--text-primary)] placeholder-[var(--text-tertiary)] focus:border-indigo-500 focus:outline-none"
+            className="w-full rounded-xs border border-border-default bg-surface-elevated pl-8 pr-3 py-1.5 text-xs text-primary placeholder:text-muted focus:border-brand focus-visible:outline-none"
           />
         </div>
       </div>
@@ -99,31 +99,31 @@ export const ConfigPage: React.FC = () => {
       {isLoading ? (
         <SkeletonTable rows={4} columns={3} />
       ) : isError ? (
-        <ErrorAlert error={error || 'Lỗi tải danh sách namespace'} onRetry={() => refetch()} />
+        <ErrorAlert error={error || 'Failed to load configuration namespaces'} onRetry={() => refetch()} />
       ) : filteredNamespaces.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-[var(--border)] p-12 text-center">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-indigo-500/10 text-indigo-400 mb-3">
-            <Database className="w-6 h-6" />
+        <div className="rounded-md border border-dashed border-border-default p-10 text-center bg-surface/50">
+          <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-xs bg-brand/10 text-brand border border-brand/20 mb-2.5">
+            <Database className="w-5 h-5" />
           </div>
-          <h3 className="text-sm font-semibold text-[var(--text-primary)]">
-            {searchTerm ? 'Không tìm thấy namespace phù hợp' : `Chưa có namespace nào tại ${activeEnv?.name}`}
+          <h3 className="text-xs font-semibold text-primary">
+            {searchTerm ? 'No matching namespaces found' : `No namespaces in ${activeEnv?.name || 'environment'}`}
           </h3>
-          <p className="mt-1 text-xs text-[var(--text-tertiary)] max-w-sm mx-auto">
-            Tạo namespace đầu tiên để lưu trữ cấu hình key-value và bí mật cho ứng dụng của bạn.
+          <p className="mt-1 text-xs text-muted max-w-sm mx-auto">
+            Create a namespace to organize key-value configurations, application variables, and encrypted secrets.
           </p>
           {!searchTerm && (
             <button
               type="button"
               onClick={() => setIsCreateOpen(true)}
-              className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-indigo-500"
+              className="mt-3.5 inline-flex items-center gap-1.5 rounded-xs bg-brand px-3 py-1.5 text-xs font-medium text-white hover:bg-brand-hover transition-colors"
             >
               <Plus className="w-3.5 h-3.5" />
-              <span>Tạo Namespace đầu tiên</span>
+              <span>Create First Namespace</span>
             </button>
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {filteredNamespaces.map((ns) => (
             <NamespaceCard key={ns.id} namespace={ns} />
           ))}

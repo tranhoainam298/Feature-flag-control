@@ -1,66 +1,98 @@
-/* Taste-skill & FlagOps Design Tokens — Dark Tech Theme */
+/* FlagOps Design Tokens — Enterprise Infrastructure Dark Theme */
+/* Precision Dark-Mode First: Zinc-950 canvas, single-accent Emerald, no gradients */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
 :root {
-  /* Surfaces & Canvas */
+  /* ── Canvas & Surfaces ── */
   --bg-canvas: #09090b;
-  --bg-surface: #121215;
+  --bg-surface: #111113;
   --bg-surface-elevated: #18181b;
-  --bg-surface-hover: #202025;
+  --bg-surface-hover: rgba(255, 255, 255, 0.04);
   --bg-surface-active: #27272a;
 
-  /* Hairline Borders */
-  --border-subtle: #27272a;
-  --border-default: #3f3f46;
-  --border-strong: #52525b;
+  /* ── Hairline Borders (white-alpha for layering) ── */
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-default: rgba(255, 255, 255, 0.12);
+  --border-strong: rgba(255, 255, 255, 0.18);
 
-  /* Typography (High Contrast WCAG AA) */
+  /* ── Typography (WCAG AA on #09090b) ── */
   --text-primary: #f4f4f5;
   --text-secondary: #a1a1aa;
   --text-muted: #71717a;
   --text-inverse: #09090b;
 
-  /* Brand / Primary Accent */
-  --primary: #6366f1;
-  --primary-hover: #4f46e5;
-  --primary-active: #4338ca;
-  --primary-glow: rgba(99, 102, 241, 0.15);
-  --focus-ring: #818cf8;
+  /* ── Primary Accent: Industrial Emerald (NO GRADIENT) ── */
+  --primary: #10b981;
+  --primary-hover: #059669;
+  --primary-active: #047857;
+  --primary-glow: rgba(16, 185, 129, 0.12);
 
-  /* Semantic Flag Status */
+  /* ── Focus System ── */
+  --focus-ring: #10b981;
+
+  /* ── Semantic Flag Status ── */
   --flag-on: #10b981;
-  --flag-on-bg: rgba(16, 185, 129, 0.12);
-  --flag-on-border: rgba(16, 185, 129, 0.28);
-
+  --flag-on-bg: rgba(16, 185, 129, 0.10);
+  --flag-on-border: rgba(16, 185, 129, 0.20);
   --flag-off: #71717a;
-  --flag-off-bg: rgba(113, 113, 122, 0.14);
-  --flag-off-border: rgba(113, 113, 122, 0.28);
+  --flag-off-bg: rgba(113, 113, 122, 0.10);
+  --flag-off-border: rgba(113, 113, 122, 0.20);
 
-  /* Status Colors */
-  --color-success: #10b981;
-  --color-danger: #ef4444;
-  --color-warning: #f59e0b;
-  --color-info: #0ea5e9;
+  /* ── Semantic Status (Health/Lifecycle) ── */
+  --color-success: #10b981;           /* LIVE / HEALTHY */
+  --color-success-bg: rgba(16, 185, 129, 0.10);
+  --color-success-border: rgba(16, 185, 129, 0.20);
 
-  /* Radius */
+  --color-warning: #f59e0b;           /* STALE */
+  --color-warning-bg: rgba(245, 158, 11, 0.10);
+  --color-warning-border: rgba(245, 158, 11, 0.20);
+
+  --color-danger: #f43f5e;            /* DEAD / CRITICAL */
+  --color-danger-bg: rgba(244, 63, 94, 0.10);
+  --color-danger-border: rgba(244, 63, 94, 0.20);
+
+  --color-info: #3b82f6;
+  --color-info-bg: rgba(59, 130, 246, 0.10);
+  --color-info-border: rgba(59, 130, 246, 0.20);
+
+  --color-archived: #94a3b8;          /* ARCHIVED / ORPHAN */
+  --color-archived-bg: rgba(148, 163, 184, 0.10);
+  --color-archived-border: rgba(148, 163, 184, 0.20);
+
+  /* ── Corner Radius (Sharp Technical Geometry) ── */
   --radius-xs: 2px;
-  --radius-sm: 4px;
-  --radius-md: 6px;
-  --radius-lg: 8px;
-  --radius-xl: 12px;
+  --radius-sm: 4px;    /* buttons, inputs, badges */
+  --radius-md: 6px;    /* cards, containers */
+  --radius-lg: 8px;    /* dialogs, popovers */
+  --radius-xl: 10px;
   --radius-full: 9999px;
+
+  /* ── Shadows (tinted to canvas) ── */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.6);
+  --shadow-xl: 0 12px 48px rgba(0, 0, 0, 0.8);
 }
 
-/* Custom Scrollbar for dense data views */
+/* ── Thin Scrollbar (6px, canvas-tinted) ── */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: var(--bg-canvas);
+  background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--border-subtle);
+  background: rgba(255, 255, 255, 0.08);
   border-radius: var(--radius-full);
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--border-default);
+  background: rgba(255, 255, 255, 0.14);
+}
+
+/* Firefox scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.08) transparent;
 }

@@ -251,11 +251,18 @@ def test_bucket_stability_across_processes() -> None:
         "print(json.dumps(res))\n"
     )
 
+    import os
+
+    env = os.environ.copy()
+    backend_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..", ".."))
+    env["PYTHONPATH"] = os.pathsep.join([backend_dir, env.get("PYTHONPATH", "")])
+
     proc = subprocess.run(
         [sys.executable, "-c", script, json.dumps(test_users), json.dumps(dist)],
         capture_output=True,
         text=True,
         check=True,
+        env=env,
     )
 
     actual_results = json.loads(proc.stdout.strip())

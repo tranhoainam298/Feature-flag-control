@@ -10,11 +10,8 @@ Tests cover:
 
 from datetime import datetime, timezone
 
-import pytest
-
 from app.models.enums import LifecycleState
 from app.services.flag_debt import (
-    DebtResult,
     DebtWeights,
     FlagSnapshot,
     calculate_debt_score,
@@ -358,7 +355,9 @@ class TestGetRecommendations:
             stale_days=30,
         )
         recs = get_recommendations(LifecycleState.ROLLED_OUT, snap)
-        assert any("permanent" in r.lower() or "gỡ" in r.lower() or "xóa" in r.lower() for r in recs)
+        assert any(
+            "permanent" in r.lower() or "gỡ" in r.lower() or "xóa" in r.lower() for r in recs
+        )
 
 
 # ===========================================================================

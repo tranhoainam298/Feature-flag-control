@@ -35,19 +35,19 @@ export const FlagsPage: React.FC = () => {
   });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-primary">Feature Flags</h1>
-          <p className="text-xs text-secondary mt-1">
-            Manage runtime flags, target variations, and percentage rollouts in{' '}
-            <span className="text-primary font-medium">{currentProject?.name || 'Project'}</span>.
+          <h1 className="text-sm font-semibold tracking-tight text-primary">Feature Flags</h1>
+          <p className="text-[11px] text-muted mt-0.5">
+            Runtime flag management for{' '}
+            <span className="text-secondary font-medium">{currentProject?.name || 'Project'}</span>
           </p>
         </div>
       </div>
 
-      {/* Filter and Action Bar */}
+      {/* Filter Bar */}
       <FlagFilterBar
         search={search}
         onSearchChange={setSearch}
@@ -58,7 +58,7 @@ export const FlagsPage: React.FC = () => {
         onOpenCreate={() => setIsCreateOpen(true)}
       />
 
-      {/* Table */}
+      {/* Data Table */}
       <FlagTable
         flags={flags as Flag[]}
         isLoading={isLoading}
@@ -70,7 +70,7 @@ export const FlagsPage: React.FC = () => {
         onOpenCreate={() => setIsCreateOpen(true)}
       />
 
-      {/* Create Flag Modal */}
+      {/* Create Modal */}
       {projectId && (
         <CreateFlagModal
           isOpen={isCreateOpen}

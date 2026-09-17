@@ -52,105 +52,96 @@ export const ChangeRequestsPage: React.FC = () => {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'APPLIED':
-        return <Badge variant="success">APPLIED</Badge>;
+        return <Badge variant="success" size="sm">APPLIED</Badge>;
       case 'APPROVED':
-        return <Badge variant="default">APPROVED</Badge>;
+        return <Badge variant="default" size="sm">APPROVED</Badge>;
       case 'PENDING':
-        return <Badge variant="warning">PENDING</Badge>;
+        return <Badge variant="warning" size="sm">PENDING</Badge>;
       case 'REJECTED':
-        return <Badge variant="danger">REJECTED</Badge>;
+        return <Badge variant="danger" size="sm">REJECTED</Badge>;
       case 'CANCELLED':
-        return <Badge variant="outline">CANCELLED</Badge>;
+        return <Badge variant="outline" size="sm">CANCELLED</Badge>;
       default:
-        return <Badge variant="outline">{status}</Badge>;
+        return <Badge variant="outline" size="sm">{status}</Badge>;
     }
   };
 
   const statusTabs: Array<{ id: ChangeRequestStatus | 'ALL'; label: string }> = [
-    { id: 'ALL', label: 'Tất cả' },
-    { id: 'PENDING', label: 'Chờ duyệt (Pending)' },
-    { id: 'APPROVED', label: 'Đã duyệt (Approved)' },
-    { id: 'APPLIED', label: 'Đã áp dụng (Applied)' },
-    { id: 'REJECTED', label: 'Từ chối (Rejected)' },
-    { id: 'CANCELLED', label: 'Đã hủy (Cancelled)' },
+    { id: 'ALL', label: 'All' },
+    { id: 'PENDING', label: 'Pending' },
+    { id: 'APPROVED', label: 'Approved' },
+    { id: 'APPLIED', label: 'Applied' },
+    { id: 'REJECTED', label: 'Rejected' },
+    { id: 'CANCELLED', label: 'Cancelled' },
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex items-center justify-between">
         <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold tracking-tight text-primary">
-              Quản lý Change Request
-            </h1>
-            <Badge variant="outline" className="font-mono text-xs">
-              Môi trường: {currentEnvironment?.name || 'Chưa chọn'}
-              {currentEnvironment?.is_production && ' (Production)'}
-            </Badge>
-          </div>
-          <p className="mt-1 text-xs text-secondary">
-            Kiểm soát thay đổi cho môi trường Production theo nguyên tắc bốn mắt (Four-Eyes Principle) và mô phỏng tác động (Impact Simulation).
+          <h1 className="text-sm font-semibold tracking-tight text-primary">
+            Change Requests
+          </h1>
+          <p className="text-[11px] text-muted mt-0.5">
+            Four-eyes approval and impact simulation for {currentEnvironment?.name || 'environment'} changes.
           </p>
         </div>
 
         <div className="flex items-center gap-2">
-          {/* Environment Selector */}
           <select
             value={currentEnvironment?.id || ''}
             onChange={(e) => {
               const selected = environments.find((env) => env.id === e.target.value);
               if (selected) setCurrentEnvironment(selected);
             }}
-            className="text-xs bg-surface border border-border-default rounded-md px-3 py-1.5 text-primary focus:outline-none focus:border-brand"
+            className="text-xs bg-surface-elevated border border-border-default rounded-sm px-2 py-1.5 text-primary focus:outline-none focus:border-brand cursor-pointer"
           >
             {environments.map((env) => (
               <option key={env.id} value={env.id}>
-                {env.name} {env.is_production ? '🛡️ (Prod)' : ''}
+                {env.name} {env.is_production ? '(Prod)' : ''}
               </option>
             ))}
           </select>
 
           <Button
-            variant="outline"
+            variant="ghost"
             size="sm"
             onClick={() => refetch()}
             disabled={isFetching}
-            className="gap-1.5"
+            aria-label="Refresh"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isFetching ? 'animate-spin' : ''}`} />
-            <span>Làm mới</span>
           </Button>
         </div>
       </div>
 
-      {/* Production Notice Banner */}
+      {/* Production Guard Notice */}
       {currentEnvironment?.is_production && (
-        <div className="p-3.5 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-start gap-3 text-xs text-indigo-300">
-          <ShieldCheck className="w-4 h-4 text-indigo-400 shrink-0 mt-0.5" />
+        <div className="px-3 py-2.5 rounded-sm bg-status-warning-bg border border-status-warning-border flex items-start gap-2.5 text-xs text-status-warning">
+          <ShieldCheck className="w-3.5 h-3.5 shrink-0 mt-0.5" />
           <div>
-            <span className="font-semibold block text-indigo-200">
-              Môi trường Production đang được bảo vệ
+            <span className="font-semibold block text-status-warning">
+              Production environment protected
             </span>
-            <span>
-              Mọi thay đổi cờ tính năng hoặc quy tắc targeting sẽ không áp dụng ngay mà tự động tạo Change Request ở trạng thái PENDING. Người tạo không được phép tự duyệt (Nguyên tắc bốn mắt).
+            <span className="text-[11px] text-status-warning/80">
+              All flag and targeting changes create a pending Change Request. Creators cannot self-approve (four-eyes principle).
             </span>
           </div>
         </div>
       )}
 
-      {/* Filter Tabs & Search */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-        {/* Status Tabs */}
-        <div className="flex items-center gap-1 overflow-x-auto pb-1 sm:pb-0">
+      {/* Status Tabs & Search */}
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-0.5">
           {statusTabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setStatusFilter(tab.id)}
-              className={`px-3 py-1.5 rounded-md text-xs font-medium whitespace-nowrap transition-colors ${
+              className={`px-2.5 py-1 rounded-sm text-[11px] font-medium whitespace-nowrap transition-colors ${
                 statusFilter === tab.id
-                  ? 'bg-brand/10 text-brand border border-brand/20'
-                  : 'text-secondary hover:text-primary hover:bg-surface-hover'
+                  ? 'bg-brand/10 text-brand'
+                  : 'text-muted hover:text-secondary hover:bg-surface-hover'
               }`}
             >
               {tab.label}
@@ -158,49 +149,46 @@ export const ChangeRequestsPage: React.FC = () => {
           ))}
         </div>
 
-        {/* Search */}
-        <div className="relative w-full sm:w-64">
-          <Search className="w-3.5 h-3.5 text-muted absolute left-3 top-2.5" />
+        <div className="relative w-52">
+          <Search className="w-3.5 h-3.5 text-muted absolute left-2.5 top-1/2 -translate-y-1/2" />
           <input
             type="text"
-            placeholder="Tìm theo tiêu đề hoặc ID..."
+            placeholder="Search by title or ID…"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-3 py-1.5 bg-surface border border-border-default rounded-md text-xs text-primary placeholder:text-muted focus:outline-none focus:border-brand"
+            className="w-full pl-8 pr-3 py-1.5 bg-surface-elevated border border-border-default rounded-sm text-xs text-primary placeholder:text-muted focus:outline-none focus:border-brand"
           />
         </div>
       </div>
 
-      {/* Change Requests Table */}
-      <div className="rounded-lg border border-border-default bg-surface overflow-hidden shadow-xs">
+      {/* Table */}
+      <div className="rounded-md border border-border-subtle bg-surface overflow-hidden">
         {isLoading ? (
-          <div className="p-6">
-            <SkeletonTable rows={5} columns={5} />
-          </div>
+          <SkeletonTable rows={5} columns={5} />
         ) : filteredCRs.length === 0 ? (
-          <div className="p-12 text-center">
-            <div className="w-10 h-10 rounded-full bg-surface-hover flex items-center justify-center text-muted mx-auto mb-3">
-              <GitPullRequest className="w-5 h-5" />
+          <div className="px-8 py-12 text-center">
+            <div className="text-muted mb-2">
+              <GitPullRequest className="w-5 h-5 mx-auto" />
             </div>
-            <h3 className="text-sm font-semibold text-primary mb-1">
-              Không có Change Request nào
+            <h3 className="text-xs font-semibold text-primary mb-1">
+              No change requests
             </h3>
-            <p className="text-xs text-muted max-w-sm mx-auto">
+            <p className="text-[11px] text-muted max-w-xs mx-auto">
               {statusFilter !== 'ALL'
-                ? `Không tìm thấy yêu cầu nào ở trạng thái '${statusFilter}'.`
-                : 'Chưa có yêu cầu thay đổi nào được tạo trong môi trường này.'}
+                ? `No requests found with status '${statusFilter}'.`
+                : 'No change requests have been created for this environment yet.'}
             </p>
           </div>
         ) : (
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-border-subtle bg-canvas text-[11px] font-semibold text-muted uppercase tracking-wider">
-                <th className="py-3 px-4">Tiêu đề Change Request</th>
-                <th className="py-3 px-4">Trạng thái</th>
-                <th className="py-3 px-4">Người yêu cầu</th>
-                <th className="py-3 px-4">Hẹn giờ áp dụng</th>
-                <th className="py-3 px-4">Ngày tạo</th>
-                <th className="py-3 px-4 text-right">Chi tiết</th>
+              <tr className="border-b border-border-subtle bg-surface-elevated text-[10px] font-mono text-muted uppercase tracking-wider">
+                <th className="py-2 px-4 font-medium">Title</th>
+                <th className="py-2 px-3 font-medium">Status</th>
+                <th className="py-2 px-3 font-medium">Requester</th>
+                <th className="py-2 px-3 font-medium">Schedule</th>
+                <th className="py-2 px-3 font-medium">Created</th>
+                <th className="py-2 px-3 font-medium text-right pr-4">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border-subtle text-xs">
@@ -208,48 +196,46 @@ export const ChangeRequestsPage: React.FC = () => {
                 <tr
                   key={cr.id}
                   onClick={() => setSelectedCR(cr)}
-                  className="hover:bg-surface-hover/80 transition-colors cursor-pointer group"
+                  className="row-hover cursor-pointer group"
                 >
-                  <td className="py-3 px-4">
-                    <div className="font-semibold text-primary group-hover:text-brand transition-colors">
+                  <td className="py-2.5 px-4">
+                    <div className="font-medium text-primary group-hover:text-brand transition-colors">
                       {cr.title}
                     </div>
-                    <div className="text-[11px] text-muted font-mono truncate max-w-xs mt-0.5">
-                      ID: {cr.id.slice(0, 13)}...
+                    <div className="text-[10px] text-muted font-mono mt-0.5">
+                      {cr.id.slice(0, 12)}…
                     </div>
                   </td>
-                  <td className="py-3 px-4">
+                  <td className="py-2.5 px-3">
                     {getStatusBadge(cr.status)}
                   </td>
-                  <td className="py-3 px-4 font-mono text-secondary">
-                    {cr.requested_by.slice(0, 8)}...
+                  <td className="py-2.5 px-3 font-mono text-muted text-[11px]">
+                    {cr.requested_by.slice(0, 8)}…
                   </td>
-                  <td className="py-3 px-4 font-mono text-secondary">
+                  <td className="py-2.5 px-3 font-mono text-muted text-[11px]">
                     {cr.scheduled_at ? (
-                      <span className="flex items-center gap-1.5 text-amber-400">
+                      <span className="flex items-center gap-1 text-status-warning">
                         <Clock className="w-3 h-3" />
-                        <span>{new Date(cr.scheduled_at).toLocaleString()}</span>
+                        {new Date(cr.scheduled_at).toLocaleString()}
                       </span>
                     ) : (
-                      <span className="text-muted">Tức thì</span>
+                      <span>Immediate</span>
                     )}
                   </td>
-                  <td className="py-3 px-4 font-mono text-muted">
+                  <td className="py-2.5 px-3 font-mono text-muted text-[11px]">
                     {new Date(cr.created_at).toLocaleDateString()}
                   </td>
-                  <td className="py-3 px-4 text-right">
-                    <Button
-                      variant="ghost"
-                      size="sm"
+                  <td className="py-2.5 px-3 text-right pr-4">
+                    <button
                       onClick={(e) => {
                         e.stopPropagation();
                         setSelectedCR(cr);
                       }}
-                      className="gap-1 text-xs"
+                      className="text-[11px] text-muted hover:text-primary transition-colors inline-flex items-center gap-1"
                     >
-                      <span>Xem & Mô phỏng</span>
-                      <ChevronRight className="w-3.5 h-3.5 text-muted group-hover:translate-x-0.5 transition-transform" />
-                    </Button>
+                      <span>View</span>
+                      <ChevronRight className="w-3 h-3" />
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -258,7 +244,7 @@ export const ChangeRequestsPage: React.FC = () => {
         )}
       </div>
 
-      {/* Change Request Detail Modal */}
+      {/* Detail Modal */}
       <ChangeRequestDetailModal
         changeRequest={selectedCR}
         isOpen={!!selectedCR}

@@ -31,59 +31,50 @@ export const FlagHeader: React.FC<Props> = ({ flag }) => {
   });
 
   return (
-    <div className="border border-border-default rounded-lg p-6 bg-surface mb-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2 flex-wrap mb-1.5">
-            <h1 className="text-xl font-bold font-mono text-primary tracking-tight">{flag.key}</h1>
+    <div className="border border-border-subtle rounded-md px-4 py-3 bg-surface">
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2 flex-wrap mb-1">
+            <h1 className="text-base font-bold font-mono text-primary tracking-tight">{flag.key}</h1>
             {health && (
               <FlagHealthBadge state={health.state} score={health.score} showScore />
             )}
-            <Badge variant="info" size="sm">
-              {flag.type}
-            </Badge>
+            <Badge variant="info" size="sm">{flag.type}</Badge>
             {flag.is_temporary && (
-              <Badge variant="outline" size="sm">
-                TEMPORARY
-              </Badge>
+              <Badge variant="outline" size="sm">TEMP</Badge>
             )}
             {isArchived && (
-              <Badge variant="danger" size="sm">
-                ARCHIVED
-              </Badge>
+              <Badge variant="archived" size="sm">ARCHIVED</Badge>
             )}
           </div>
-          <p className="text-sm font-medium text-secondary">{flag.name}</p>
-          {flag.description && <p className="text-xs text-muted mt-1">{flag.description}</p>}
+          <p className="text-xs text-secondary">{flag.name}</p>
+          {flag.description && <p className="text-[11px] text-muted mt-0.5">{flag.description}</p>}
 
-          {/* Tags */}
           {flag.tags.length > 0 && (
-            <div className="flex items-center gap-1.5 mt-3">
+            <div className="flex items-center gap-1 mt-2">
               {flag.tags.map((t) => (
                 <span
                   key={t}
-                  className="px-2 py-0.5 rounded-xs bg-surface-elevated text-secondary text-[11px] font-mono border border-border-subtle"
+                  className="px-1.5 py-px rounded-xs bg-surface-elevated text-muted text-[10px] font-mono border border-border-subtle"
                 >
-                  #{t}
+                  {t}
                 </span>
               ))}
             </div>
           )}
         </div>
 
-        <div className="flex items-center gap-2">
-          <Button
-            variant={isArchived ? 'primary' : 'outline'}
-            size="sm"
-            onClick={() => archiveMutation.mutate()}
-            isLoading={archiveMutation.isPending}
-            leftIcon={
-              isArchived ? <RotateCcw className="w-3.5 h-3.5" /> : <Archive className="w-3.5 h-3.5" />
-            }
-          >
-            {isArchived ? 'Restore Flag' : 'Archive Flag'}
-          </Button>
-        </div>
+        <Button
+          variant={isArchived ? 'primary' : 'outline'}
+          size="sm"
+          onClick={() => archiveMutation.mutate()}
+          isLoading={archiveMutation.isPending}
+          leftIcon={
+            isArchived ? <RotateCcw className="w-3 h-3" /> : <Archive className="w-3 h-3" />
+          }
+        >
+          {isArchived ? 'Restore' : 'Archive'}
+        </Button>
       </div>
     </div>
   );
