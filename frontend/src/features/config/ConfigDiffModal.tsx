@@ -52,31 +52,31 @@ export const ConfigDiffModal: React.FC<ConfigDiffModalProps> = ({
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              {/* Column 1: ADDED (Green) */}
-              <div className="rounded-xs border border-status-success/30 bg-status-success/5 p-2.5 flex flex-col">
-                <div className="flex items-center justify-between border-b border-status-success/20 pb-2 mb-2 text-status-success font-medium text-xs">
-                  <span className="flex items-center gap-1.5">
+              {/* Column 1: ADDED (Emerald Green) */}
+              <div className="rounded-xs border border-emerald-500/30 bg-emerald-500/5 p-2.5 flex flex-col">
+                <div className="flex items-center justify-between border-b border-emerald-500/20 pb-2 mb-2 text-emerald-600 dark:text-emerald-400 font-medium text-xs">
+                  <span className="flex items-center gap-1.5 font-semibold">
                     <PlusCircle className="w-3.5 h-3.5" />
                     Added
                   </span>
-                  <span className="rounded-xs bg-status-success/20 px-1.5 py-0.2 text-[10px] font-mono">
+                  <span className="rounded-xs bg-emerald-500/20 px-1.5 py-0.2 text-[10px] font-mono font-bold text-emerald-700 dark:text-emerald-300">
                     {addedEntries.length}
                   </span>
                 </div>
 
-                <div className="space-y-1.5 overflow-y-auto max-h-96 pr-1">
+                <div className="space-y-2 overflow-y-auto max-h-96 pr-1">
                   {addedEntries.length === 0 ? (
                     <span className="text-xs text-muted italic">None</span>
                   ) : (
                     addedEntries.map(([key, val]) => (
                       <div
                         key={key}
-                        className="rounded-xs bg-surface p-2 border border-status-success/20 text-xs"
+                        className="rounded-xs bg-surface p-2 border border-emerald-500/25 text-xs shadow-xs"
                       >
-                        <div className="font-mono font-semibold text-status-success break-all">
+                        <div className="font-mono font-semibold text-emerald-600 dark:text-emerald-400 break-all">
                           +{key}
                         </div>
-                        <div className="mt-1 font-mono text-[11px] text-secondary break-all bg-surface-elevated p-1 rounded-xs">
+                        <div className="mt-1 font-mono text-[11px] text-emerald-800 dark:text-emerald-200 break-all bg-emerald-500/10 p-1.5 rounded-xs border border-emerald-500/20">
                           {typeof val === 'object' ? JSON.stringify(val) : String(val)}
                         </div>
                       </div>
@@ -85,35 +85,35 @@ export const ConfigDiffModal: React.FC<ConfigDiffModalProps> = ({
                 </div>
               </div>
 
-              {/* Column 2: CHANGED (Yellow/Amber) */}
-              <div className="rounded-xs border border-status-warning/30 bg-status-warning/5 p-2.5 flex flex-col">
-                <div className="flex items-center justify-between border-b border-status-warning/20 pb-2 mb-2 text-status-warning font-medium text-xs">
-                  <span className="flex items-center gap-1.5">
+              {/* Column 2: CHANGED / MODIFIED (Amber) */}
+              <div className="rounded-xs border border-amber-500/30 bg-amber-500/5 p-2.5 flex flex-col">
+                <div className="flex items-center justify-between border-b border-amber-500/20 pb-2 mb-2 text-amber-600 dark:text-amber-400 font-medium text-xs">
+                  <span className="flex items-center gap-1.5 font-semibold">
                     <AlertCircle className="w-3.5 h-3.5" />
-                    Changed
+                    Modified
                   </span>
-                  <span className="rounded-xs bg-status-warning/20 px-1.5 py-0.2 text-[10px] font-mono">
+                  <span className="rounded-xs bg-amber-500/20 px-1.5 py-0.2 text-[10px] font-mono font-bold text-amber-700 dark:text-amber-300">
                     {changedEntries.length}
                   </span>
                 </div>
 
-                <div className="space-y-1.5 overflow-y-auto max-h-96 pr-1">
+                <div className="space-y-2 overflow-y-auto max-h-96 pr-1">
                   {changedEntries.length === 0 ? (
                     <span className="text-xs text-muted italic">None</span>
                   ) : (
                     changedEntries.map(([key, item]: [string, any]) => (
                       <div
                         key={key}
-                        className="rounded-xs bg-surface p-2 border border-status-warning/20 text-xs"
+                        className="rounded-xs bg-surface p-2 border border-amber-500/25 text-xs shadow-xs"
                       >
-                        <div className="font-mono font-semibold text-status-warning break-all">
+                        <div className="font-mono font-semibold text-amber-600 dark:text-amber-400 break-all">
                           ~ {key}
                         </div>
-                        <div className="mt-1 space-y-1 font-mono text-[11px]">
-                          <div className="rounded-xs bg-status-danger/10 p-1 text-status-danger border border-status-danger/20 break-all">
+                        <div className="mt-1.5 space-y-1 font-mono text-[11px]">
+                          <div className="rounded-xs bg-rose-500/10 p-1.5 text-rose-700 dark:text-rose-300 border border-rose-500/20 break-all">
                             - {typeof item?.old === 'object' ? JSON.stringify(item.old) : String(item?.old)}
                           </div>
-                          <div className="rounded-xs bg-status-success/10 p-1 text-status-success border border-status-success/20 break-all">
+                          <div className="rounded-xs bg-emerald-500/10 p-1.5 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20 break-all">
                             + {typeof item?.new === 'object' ? JSON.stringify(item.new) : String(item?.new)}
                           </div>
                         </div>
@@ -123,31 +123,31 @@ export const ConfigDiffModal: React.FC<ConfigDiffModalProps> = ({
                 </div>
               </div>
 
-              {/* Column 3: REMOVED (Red) */}
-              <div className="rounded-xs border border-status-danger/30 bg-status-danger/5 p-2.5 flex flex-col">
-                <div className="flex items-center justify-between border-b border-status-danger/20 pb-2 mb-2 text-status-danger font-medium text-xs">
-                  <span className="flex items-center gap-1.5">
+              {/* Column 3: REMOVED (Rose Red) */}
+              <div className="rounded-xs border border-rose-500/30 bg-rose-500/5 p-2.5 flex flex-col">
+                <div className="flex items-center justify-between border-b border-rose-500/20 pb-2 mb-2 text-rose-600 dark:text-rose-400 font-medium text-xs">
+                  <span className="flex items-center gap-1.5 font-semibold">
                     <MinusCircle className="w-3.5 h-3.5" />
                     Removed
                   </span>
-                  <span className="rounded-xs bg-status-danger/20 px-1.5 py-0.2 text-[10px] font-mono">
+                  <span className="rounded-xs bg-rose-500/20 px-1.5 py-0.2 text-[10px] font-mono font-bold text-rose-700 dark:text-rose-300">
                     {removedEntries.length}
                   </span>
                 </div>
 
-                <div className="space-y-1.5 overflow-y-auto max-h-96 pr-1">
+                <div className="space-y-2 overflow-y-auto max-h-96 pr-1">
                   {removedEntries.length === 0 ? (
                     <span className="text-xs text-muted italic">None</span>
                   ) : (
                     removedEntries.map(([key, val]) => (
                       <div
                         key={key}
-                        className="rounded-xs bg-surface p-2 border border-status-danger/20 text-xs"
+                        className="rounded-xs bg-surface p-2 border border-rose-500/25 text-xs shadow-xs"
                       >
-                        <div className="font-mono font-semibold text-status-danger break-all">
+                        <div className="font-mono font-semibold text-rose-600 dark:text-rose-400 break-all">
                           -{key}
                         </div>
-                        <div className="mt-1 font-mono text-[11px] text-muted line-through break-all bg-surface-elevated p-1 rounded-xs opacity-75">
+                        <div className="mt-1 font-mono text-[11px] text-rose-700 dark:text-rose-300 line-through break-all bg-rose-500/10 p-1.5 rounded-xs border border-rose-500/20 opacity-80">
                           {typeof val === 'object' ? JSON.stringify(val) : String(val)}
                         </div>
                       </div>

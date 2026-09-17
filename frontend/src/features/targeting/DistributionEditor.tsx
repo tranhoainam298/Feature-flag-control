@@ -9,6 +9,15 @@ interface DistributionEditorProps {
   disabled?: boolean;
 }
 
+export const VARIATION_COLORS = [
+  { bg: 'bg-sky-500', text: 'text-sky-500', border: 'border-sky-500', hex: '#0284c7' },
+  { bg: 'bg-violet-500', text: 'text-violet-500', border: 'border-violet-500', hex: '#8b5cf6' },
+  { bg: 'bg-amber-500', text: 'text-amber-500', border: 'border-amber-500', hex: '#f59e0b' },
+  { bg: 'bg-emerald-500', text: 'text-emerald-500', border: 'border-emerald-500', hex: '#10b981' },
+  { bg: 'bg-rose-500', text: 'text-rose-500', border: 'border-rose-500', hex: '#f43f5e' },
+  { bg: 'bg-indigo-500', text: 'text-indigo-500', border: 'border-indigo-500', hex: '#6366f1' },
+];
+
 export const DistributionEditor: React.FC<DistributionEditorProps> = ({
   variations,
   distribution,
@@ -82,6 +91,41 @@ export const DistributionEditor: React.FC<DistributionEditorProps> = ({
         </div>
       </div>
 
+      {/* Segmented Progress Bar */}
+      <div className="w-full space-y-1.5">
+        <div className="h-3.5 w-full rounded-xs overflow-hidden flex bg-surface-elevated border border-border-default shadow-inner">
+          {variations.map((v, i) => {
+            const w = getWeight(v.id);
+            if (w <= 0) return null;
+            const color = VARIATION_COLORS[i % VARIATION_COLORS.length];
+            return (
+              <div
+                key={v.id}
+                style={{ width: `${w}%` }}
+                title={`${v.key}: ${w}%`}
+                className={`${color.bg} h-full transition-all duration-200 flex items-center justify-center text-[9px] font-mono text-white font-medium truncate px-1`}
+              >
+                {w >= 14 ? `${v.key} ${w}%` : w >= 7 ? `${w}%` : ''}
+              </div>
+            );
+          })}
+        </div>
+        {/* Legend */}
+        <div className="flex flex-wrap items-center gap-3 px-0.5">
+          {variations.map((v, i) => {
+            const w = getWeight(v.id);
+            const color = VARIATION_COLORS[i % VARIATION_COLORS.length];
+            return (
+              <div key={v.id} className="flex items-center gap-1.5 text-[10px] font-mono">
+                <span className={`w-2 h-2 rounded-full ${color.bg}`} />
+                <span className="text-secondary">{v.key}</span>
+                <span className="font-semibold text-primary">{w}%</span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
       {isInvalidTotal && (
         <div
           role="alert"
@@ -93,8 +137,9 @@ export const DistributionEditor: React.FC<DistributionEditorProps> = ({
       )}
 
       <div className="space-y-1.5">
-        {variations.map((v) => {
+        {variations.map((v, i) => {
           const w = getWeight(v.id);
+          const color = VARIATION_COLORS[i % VARIATION_COLORS.length];
           return (
             <div
               key={v.id}
@@ -102,6 +147,7 @@ export const DistributionEditor: React.FC<DistributionEditorProps> = ({
             >
               <div className="min-w-28 flex-1">
                 <div className="flex items-center gap-1.5">
+                  <span className={`w-2 h-2 rounded-full shrink-0 ${color.bg}`} />
                   <span className="font-semibold text-xs text-primary font-mono">
                     {v.key}
                   </span>

@@ -30,6 +30,16 @@ export const FlagHeader: React.FC<Props> = ({ flag }) => {
     },
   });
 
+  const getTypeBadgeVariant = (type: string): 'boolean' | 'string' | 'number' | 'json' | 'outline' => {
+    switch (type?.toUpperCase()) {
+      case 'BOOLEAN': return 'boolean';
+      case 'STRING': return 'string';
+      case 'NUMBER': return 'number';
+      case 'JSON': return 'json';
+      default: return 'outline';
+    }
+  };
+
   return (
     <div className="border border-border-subtle rounded-md px-4 py-3 bg-surface">
       <div className="flex items-start justify-between gap-4">
@@ -39,7 +49,7 @@ export const FlagHeader: React.FC<Props> = ({ flag }) => {
             {health && (
               <FlagHealthBadge state={health.state} score={health.score} showScore />
             )}
-            <Badge variant="info" size="sm">{flag.type}</Badge>
+            <Badge variant={getTypeBadgeVariant(flag.type)} size="sm">{flag.type}</Badge>
             {flag.is_temporary && (
               <Badge variant="outline" size="sm">TEMP</Badge>
             )}

@@ -56,11 +56,12 @@ export const FlagRow: React.FC<Props> = ({ flag, envId, envName }) => {
     setTimeout(() => setCopied(false), 1500);
   };
 
-  const getTypeBadgeVariant = (type: string) => {
-    switch (type) {
-      case 'BOOLEAN': return 'info';
-      case 'JSON': return 'warning';
-      case 'NUMBER': return 'default';
+  const getTypeBadgeVariant = (type: string): 'boolean' | 'string' | 'number' | 'json' | 'outline' => {
+    switch (type?.toUpperCase()) {
+      case 'BOOLEAN': return 'boolean';
+      case 'STRING': return 'string';
+      case 'NUMBER': return 'number';
+      case 'JSON': return 'json';
       default: return 'outline';
     }
   };
@@ -150,9 +151,26 @@ export const FlagRow: React.FC<Props> = ({ flag, envId, envName }) => {
       <td className="px-3 py-2.5 pr-4 text-right">
         <Link
           to={`/flags/${flag.id}`}
-          className="text-[11px] text-muted hover:text-primary font-mono transition-colors"
+          className="inline-flex flex-col items-end gap-1 group/var"
         >
-          {flag.variations.length} var{flag.variations.length !== 1 ? 's' : ''}
+          <span className="text-[11px] text-muted group-hover/var:text-primary font-mono transition-colors">
+            {flag.variations.length} var{flag.variations.length !== 1 ? 's' : ''}
+          </span>
+          {flag.variations.length > 1 && (
+            <div className="w-16 h-1.5 rounded-full overflow-hidden flex bg-surface-elevated border border-border-subtle">
+              {flag.variations.map((v, i) => {
+                const colors = ['bg-sky-500', 'bg-violet-500', 'bg-amber-500', 'bg-emerald-500', 'bg-rose-500'];
+                return (
+                  <div
+                    key={v.id}
+                    title={v.key}
+                    style={{ flex: 1 }}
+                    className={`${colors[i % colors.length]} h-full opacity-85`}
+                  />
+                );
+              })}
+            </div>
+          )}
         </Link>
       </td>
     </tr>

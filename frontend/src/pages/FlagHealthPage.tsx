@@ -25,6 +25,7 @@ import {
   Layers,
 } from 'lucide-react';
 import { cn } from '../lib/utils';
+import { TechnicalDebtGauge } from '../components/TechnicalDebtGauge';
 
 export const FlagHealthPage: React.FC = () => {
   const { currentProject } = useApp();
@@ -81,12 +82,6 @@ export const FlagHealthPage: React.FC = () => {
   }, [data?.items, search]);
 
   const summary = data?.summary;
-
-  const getScoreColor = (score: number) => {
-    if (score < 30) return 'text-emerald-400 bg-emerald-500';
-    if (score < 60) return 'text-amber-400 bg-amber-500';
-    return 'text-rose-400 bg-rose-500';
-  };
 
   const getScoreBorderColor = (score: number) => {
     if (score < 30) return 'border-emerald-500/20 bg-emerald-500/10 text-emerald-400';
@@ -161,11 +156,11 @@ export const FlagHealthPage: React.FC = () => {
             <span className="text-[11px] text-muted font-medium flex items-center gap-1.5">
               <HeartPulse className="w-3.5 h-3.5 text-brand" /> Avg Debt Score
             </span>
-            <div className="flex items-baseline gap-1 mt-1.5">
-              <span className={cn('text-lg font-bold font-mono', getScoreColor(summary.avg_score).split(' ')[0])}>
-                {summary.avg_score}
+            <div className="flex items-center justify-between mt-1.5">
+              <TechnicalDebtGauge score={summary.avg_score} size="sm" />
+              <span className="text-[10px] text-muted font-mono">
+                {summary.avg_score < 30 ? 'Healthy' : summary.avg_score <= 60 ? 'Warning' : 'Critical'}
               </span>
-              <span className="text-[10px] text-muted font-mono">/100</span>
             </div>
           </div>
         </div>
@@ -274,7 +269,6 @@ export const FlagHealthPage: React.FC = () => {
               </thead>
               <tbody className="divide-y divide-border-subtle">
                 {filteredItems.map((item) => {
-                  const scoreColor = getScoreColor(item.score);
                   const isArchived = item.state === 'ARCHIVED';
 
                   return (
@@ -313,37 +307,29 @@ export const FlagHealthPage: React.FC = () => {
 
                       {/* Debt Score & Breakdown */}
                       <td className="py-2.5 px-3">
-                        <div className="flex flex-col gap-1">
-                          <div className="flex items-center justify-between">
-                            <span
-                              className={cn(
-                                'font-mono font-bold text-xs px-1.5 py-0.5 rounded-xs border',
-                                getScoreBorderColor(item.score)
-                              )}
-                            >
-                              {item.score} / 100
-                            </span>
-                            <span className="text-[10px] text-muted">
-                              {item.score < 30 ? 'Healthy' : item.score < 60 ? 'Warning' : 'Critical'}
-                            </span>
-                          </div>
+                        <div className="flex items-center gap-2.5">
+                          <TechnicalDebtGauge score={item.score} size="sm" />
+                          <div className="flex-1 flex flex-col gap-1 min-w-0">
+                            <div className="flex items-center justify-between">
+                              <span
+                                className={cn(
+                                  'font-mono font-bold text-[11px] px-1.5 py-0.2 rounded-xs border',
+                                  getScoreBorderColor(item.score)
+                                )}
+                              >
+                                {item.score} / 100
+                              </span>
+                              <span className="text-[10px] text-muted">
+                                {item.score < 30 ? 'Healthy' : item.score <= 60 ? 'Warning' : 'Critical'}
+                              </span>
+                            </div>
 
-                          {/* Progress Bar */}
-                          <div className="w-full bg-surface-elevated rounded-full h-1.5 overflow-hidden">
-                            <div
-                              className={cn('h-full transition-all duration-300', scoreColor.split(' ')[1])}
-                              style={{ width: `${Math.max(item.score, 4)}%` }}
-                            />
-                          </div>
-
-                          {/* Micro Breakdown Indicator */}
-                          <div className="flex items-center justify-between text-[10px] font-mono text-muted pt-0.5">
-                            <span title="Flag age score">Age: {item.age_score}</span>
-                            <span title="Full rollout score">Rollout: {item.rollout_score}</span>
-                            <span title="Staleness score">Stale: {item.staleness_score}</span>
-                            {item.is_temporary && (
-                              <span title="Temporary flag penalty">Temp: {item.temporary_score}</span>
-                            )}
+                            {/* Micro Breakdown Indicator */}
+                            <div className="flex items-center justify-between text-[9px] font-mono text-muted pt-0.5">
+                              <span title="Flag age score">Age: {item.age_score}</span>
+                              <span title="Full rollout score">Rollout: {item.rollout_score}</span>
+                              <span title="Staleness score">Stale: {item.staleness_score}</span>
+                            </div>
                           </div>
                         </div>
                       </td>

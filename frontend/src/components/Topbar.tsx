@@ -2,6 +2,7 @@ import React from 'react';
 import { useApp } from '../context/AppContext';
 import { FolderGit2, Layers, LogOut, ChevronDown } from 'lucide-react';
 import { Badge } from './ui/Badge';
+import { ThemeToggle } from './ThemeToggle';
 
 export const Topbar: React.FC = () => {
   const {
@@ -74,13 +75,14 @@ export const Topbar: React.FC = () => {
         </div>
       </div>
 
-      {/* User & Org */}
+      {/* User & Org & Theme */}
       <div className="flex items-center gap-2.5">
         {currentOrg && (
           <span className="hidden sm:inline text-[10px] font-mono text-muted uppercase tracking-wider">
             {currentOrg.name}
           </span>
         )}
+        <ThemeToggle />
         <div className="flex items-center gap-2 pl-2.5 border-l border-border-subtle">
           <div className="w-6 h-6 rounded-sm bg-surface-elevated border border-border-default flex items-center justify-center text-[10px] font-semibold text-secondary">
             {user?.email?.[0].toUpperCase() || 'U'}

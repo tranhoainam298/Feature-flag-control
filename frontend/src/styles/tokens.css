@@ -1,35 +1,125 @@
-/* FlagOps Design Tokens — Enterprise Infrastructure Dark Theme */
-/* Precision Dark-Mode First: Zinc-950 canvas, single-accent Emerald, no gradients */
+/* FlagOps Design Tokens — Dual-Theme Precision Enterprise System */
+/* Dark Mode: Zinc-950 canvas, #121215 card, border-white/[0.08] */
+/* Light Mode: Slate-50 canvas, #ffffff card, border-slate-200, crisp #0f172a text */
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 :root {
-  /* ── Canvas & Surfaces ── */
+  /* ── Canvas & Surfaces (Light Mode Default) ── */
+  --bg-canvas: #f8fafc;
+  --bg-surface: #ffffff;
+  --bg-surface-elevated: #f1f5f9;
+  --bg-surface-hover: rgba(15, 23, 42, 0.04);
+  --bg-surface-active: #e2e8f0;
+
+  /* ── Hairline Borders (Light Mode) ── */
+  --border-subtle: #e2e8f0;
+  --border-default: #cbd5e1;
+  --border-strong: #94a3b8;
+
+  /* ── Typography (Light Mode — High Contrast) ── */
+  --text-primary: #0f172a;
+  --text-secondary: #334155;
+  --text-muted: #64748b;
+  --text-inverse: #ffffff;
+
+  /* ── Primary Accent: Industrial Emerald ── */
+  --primary: #10b981;
+  --primary-hover: #059669;
+  --primary-active: #047857;
+  --primary-glow: rgba(16, 185, 129, 0.16);
+
+  /* ── Focus System ── */
+  --focus-ring: #10b981;
+
+  /* ── Semantic Flag Status ── */
+  --flag-on: #059669;
+  --flag-on-bg: rgba(16, 185, 129, 0.10);
+  --flag-on-border: rgba(16, 185, 129, 0.25);
+  --flag-off: #64748b;
+  --flag-off-bg: rgba(100, 116, 139, 0.08);
+  --flag-off-border: rgba(100, 116, 139, 0.20);
+
+  /* ── Semantic Status (Health/Lifecycle) ── */
+  --color-success: #059669;
+  --color-success-bg: rgba(16, 185, 129, 0.10);
+  --color-success-border: rgba(16, 185, 129, 0.25);
+
+  --color-warning: #d97706;
+  --color-warning-bg: rgba(245, 158, 11, 0.10);
+  --color-warning-border: rgba(245, 158, 11, 0.25);
+
+  --color-danger: #e11d48;
+  --color-danger-bg: rgba(244, 63, 94, 0.10);
+  --color-danger-border: rgba(244, 63, 94, 0.25);
+
+  --color-info: #0284c7;
+  --color-info-bg: rgba(2, 132, 199, 0.10);
+  --color-info-border: rgba(2, 132, 199, 0.25);
+
+  --color-archived: #64748b;
+  --color-archived-bg: rgba(100, 116, 139, 0.08);
+  --color-archived-border: rgba(100, 116, 139, 0.20);
+
+  /* ── Type Colors ── */
+  --type-boolean: #059669;
+  --type-boolean-bg: rgba(16, 185, 129, 0.10);
+  --type-boolean-border: rgba(16, 185, 129, 0.25);
+
+  --type-string: #0284c7;
+  --type-string-bg: rgba(2, 132, 199, 0.10);
+  --type-string-border: rgba(2, 132, 199, 0.25);
+
+  --type-number: #d97706;
+  --type-number-bg: rgba(245, 158, 11, 0.10);
+  --type-number-border: rgba(245, 158, 11, 0.25);
+
+  --type-json: #7c3aed;
+  --type-json-bg: rgba(139, 92, 246, 0.10);
+  --type-json-border: rgba(139, 92, 246, 0.25);
+
+  /* ── Corner Radius (Sharp Technical Geometry) ── */
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 10px;
+  --radius-full: 9999px;
+
+  /* ── Shadows (Light Mode) ── */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.07);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.08);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.08);
+
+  --scrollbar-thumb: rgba(15, 23, 42, 0.15);
+  --scrollbar-thumb-hover: rgba(15, 23, 42, 0.25);
+}
+
+.dark {
+  /* ── Canvas & Surfaces (Dark Mode) ── */
   --bg-canvas: #09090b;
-  --bg-surface: #111113;
+  --bg-surface: #121215;
   --bg-surface-elevated: #18181b;
   --bg-surface-hover: rgba(255, 255, 255, 0.04);
   --bg-surface-active: #27272a;
 
-  /* ── Hairline Borders (white-alpha for layering) ── */
+  /* ── Hairline Borders (Dark Mode) ── */
   --border-subtle: rgba(255, 255, 255, 0.08);
   --border-default: rgba(255, 255, 255, 0.12);
   --border-strong: rgba(255, 255, 255, 0.18);
 
-  /* ── Typography (WCAG AA on #09090b) ── */
+  /* ── Typography (Dark Mode) ── */
   --text-primary: #f4f4f5;
   --text-secondary: #a1a1aa;
   --text-muted: #71717a;
   --text-inverse: #09090b;
 
-  /* ── Primary Accent: Industrial Emerald (NO GRADIENT) ── */
+  /* ── Primary Accent ── */
   --primary: #10b981;
   --primary-hover: #059669;
   --primary-active: #047857;
   --primary-glow: rgba(16, 185, 129, 0.12);
-
-  /* ── Focus System ── */
-  --focus-ring: #10b981;
 
   /* ── Semantic Flag Status ── */
   --flag-on: #10b981;
@@ -40,15 +130,15 @@
   --flag-off-border: rgba(113, 113, 122, 0.20);
 
   /* ── Semantic Status (Health/Lifecycle) ── */
-  --color-success: #10b981;           /* LIVE / HEALTHY */
+  --color-success: #10b981;
   --color-success-bg: rgba(16, 185, 129, 0.10);
   --color-success-border: rgba(16, 185, 129, 0.20);
 
-  --color-warning: #f59e0b;           /* STALE */
+  --color-warning: #f59e0b;
   --color-warning-bg: rgba(245, 158, 11, 0.10);
   --color-warning-border: rgba(245, 158, 11, 0.20);
 
-  --color-danger: #f43f5e;            /* DEAD / CRITICAL */
+  --color-danger: #f43f5e;
   --color-danger-bg: rgba(244, 63, 94, 0.10);
   --color-danger-border: rgba(244, 63, 94, 0.20);
 
@@ -56,26 +146,38 @@
   --color-info-bg: rgba(59, 130, 246, 0.10);
   --color-info-border: rgba(59, 130, 246, 0.20);
 
-  --color-archived: #94a3b8;          /* ARCHIVED / ORPHAN */
+  --color-archived: #94a3b8;
   --color-archived-bg: rgba(148, 163, 184, 0.10);
   --color-archived-border: rgba(148, 163, 184, 0.20);
 
-  /* ── Corner Radius (Sharp Technical Geometry) ── */
-  --radius-xs: 2px;
-  --radius-sm: 4px;    /* buttons, inputs, badges */
-  --radius-md: 6px;    /* cards, containers */
-  --radius-lg: 8px;    /* dialogs, popovers */
-  --radius-xl: 10px;
-  --radius-full: 9999px;
+  /* ── Type Colors ── */
+  --type-boolean: #10b981;
+  --type-boolean-bg: rgba(16, 185, 129, 0.10);
+  --type-boolean-border: rgba(16, 185, 129, 0.20);
 
-  /* ── Shadows (tinted to canvas) ── */
+  --type-string: #38bdf8;
+  --type-string-bg: rgba(56, 189, 248, 0.10);
+  --type-string-border: rgba(56, 189, 248, 0.20);
+
+  --type-number: #fbbf24;
+  --type-number-bg: rgba(251, 191, 36, 0.10);
+  --type-number-border: rgba(251, 191, 36, 0.20);
+
+  --type-json: #a78bfa;
+  --type-json-bg: rgba(167, 139, 250, 0.10);
+  --type-json-border: rgba(167, 139, 250, 0.20);
+
+  /* ── Shadows (Dark Mode) ── */
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
   --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.6);
   --shadow-xl: 0 12px 48px rgba(0, 0, 0, 0.8);
+
+  --scrollbar-thumb: rgba(255, 255, 255, 0.08);
+  --scrollbar-thumb-hover: rgba(255, 255, 255, 0.14);
 }
 
-/* ── Thin Scrollbar (6px, canvas-tinted) ── */
+/* ── Thin Scrollbar (6px) ── */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -84,15 +186,14 @@
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--scrollbar-thumb);
   border-radius: var(--radius-full);
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.14);
+  background: var(--scrollbar-thumb-hover);
 }
 
-/* Firefox scrollbar */
 * {
   scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.08) transparent;
+  scrollbar-color: var(--scrollbar-thumb) transparent;
 }

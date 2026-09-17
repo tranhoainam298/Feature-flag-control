@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from './lib/query-client';
 import { AppProvider } from './context/AppContext';
+import { ThemeProvider } from './context/ThemeContext';
 import { Layout } from './components/Layout';
 import { LoginPage } from './pages/LoginPage';
 import { FlagsPage } from './pages/FlagsPage';
@@ -19,8 +20,9 @@ import { ChangeRequestsPage } from './pages/ChangeRequestsPage';
 export default function App(): React.ReactElement {
   return (
     <QueryClientProvider client={queryClient}>
-      <AppProvider>
-        <BrowserRouter>
+      <ThemeProvider>
+        <AppProvider>
+          <BrowserRouter>
           <Routes>
             <Route path="/login" element={<LoginPage />} />
             <Route path="/" element={<Layout />}>
@@ -40,6 +42,7 @@ export default function App(): React.ReactElement {
           </Routes>
         </BrowserRouter>
       </AppProvider>
-    </QueryClientProvider>
+    </ThemeProvider>
+  </QueryClientProvider>
   );
 }

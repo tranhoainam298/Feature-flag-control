@@ -2,6 +2,11 @@
 requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["app*"]
+exclude = ["alembic*", "tests*", "scripts*"]
+
 [project]
 name = "flagops-backend"
 version = "0.1.0"

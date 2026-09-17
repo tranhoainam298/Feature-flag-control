@@ -51,7 +51,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setEnvironments(envList);
 
       const savedEnvId = localStorage.getItem(SELECTED_ENV_KEY);
-      const matched = envList.find((e) => e.id === savedEnvId) || envList[0] || null;
+      const matched = envList.find((e: Environment) => e.id === savedEnvId) || envList[0] || null;
       setCurrentEnvironmentState(matched);
       if (matched) {
         localStorage.setItem(SELECTED_ENV_KEY, matched.id);
@@ -100,7 +100,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setProjects(projList);
 
         const savedProjId = localStorage.getItem(SELECTED_PROJECT_KEY);
-        const selectedProj = projList.find((p) => p.id === savedProjId) || projList[0] || null;
+        const selectedProj = projList.find((p: Project) => p.id === savedProjId) || projList[0] || null;
         setCurrentProjectState(selectedProj);
 
         if (selectedProj) {
