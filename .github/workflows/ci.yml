@@ -82,6 +82,22 @@ jobs:
         run: |
           timeout 30 bash -c 'until curl -s -f http://127.0.0.1:8000/health; do sleep 1; done' || (echo "=== API Server Log ===" && cat /tmp/api.log && exit 1)
 
+      - name: SSE Live Integration Tests
+        env:
+          DATABASE_URL: postgresql+asyncpg://postgres:test@localhost:5432/flagops
+          REDIS_URL: redis://localhost:6379/0
+          SECRET_KEY: "secure_production_secret_key_at_least_32_chars_long"
+          CONFIG_MASTER_KEY: "0123456789abcdef0123456789abcdef"
+        run: |
+          pytest app/tests/integration/test_sse.py --cov=app
+
+      - name: Stop background API server
+        if: always()
+        run: |
+          if [ -f /tmp/api.pid ]; then
+            kill $(cat /tmp/api.pid) || true
+          fi
+
       - name: Engine Coverage Gate (>= 95%)
         env:
           DATABASE_URL: postgresql+asyncpg://postgres:test@localhost:5432/flagops
@@ -98,14 +114,7 @@ jobs:
           SECRET_KEY: "secure_production_secret_key_at_least_32_chars_long"
           CONFIG_MASTER_KEY: "0123456789abcdef0123456789abcdef"
         run: |
-          pytest --cov=app --cov-report=term-missing --cov-report=xml --cov-fail-under=75
-
-      - name: Stop background API server
-        if: always()
-        run: |
-          if [ -f /tmp/api.pid ]; then
-            kill $(cat /tmp/api.pid) || true
-          fi
+          pytest --ignore=app/tests/integration/test_sse.py --cov=app --cov-append --cov-report=term-missing --cov-report=xml --cov-fail-under=75
 
   frontend:
     name: Frontend Lint, Typecheck, Test & Build

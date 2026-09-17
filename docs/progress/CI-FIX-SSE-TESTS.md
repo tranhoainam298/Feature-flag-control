@@ -37,8 +37,8 @@ Chúng tôi đã khảo sát và thực nghiệm phương án chuyển đổi sa
 
 ## 3. Implemented
 Trong file `.github/workflows/ci.yml` (job `backend`):
-1. **Khởi động FastAPI Server nền:**
-   - Ngay sau bước `alembic upgrade head`, bổ sung bước khởi động Uvicorn:
+1. **Khởi động FastAPI Server nền & Healthcheck Gate:**
+   - Ngay sau bước `alembic upgrade head`, bổ sung bước khởi động Uvicorn và chờ cổng 8000 sẵn sàng:
      ```yaml
      - name: Start FastAPI server in background
        env:
@@ -51,24 +51,40 @@ Trong file `.github/workflows/ci.yml` (job `backend`):
        run: |
          python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 > /tmp/api.log 2>&1 &
          echo $! > /tmp/api.pid
-     ```
-   - Chạy với `DEBUG: "false"` và các khóa bí mật chuẩn (đủ 32 bytes) nhằm đồng thời kích hoạt smoke-test guard bảo mật `validate_production_security()`.
-2. **Healthcheck Gate (Chống Race Condition):**
-   - Bổ sung bước kiểm tra tính sẵn sàng trước khi vào pytest:
-     ```yaml
+
      - name: Wait for API server readiness
        run: |
          timeout 30 bash -c 'until curl -s -f http://127.0.0.1:8000/health; do sleep 1; done' || (echo "=== API Server Log ===" && cat /tmp/api.log && exit 1)
      ```
-3. **Teardown & Cleanup Gate:**
-   - Bổ sung bước dọn dẹp tiến trình với điều kiện `if: always()` để giải phóng port và PID:
+   - Chạy với `DEBUG: "false"` và các khóa bí mật chuẩn (đủ 32 bytes) nhằm đồng thời kích hoạt smoke-test guard bảo mật `validate_production_security()`.
+
+2. **Cách ly kiểm thử SSE và Dọn dẹp Tiến trình (Isolation & Cleanup Gate):**
+   - Chạy riêng `app/tests/integration/test_sse.py` trong khi server đang hoạt động:
      ```yaml
+     - name: SSE Live Integration Tests
+       env:
+         DATABASE_URL: postgresql+asyncpg://postgres:test@localhost:5432/flagops
+         REDIS_URL: redis://localhost:6379/0
+         SECRET_KEY: "secure_production_secret_key_at_least_32_chars_long"
+         CONFIG_MASTER_KEY: "0123456789abcdef0123456789abcdef"
+       run: |
+         pytest app/tests/integration/test_sse.py --cov=app
+
      - name: Stop background API server
        if: always()
        run: |
          if [ -f /tmp/api.pid ]; then
            kill $(cat /tmp/api.pid) || true
          fi
+     ```
+   - **Tối ưu hóa cốt lõi chống Race Condition:** Việc tắt ngay tiến trình Uvicorn sau khi test SSE hoàn tất đảm bảo APScheduler trong background server không chạy định kỳ và không xung đột race condition với các bài test scheduled change request (`test_scheduled_change_applied_by_scheduler`).
+
+3. **Cộng dồn độ phủ toàn diện với `--cov-append`:**
+   - Chạy phần còn lại của test suite (302 test) với cờ `--cov-append` để tích hợp toàn bộ độ phủ của test SSE vào báo cáo tổng hợp:
+     ```yaml
+     - name: Overall Backend Pytest Coverage (>= 75%)
+       run: |
+         pytest --ignore=app/tests/integration/test_sse.py --cov=app --cov-append --cov-report=term-missing --cov-report=xml --cov-fail-under=75
      ```
 
 ---
